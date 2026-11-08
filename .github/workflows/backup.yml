@@ -1,0 +1,86 @@
+
+name: SHGER Database Backup
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    name: Create Secure Database Backup
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check secret
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "ERROR: SUPABASE_DB_URL is missing"
+            exit 1
+          fi
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Create backup directory
+        run: mkdir -p backup
+
+      - name: Backup database roles
+        run: |
+          supabase db dump \
+            --remote="$SUPABASE_DB_URL" \
+            -f backup/roles.sql \
+            --role-only
+
+      - name: Backup database schema
+        run: |
+          supabase db dump \
+            --remote="$SUPABASE_DB_URL" \
+            -f backup/schema.sql
+
+      - name: Backup database data
+        run: |
+          supabase db dump \
+            --remote="$SUPABASE_DB_URL" \
+            -f backup/data.sql \
+            --use-copy \
+            --data-only \
+            -x "storage.buckets_vectors" \
+            -x "storage.vector_indexes"
+
+      - name: Validate backup files
+        run: |
+          test -s backup/roles.sql
+          test -s backup/schema.sql
+          test -s backup/data.sql
+
+          date -u +"%Y-%m-%d %H:%M:%S UTC" \
+            > backup/backup-date.txt
+
+          echo "SHGER DATABASE BACKUP" \
+            > backup/README.txt
+
+          echo "Schema, roles and data exports." \
+            >> backup/README.txt
+
+          echo "Backup files validated successfully."
+
+      - name: Upload secure backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SHGER-BACKUP-${{ github.run_id }}
+          path: backup/
+          retention-days: 90
+          if-no-files-found: error
