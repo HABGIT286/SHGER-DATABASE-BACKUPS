@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#090b12">
+<title>SHGER | متوسطة الأميرات للبنات</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+:root{--bg:#080a11;--panel:rgba(20,24,37,.78);--panel2:rgba(27,32,48,.72);--line:rgba(255,255,255,.09);--text:#f5f6fb;--muted:#9ba4b8;--gold:#d9b66d;--gold2:#f2d99d;--green:#39d6a0;--red:#ff647c;--blue:#82aaff;--shadow:0 24px 70px rgba(0,0,0,.38);--radius:22px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 15% 0%,rgba(94,74,143,.2),transparent 35%),radial-gradient(ellipse at 90% 25%,rgba(34,118,128,.13),transparent 30%),var(--bg);color:var(--text);font-family:"IBM Plex Sans Arabic",Inter,sans-serif;min-height:100vh}button,input,textarea,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}.app{min-height:100vh}.topbar{height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid var(--line);background:rgba(8,10,17,.75);backdrop-filter:blur(20px);position:sticky;top:0;z-index:20}.brand{display:flex;align-items:center;gap:13px}.logo{width:43px;height:43px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(145deg,#f0d99e,#98743a);color:#17130b;font-weight:900;box-shadow:0 8px 28px #d9b66d33}.brand strong{display:block;letter-spacing:2px;font:800 17px Inter,sans-serif}.brand small{color:var(--muted);font-size:11px;letter-spacing:1.4px}.top-actions{display:flex;gap:9px;align-items:center}.icon-btn,.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:13px;padding:10px 14px}.icon-btn{width:42px;height:42px;padding:0}.btn.primary{background:linear-gradient(135deg,#e8cb8a,#b68b47);color:#18140c;border:0;font-weight:700}.btn.danger{border-color:#ff647c66;color:#ff91a1}.btn.success{border-color:#39d6a066;color:#6be8bc}.btn.small{padding:7px 10px;font-size:12px;border-radius:10px}.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:22px;max-width:1600px;margin:auto;padding:22px}.sidebar{align-self:start;position:sticky;top:98px;padding:17px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);backdrop-filter:blur(18px);box-shadow:var(--shadow)}.profile{padding:13px 10px 18px;border-bottom:1px solid var(--line);margin-bottom:13px}.avatar{width:48px;height:48px;border-radius:17px;background:linear-gradient(145deg,#d9b66d,#69512d);display:grid;place-items:center;color:#17130b;font-size:20px;font-weight:800;margin-bottom:10px}.profile b{display:block}.profile small{color:var(--muted)}.nav{display:grid;gap:6px}.nav button{border:0;background:transparent;color:var(--muted);text-align:right;padding:12px 13px;border-radius:13px;display:flex;gap:12px;align-items:center}.nav button.active,.nav button:hover{background:linear-gradient(90deg,rgba(217,182,109,.16),rgba(217,182,109,.04));color:var(--gold2)}.nav .ico{width:22px;text-align:center;font-size:17px}.main{min-width:0}.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:15px;margin:7px 0 20px}.page-head h1{font-size:clamp(22px,3vw,31px);margin:0 0 5px}.page-head p{margin:0;color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:15px}.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:19px;box-shadow:var(--shadow);backdrop-filter:blur(18px);min-width:0}.card h3{margin:0 0 14px;font-size:16px}.span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-6{grid-column:span 6}.span-4{grid-column:span 4}.stat{display:flex;align-items:center;justify-content:space-between;gap:10px}.stat strong{font:800 27px Inter,sans-serif}.stat small{display:block;color:var(--muted);margin-top:6px}.stat .stat-icon{width:45px;height:45px;border-radius:15px;display:grid;place-items:center;background:#d9b66d18;color:var(--gold2);font-size:20px}.muted{color:var(--muted)}.gold{color:var(--gold2)}.green{color:var(--green)}.red{color:var(--red)}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.between{display:flex;justify-content:space-between;align-items:center;gap:10px}.stack{display:grid;gap:12px}.field{display:grid;gap:7px;margin:10px 0}.field label{font-size:12px;color:var(--muted)}.field input,.field textarea,.field select,.search{width:100%;background:rgba(4,7,14,.7);border:1px solid var(--line);border-radius:12px;color:var(--text);padding:12px 13px;outline:none}.field input:focus,.field textarea:focus,.field select:focus,.search:focus{border-color:#d9b66d99;box-shadow:0 0 0 3px #d9b66d16}.field textarea{min-height:110px;resize:vertical}.field select option{background:#111522}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}table{width:100%;border-collapse:collapse;min-width:620px}th,td{text-align:right;padding:12px 13px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}th{color:var(--gold2);font-weight:600;background:#ffffff06}tr:last-child td{border-bottom:0}.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:99px;padding:5px 9px;font-size:11px;color:var(--muted);white-space:nowrap}.pill.ok{color:var(--green);border-color:#39d6a044;background:#39d6a00c}.pill.bad{color:var(--red);border-color:#ff647c44;background:#ff647c0c}.pill.warn{color:#f4c875;border-color:#f4c87544}.empty{padding:28px;text-align:center;color:var(--muted)}.hidden{display:none!important}.login-shell{min-height:calc(100vh - 76px);display:grid;place-items:center;padding:22px}.login-card{width:min(100%,470px);padding:30px}.login-card .logo{width:60px;height:60px;font-size:24px;margin-bottom:20px}.login-card h1{font-size:27px;margin:0 0 6px}.login-card p{color:var(--muted);margin:0 0 20px}.hero{padding:25px;background:linear-gradient(120deg,rgba(217,182,109,.14),rgba(36,67,88,.13)),var(--panel);position:relative;overflow:hidden}.hero:after{content:"";position:absolute;width:220px;height:220px;border-radius:50%;border:1px solid #d9b66d26;left:-60px;top:-100px;box-shadow:0 0 0 22px #d9b66d08,0 0 0 48px #d9b66d05}.hero h2{font-size:24px;margin:0 0 7px}.hero p{color:var(--muted);margin:0}.question{font-size:20px;line-height:2.1;padding:22px;border-radius:16px;background:#050811;border:1px solid var(--line);white-space:pre-wrap}.timer{font:800 25px Inter,sans-serif;color:var(--gold2)}.toast-host{position:fixed;left:18px;bottom:18px;z-index:100;display:grid;gap:9px;width:min(360px,calc(100vw - 36px))}.toast{padding:14px 16px;border-radius:15px;background:#171d2b;border:1px solid var(--line);box-shadow:var(--shadow);animation:slide .25s ease}.toast.error{border-color:#ff647c77}.toast.success{border-color:#39d6a077}@keyframes slide{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}.modal-backdrop{position:fixed;inset:0;background:#000a;backdrop-filter:blur(9px);display:grid;place-items:center;padding:18px;z-index:80}.modal{width:min(100%,570px);max-height:88vh;overflow:auto;background:#131827;border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:var(--shadow)}.modal h2{margin:0 0 14px}.tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:15px}.tabs button{border:1px solid var(--line);border-radius:11px;padding:9px 12px;background:transparent;color:var(--muted)}.tabs button.active{color:var(--gold2);background:#d9b66d17;border-color:#d9b66d55}.progress{height:7px;background:#ffffff12;border-radius:99px;overflow:hidden}.progress span{display:block;height:100%;background:linear-gradient(90deg,#a98143,#f0d99d);width:0}.notice{border:1px solid #d9b66d44;background:#d9b66d0d;color:#ead8ae;padding:12px 14px;border-radius:13px;font-size:12px;line-height:1.8}.footer{color:var(--muted);text-align:center;font-size:11px;padding:22px}.mobile-menu{display:none}
+@media(max-width:900px){.layout{grid-template-columns:1fr;padding:13px}.sidebar{position:fixed;top:76px;bottom:0;right:0;width:275px;z-index:40;border-radius:0 0 0 20px;transform:translateX(110%);transition:.25s;overflow:auto}.sidebar.open{transform:translateX(0)}.mobile-menu{display:inline-grid;place-items:center}.span-8,.span-6,.span-4{grid-column:span 12}.topbar{padding:0 13px}.brand small{font-size:9px}.top-actions .hide-mobile{display:none}}
+@media(max-width:520px){.form-grid{grid-template-columns:1fr}.card{padding:15px}.login-card{padding:22px}.page-head{align-items:flex-start;flex-direction:column}.topbar{height:68px}.sidebar{top:68px}.brand strong{font-size:14px}.brand .logo{width:38px;height:38px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+  <div class="brand">
+    <button class="icon-btn mobile-menu" id="menuToggle" aria-label="القائمة">☰</button>
+    <div class="logo">S</div>
+    <div><strong>SHGER</strong><small>SUBSCRIBER & EXAM COMMAND CENTER</small></div>
+  </div>
+  <div class="top-actions">
+    <span id="connectionState" class="pill">غير متصل</span>
+    <button class="icon-btn" id="settingsBtn" title="إعدادات الاتصال">⚙</button>
+    <button class="btn small hide-mobile" id="logoutBtn" style="display:none">تسجيل الخروج</button>
+  </div>
+</header>
+
+<section id="loginView" class="login-shell">
+  <div class="card login-card">
+    <div class="logo">S</div>
+    <h1>مرحباً بك في SHGER</h1>
+    <p>متوسطة الأميرات للبنات · نظام الاختبارات والإدارة</p>
+    <div class="tabs">
+      <button class="active" data-login-tab="student">دخول الطالبة</button>
+      <button data-login-tab="teacher">دخول الأستاذة</button>
+      <button data-login-tab="director">دخول المديرة</button>
+    </div>
+    <form id="studentLoginForm">
+      <div class="field"><label>الاسم الثلاثي للطالبة</label><input id="studentFullName" required minlength="5" placeholder="الاسم الثلاثي كما في السجل"></div>
+      <button class="btn primary" type="submit" style="width:100%">دخول وبدء الاختبار</button>
+    </form>
+    <form id="adminLoginForm" class="hidden">
+      <div class="field"><label id="adminPasswordLabel">كلمة المرور</label><input id="adminPassword" type="password" required autocomplete="current-password" placeholder="أدخلي كلمة المرور"></div>
+      <button class="btn primary" type="submit" style="width:100%">تسجيل الدخول</button>
+    </form>
+    <div id="publicNotice" class="notice" style="margin-top:17px">يتم تحميل حالة الاختبار…</div>
+    <p class="muted" style="font-size:11px;margin:16px 0 0">الدخول الإداري محمي برمز جلسة مؤقت. لا تشاركي كلمة المرور مع الطالبات.</p>
+  </div>
+</section>
+
+<div id="workspace" class="layout hidden">
+  <aside class="sidebar" id="sidebar">
+    <div class="profile"><div class="avatar" id="profileAvatar">S</div><b id="profileName">SHGER</b><small id="profileRole">لوحة النظام</small></div>
+    <nav class="nav" id="navigation"></nav>
+    <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:14px">
+      <button class="btn small" style="width:100%" id="sidebarLogout">خروج آمن ↗</button>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="page-head"><div><h1 id="pageTitle">الرئيسية</h1><p id="pageSubtitle">نظرة عامة على النظام</p></div><div class="row"><span class="pill ok" id="roleBadge">متصل</span><button class="btn small" id="refreshBtn">↻ تحديث</button></div></div>
+    <div id="pageContent"></div>
+  </main>
+</div>
+<div class="footer">SHGER · متوسطة الأميرات للبنات · نظام إدارة الاختبارات</div>
+</div>
+
+<div id="modalHost"></div><div id="toastHost" class="toast-host"></div>
+
+<script>
+(() => {
+"use strict";
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const state = {
+ apiUrl: localStorage.getItem("shger_api_url") || "",
+ role:null, adminToken:null, studentToken:null, student:null, exam:null,
+ currentQuestion:null, deadline:null, timer:null, currentPage:"home",
+ dashboard:null, securityTab:"overview", loginTab:"student", visitorFingerprint:null,
+ pasteAttempts:0, lastToast:""
+};
+const adminNav = [
+ ["home","⌂","الرئيسية"],["students","♙","الطالبات"],["questions","▤","الأسئلة"],["reports","▧","التقارير والنتائج"],["visitors","◉","الزوار"],["notifications","♢","الإشعارات"],["messages","✉","الرسائل"],["activity","◷","سجل النشاط"],["security","⬡","الأمان والأجهزة"],["notes","▣","الملاحظات"],["settings","⚙","إعدادات الاختبار"]
+];
+const directorExtra = [["securityCenter","⬢","مركز أمن الصلاحيات"]];
+const studentNav = [["home","⌂","الاختبار"],["messages","✉","مراسلة الأستاذة"],["account","♙","حسابي"]];
+const titles = {home:["الرئيسية","ملخص الحالة والإحصائيات"],students:["إدارة الطالبات","الملفات والحسابات ومحاولات الاختبار"],questions:["إدارة الأسئلة","إضافة الأسئلة وتعديلها وترتيبها"],reports:["التقارير والنتائج","تقارير الاختبارات وإدارة التسليم"],visitors:["الزوار","متابعة الزيارات والأجهزة"],notifications:["الإشعارات","سجل التنبيهات الواردة"],messages:["الرسائل","مراسلات الطالبات وردود الأستاذة"],activity:["سجل النشاط","الأحداث المسجلة في النظام"],security:["الأمان والأجهزة","جلسات الدخول والأجهزة وسجلات الأمان"],notes:["الملاحظات","ملاحظات الإدارة"],settings:["إعدادات الاختبار","بيانات الاختبار والتحكم بالدخول"],securityCenter:["مركز أمن الصلاحيات","الحوادث والإيقافات والتحكم الأمني"],account:["حسابي","بيانات الطالبة"],};
+function toast(msg,type="success"){const el=document.createElement("div");el.className="toast "+(type==="error"?"error":type==="success"?"success":"");el.textContent=msg;$("#toastHost").append(el);setTimeout(()=>el.remove(),4200)}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function date(v){if(!v)return "—";const d=new Date(v);return isNaN(d)?"—":d.toLocaleString("ar-IQ",{dateStyle:"medium",timeStyle:"short"})}
+function fmtTime(seconds){seconds=Math.max(0,seconds|0);return `${String(Math.floor(seconds/3600)).padStart(2,"0")}:${String(Math.floor(seconds%3600/60)).padStart(2,"0")}:${String(seconds%60).padStart(2,"0")}`}
+function pill(text,kind=""){return `<span class="pill ${kind}">${esc(text)}</span>`}
+function btn(label,action,cls="small"){return `<button class="btn ${cls}" data-action="${esc(action)}">${label}</button>`}
+function apiReady(){if(!state.apiUrl){openSettings();return false}return true}
+async function api(action,data={},admin=false){
+ if(!apiReady())throw new Error("أدخلي رابط Edge Function أولاً");
+ const body={action,...data};
+ if(admin){if(!state.adminToken)throw new Error("انتهت الجلسة الإدارية");body.admin_token=state.adminToken}
+ const res=await fetch(state.apiUrl,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+ let result;try{result=await res.json()}catch{throw new Error("استجابة غير مفهومة من الخادم")}
+ if(!res.ok||result.success===false)throw new Error(result.error||`HTTP ${res.status}`);
+ $("#connectionState").textContent="متصل";$("#connectionState").className="pill ok";
+ return result;
+}
+function setConnection(ok,msg){$("#connectionState").textContent=msg|| (ok?"متصل":"غير متصل");$("#connectionState").className="pill "+(ok?"ok":"bad")}
+function openSettings(){
+ $("#modalHost").innerHTML=`<div class="modal-backdrop"><div class="modal"><div class="between"><h2>إعدادات الاتصال</h2><button class="icon-btn" data-close>✕</button></div><p class="muted">أدخلي رابط Supabase Edge Function المنشور الذي يحتوي على index.ts. لا تضعي Service Role Key هنا أبداً.</p><div class="field"><label>رابط API</label><input id="apiUrlInput" dir="ltr" placeholder="https://PROJECT.supabase.co/functions/v1/FUNCTION_NAME" value="${esc(state.apiUrl)}"></div><div class="notice">يُحفظ الرابط على هذا الجهاز فقط. رابط الوظيفة ليس مفتاحاً سرياً؛ المفتاح السري يبقى داخل Supabase Secrets.</div><div class="row" style="justify-content:flex-end;margin-top:17px"><button class="btn" data-close>إلغاء</button><button class="btn primary" id="saveApi">حفظ واختبار الاتصال</button></div></div></div>`;
+ $("#saveApi").onclick=async()=>{const v=$("#apiUrlInput").value.trim().replace(/\/$/,"");if(!/^https:\/\/.+\/functions\/v1\/.+/.test(v)){toast("الرابط غير مكتمل. استخدمي رابط Edge Function الصحيح","error");return}state.apiUrl=v;localStorage.setItem("shger_api_url",v);$("#modalHost").innerHTML="";try{await loadPublic();toast("تم حفظ رابط الاتصال")}catch(e){setConnection(false,"فشل الاتصال");toast(e.message,"error")}};
+}
+function showLogin(){stopTimer();$("#loginView").classList.remove("hidden");$("#workspace").classList.add("hidden");$("#logoutBtn").style.display="none";state.role=null;state.adminToken=null;state.studentToken=null;state.student=null}
+function enterWorkspace(role,user){
+ state.role=role;$("#loginView").classList.add("hidden");$("#workspace").classList.remove("hidden");$("#logoutBtn").style.display="inline-block";
+ $("#profileName").textContent=user?.full_name||(role==="director"?"المديرة":"الأستاذة");$("#profileRole").textContent=role==="director"?"مديرة النظام":role==="teacher"?"لوحة الأستاذة":"حساب الطالبة";$("#profileAvatar").textContent=role==="student"?(user?.full_name?.[0]||"ط"):"S";
+ $("#roleBadge").textContent=role==="director"?"مديرة":role==="teacher"?"أستاذة":"طالبة";
+ const nav=role==="student"?studentNav:[...adminNav,...(role==="director"?directorExtra:[])];
+ $("#navigation").innerHTML=nav.map(([id,ic,label],i)=>`<button data-page="${id}" class="${i===0?"active":""}"><span class="ico">${ic}</span>${label}</button>`).join("");
+ navigate("home");
+}
+function navigate(page){
+ state.currentPage=page;$("#sidebar").classList.remove("open");
+ $$("#navigation button").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
+ const t=titles[page]||["SHGER",""];$("#pageTitle").textContent=t[0];$("#pageSubtitle").textContent=t[1];
+ renderPage(page).catch(e=>{toast(e.message,"error");$("#pageContent").innerHTML=`<div class="card empty">${esc(e.message)}</div>`});
+}
+async function loadPublic(){
+ const r=await api("public_status");state.exam=r.exam;
+ const e=r.exam;
+ $("#publicNotice").innerHTML=`<b>${esc(e.title||"الاختبار")}</b><br>${esc(e.school||"متوسطة الأميرات للبنات")} · ${esc(e.subject||"")}<br>عدد الأسئلة: ${e.question_count??"—"} · المدة: ${e.duration_minutes??"—"} دقيقة<br>${e.student_access_enabled?pill("دخول الطالبات متاح","ok"):pill("دخول الطالبات متوقف","bad")} ${e.maintenance_mode?pill("صيانة","warn"):""}<br>${esc(e.message||e.site_notice||"")}`;
+ setConnection(true);
+}
+async function renderPage(page){
+ const root=$("#pageContent");root.innerHTML=`<div class="card empty">جارٍ تحميل البيانات…</div>`;
+ if(state.role==="student"){return renderStudentPage(page)}
+ switch(page){
+ case "home":return renderAdminHome();
+ case "students":return renderStudents();
+ case "questions":return renderQuestions();
+ case "reports":return renderReports();
+ case "visitors":return renderVisitors();
+ case "notifications":return renderNotifications();
+ case "messages":return renderMessages();
+ case "activity":return renderActivity();
+ case "security":return renderSecurity();
+ case "notes":return renderNotes();
+ case "settings":return renderSettings();
+ case "securityCenter":return renderSecurityCenter();
+ default:root.innerHTML=`<div class="card empty">القسم غير متاح</div>`;
+ }
+}
+async function renderAdminHome(){
+ const d=await api("admin_dashboard",{},true);state.dashboard=d;
+ const active=d.sessions.filter(x=>x.status==="active").length,done=d.sessions.filter(x=>["submitted","expired"].includes(x.status)).length;
+ $("#pageContent").innerHTML=`<div class="grid">
+ <div class="card hero span-12"><h2>أهلاً بك في مركز SHGER</h2><p>${esc(d.settings.school_name||"متوسطة الأميرات للبنات")} · ${esc(d.settings.exam_title||"نظام الاختبارات")}</p><div class="row" style="margin-top:18px">${pill(d.access.student_access_enabled?"الدخول مفتوح":"الدخول مغلق",d.access.student_access_enabled?"ok":"bad")}${pill(`الأسئلة ${d.questions.length}`)}${pill(`آخر تحديث ${date(new Date())}`)}</div></div>
+ ${statCard("إجمالي الطالبات",d.students.length,"♙")}${statCard("جلسات نشطة",active,"◷")}${statCard("اختبارات منتهية",done,"✓")}${statCard("التقارير",d.reports.length,"▧")}
+ <div class="card span-8"><div class="between"><h3>أحدث الطالبات</h3>${btn("عرض الكل","go:students")}</div>${studentTable(d.students.slice(0,7))}</div>
+ <div class="card span-4"><h3>التحكم السريع</h3><div class="stack"><button class="btn ${d.access.student_access_enabled?"danger":"primary"}" data-action="toggle-access">${d.access.student_access_enabled?"إغلاق دخول الطالبات":"فتح دخول الطالبات"}</button>${btn("إدارة الأسئلة","go:questions","")}${btn("فتح التقارير","go:reports","")}${btn("مركز الأمان","go:securityCenter","")}</div></div>
+ <div class="card span-12"><h3>آخر الجلسات</h3>${sessionTable(d.sessions.slice(0,8),d.students)}</div></div>`;
+}
+function statCard(label,value,ic){return `<div class="card span-3"><div class="stat"><div><strong>${esc(value)}</strong><small>${label}</small></div><div class="stat-icon">${ic}</div></div></div>`}
+function studentTable(rows){if(!rows?.length)return `<div class="empty">لا توجد طالبات مسجلات حتى الآن</div>`;return `<div class="table-wrap"><table><thead><tr><th>الاسم</th><th>الرمز</th><th>الحالة</th><th>تاريخ التسجيل</th><th>إجراء</th></tr></thead><tbody>${rows.map(s=>`<tr><td>${esc(s.full_name)}</td><td dir="ltr">${esc(s.student_code)}</td><td>${pill(s.student_status==="blocked"?"محظورة":"نشطة",s.student_status==="blocked"?"bad":"ok")}</td><td>${date(s.joined_at)}</td><td><button class="btn small" data-action="student-details:${s.id}">التفاصيل</button></td></tr>`).join("")}</tbody></table></div>`}
+function sessionTable(rows,students=[]){if(!rows?.length)return `<div class="empty">لا توجد جلسات</div>`;return `<div class="table-wrap"><table><thead><tr><th>الطالبة</th><th>الحالة</th><th>البداية</th><th>موعد الإنهاء</th></tr></thead><tbody>${rows.map(s=>`<tr><td>${esc(students.find(x=>x.id===s.student_id)?.full_name||s.student_id)}</td><td>${pill(s.status,s.status==="active"?"ok":s.status==="revoked"?"bad":"")}</td><td>${date(s.started_at)}</td><td>${date(s.deadline_at)}</td></tr>`).join("")}</tbody></table></div>`}
+async function renderStudents(){const d=state.dashboard||await api("admin_dashboard",{},true);$("#pageContent").innerHTML=`<div class="card"><div class="between"><h3>سجل الطالبات (${d.students.length})</h3><input class="search" id="studentSearch" style="max-width:260px" placeholder="بحث بالاسم أو الرمز"></div><div id="studentsTable">${studentTable(d.students)}</div><div class="row" style="margin-top:14px">${btn("تصدير جميع بيانات الطالبات ZIP","export-all")}${btn("تحديث القائمة","refresh")}</div></div>`;$("#studentSearch").oninput=()=>{const q=$("#studentSearch").value.toLowerCase();$("#studentsTable").innerHTML=studentTable(d.students.filter(s=>(s.full_name+" "+s.student_code).toLowerCase().includes(q))) }}
+async function renderQuestions(){const r=await api("admin_questions",{},true);$("#pageContent").innerHTML=`<div class="grid"><div class="card span-5"><h3>إضافة سؤال جديد</h3><form id="addQuestion"><div class="field"><label>نص الآية</label><textarea name="verse_text" required></textarea></div><div class="field"><label>المطلوب من الطالبة</label><textarea name="question_prompt" required></textarea></div><div class="field"><label>الترتيب</label><input name="position" type="number" min="1" value="${r.questions.length+1}" required></div><label class="row"><input name="is_active" type="checkbox" checked> تفعيل السؤال</label><button class="btn primary" style="margin-top:14px">إضافة السؤال</button></form></div><div class="card span-7"><h3>الأسئلة (${r.questions.length})</h3>${r.questions.length?r.questions.map(q=>`<div class="card" style="padding:13px;margin-bottom:10px"><div class="between"><b>السؤال ${q.position}</b>${pill(q.is_active?"نشط":"متوقف",q.is_active?"ok":"bad")}</div><p>${esc(q.verse_text)}</p><p class="muted">${esc(q.question_prompt)}</p><div class="row">${btn("تعديل","edit-question:"+q.id)}${btn("حذف","delete-question:"+q.id,"danger small")}</div></div>`).join(""):`<div class="empty">لا توجد أسئلة</div>`}</div></div>`;
+ $("#addQuestion").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);await api("admin_add_question",{verse_text:f.get("verse_text"),question_prompt:f.get("question_prompt"),position:Number(f.get("position")),is_active:f.has("is_active")},true);toast("تمت إضافة السؤال");renderQuestions()}
+}
+async function renderReports(){const r=await api("admin_export_reports",{},true);$("#pageContent").innerHTML=`<div class="card"><div class="between"><h3>تقارير الاختبارات (${r.reports.length})</h3>${btn("تحديث","refresh")}</div>${r.reports.length?`<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>الرمز</th><th>وقت التقرير</th><th>الملف</th><th>الإجراء</th></tr></thead><tbody>${r.reports.map(x=>`<tr><td>${esc(x.report_data?.full_name)}</td><td>${esc(x.report_data?.student_code)}</td><td>${date(x.generated_at)}</td><td>${esc(x.file_name)}</td><td><button class="btn small" data-action="view-report:${x.id}">عرض</button> <button class="btn small" data-action="retry-telegram:${x.id}">إعادة Telegram</button></td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">لا توجد تقارير بعد</div>`}</div>`}
+async function renderVisitors(){const r=await api("admin_visitors",{},true);$("#pageContent").innerHTML=`<div class="card"><h3>الزوار (${r.visitors.length})</h3>${r.visitors.length?`<div class="table-wrap"><table><thead><tr><th>الاسم</th><th>الرمز</th><th>الجهاز</th><th>آخر زيارة</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody>${r.visitors.map(v=>`<tr><td>${esc(v.visitor_name)}</td><td>${esc(v.visitor_code)}</td><td>${esc(v.device_name)}</td><td>${date(v.last_visit_at)}</td><td>${pill(v.is_blocked?"محظور":v.is_active?"نشط":"غير نشط",v.is_blocked?"bad":v.is_active?"ok":"")}</td><td><button class="btn small" data-action="visitor-history:${v.id}">السجل</button> <button class="btn small" data-action="visitor-block:${v.id}:${!v.is_blocked}">${v.is_blocked?"رفع الحظر":"حظر"}</button> <button class="btn small" data-action="visitor-rename:${v.id}">تسمية</button></td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">لا يوجد زوار مسجلون</div>`}</div>`}
+async function renderNotifications(){const r=await api("admin_notifications",{limit:300},true);$("#pageContent").innerHTML=`<div class="card"><div class="between"><h3>الإشعارات (${r.unread_count} غير مقروء)</h3>${btn("تعليم الكل كمقروء","read-all")}</div>${r.notifications.length?r.notifications.map(n=>`<div class="between" style="padding:13px 0;border-bottom:1px solid var(--line)"><div><b>${esc(n.title)}</b><p class="muted" style="margin:5px 0">${esc(n.message)}</p><small class="muted">${date(n.created_at)} · ${esc(n.category)}</small></div><div>${pill(n.severity||"info",n.severity==="critical"?"bad":n.severity==="warning"?"warn":"")}${!n.is_read?btn("مقروء","read-notification:"+n.id):""}</div></div>`).join(""):`<div class="empty">لا توجد إشعارات</div>`}</div>`}
+async function renderMessages(){const r=await api("admin_messages",{},true);$("#pageContent").innerHTML=`<div class="card"><div class="between"><h3>رسائل الطالبات</h3><label class="row"><input type="checkbox" id="messagingToggle" ${r.messaging_enabled?"checked":""}> تفعيل المراسلة للجميع</label></div>${r.messages.length?r.messages.map(m=>`<div class="card" style="margin:12px 0;padding:14px"><div class="between"><b>${esc(m.user_name)} · ${esc(m.user_code)}</b><small class="muted">${date(m.created_at)}</small></div><p>${esc(m.content)}</p>${(m.replies||[]).map(x=>`<div class="notice" style="margin:8px 0"><b>رد الأستاذة:</b> ${esc(x.content)}<br><small>${date(x.created_at)}</small></div>`).join("")}<div class="row"><button class="btn small" data-action="reply-message:${m.id}">رد</button><button class="btn small danger" data-action="delete-message:${m.id}">حذف</button><button class="btn small" data-action="block-messaging:${m.student_id}">إيقاف مراسلة الطالبة</button></div></div>`).join(""):`<div class="empty">لا توجد رسائل</div>`}</div>`;$("#messagingToggle").onchange=async e=>{await api("admin_set_messaging",{enabled:e.target.checked},true);toast("تم تحديث إعداد المراسلة")}}
+async function renderActivity(){const r=await api("admin_activity",{},true);$("#pageContent").innerHTML=`<div class="card"><h3>سجل النشاط (${r.events.length})</h3><div class="table-wrap"><table><thead><tr><th>الحدث</th><th>المستخدم</th><th>التفاصيل</th><th>الوقت</th></tr></thead><tbody>${r.events.map(e=>`<tr><td>${esc(e.event_type)}</td><td>${esc(e.user_name||e.user_type||"النظام")}</td><td>${esc(e.content||JSON.stringify(e.event_details||{}))}</td><td>${date(e.created_at)}</td></tr>`).join("")}</tbody></table></div></div>`}
+async function renderSecurity(){const r=await api("admin_security_records",{},true);$("#pageContent").innerHTML=`<div class="grid"><div class="card span-12"><h3>إعدادات الحماية</h3><div class="notice">${esc(r.passkey_note||"")}</div><p class="muted">Passkey غير متاح في النسخة الحالية وفق استجابة الخادم.</p><div class="row"><label><input type="checkbox" id="strictToggle"> تفعيل الوضع الصارم</label><label><input type="checkbox" id="multiToggle"> السماح بجلسات متعددة</label></div><button class="btn primary" id="saveSecurity" style="margin-top:12px">حفظ الإعدادات</button></div><div class="card span-6"><h3>الأجهزة (${r.devices.length})</h3>${simpleRows(r.devices,x=>`${x.device_label||x.device_name||"جهاز"} · ${date(x.last_seen_at)}`)}</div><div class="card span-6"><h3>سجلات الأمان (${r.security.length})</h3>${simpleRows(r.security,x=>`${x.event_type||x.record_type} · ${x.user_name||""} · ${date(x.created_at)}`)}</div></div>`;$("#saveSecurity").onclick=async()=>{await api("admin_set_security_settings",{enabled:$("#strictToggle").checked,allow_multiple_sessions:$("#multiToggle").checked},true);toast("تم حفظ إعدادات الأمان")}}
+function simpleRows(a,fn){return a.length?`<div class="stack">${a.slice(0,40).map(x=>`<div style="padding:9px;border-bottom:1px solid var(--line);font-size:12px">${esc(fn(x))}</div>`).join("")}</div>`:`<div class="empty">لا توجد سجلات</div>`}
+async function renderNotes(){const r=await api("admin_notes",{},true);$("#pageContent").innerHTML=`<div class="grid"><div class="card span-5"><h3>إضافة ملاحظة</h3><form id="noteForm"><div class="field"><label>العنوان</label><input name="title" required></div><div class="field"><label>المحتوى</label><textarea name="content" required></textarea></div><button class="btn primary">حفظ الملاحظة</button></form></div><div class="card span-7"><h3>الملاحظات</h3>${r.notes.length?r.notes.map(n=>`<div class="card" style="padding:13px;margin-bottom:10px"><b>${esc(n.title)}</b><p>${esc(n.content)}</p><small class="muted">${date(n.updated_at||n.created_at)}</small>${btn("حذف","delete-note:"+n.id,"danger small")}</div>`).join(""):`<div class="empty">لا توجد ملاحظات</div>`}</div></div>`;$("#noteForm").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);await api("admin_save_note",{title:f.get("title"),content:f.get("content")},true);toast("تم حفظ الملاحظة");renderNotes()}}
+async function renderSettings(){const d=state.dashboard||await api("admin_dashboard",{},true);const s=d.settings;$("#pageContent").innerHTML=`<div class="grid"><div class="card span-7"><h3>بيانات الاختبار</h3><form id="settingsForm"><div class="form-grid">${field("exam_title","عنوان الاختبار",s.exam_title)}${field("school_name","اسم المدرسة",s.school_name)}${field("class_name","الصف",s.class_name)}${field("subject_name","المادة",s.subject_name)}${field("exam_date","تاريخ الاختبار",s.exam_date,"date")}${field("duration_minutes","مدة الاختبار بالدقائق",s.duration_minutes,"number")}${field("max_students","العدد الأقصى للطالبات",s.max_students,"number")}</div><div class="field"><label>إعلان الموقع</label><textarea name="site_notice">${esc(state.exam?.site_notice||"")}</textarea></div><button class="btn primary">حفظ التغييرات</button></form></div><div class="card span-5"><h3>التحكم بالدخول</h3><p class="muted">فتح أو إغلاق دخول الطالبات ووضع الصيانة.</p><label class="row"><input type="checkbox" id="accessEnabled" ${d.access.student_access_enabled?"checked":""}> السماح بدخول الطالبات</label><label class="row" style="margin-top:12px"><input type="checkbox" id="examLocked" ${d.access.locked?"checked":""}> إغلاق الاختبار / صيانة</label><div class="field"><label>رسالة الإغلاق</label><textarea id="lockMessage">${esc(s.maintenance_message||d.access.control?.lock_message||"")}</textarea></div><button class="btn primary" id="saveAccess">تطبيق حالة الدخول</button><hr style="border-color:var(--line);margin:20px 0"><h3>إعدادات سريعة</h3><label class="row"><input type="checkbox" id="pasteToggle"> منع لصق النص أثناء الاختبار</label><button class="btn" id="savePaste" style="margin-top:10px">حفظ منع اللصق</button><div class="notice" style="margin-top:15px">إعدادات الخلفية والثيمات المحلية يمكن تغييرها من إعدادات المتصفح. لا يؤثر ذلك على بيانات الاختبار.</div></div></div>`;
+ $("#settingsForm").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),o={};for(const k of ["exam_title","school_name","class_name","subject_name","exam_date","duration_minutes","max_students"])if(f.get(k)!=="")o[k]=["duration_minutes","max_students"].includes(k)?Number(f.get(k)):f.get(k);o.site_notice=f.get("site_notice");await api("admin_update_settings",o,true);toast("تم تحديث الإعدادات");state.dashboard=null;renderSettings()};
+ $("#saveAccess").onclick=async()=>{await api("admin_set_access",{student_access_enabled:$("#accessEnabled").checked,exam_locked:$("#examLocked").checked,message:$("#lockMessage").value},true);toast("تم تحديث حالة الاختبار")};
+ try{const x=await api("public_status");$("#pasteToggle").checked=!!x.exam.paste_block_enabled}catch{}
+ $("#savePaste").onclick=async()=>{await api("admin_set_paste_block",{enabled:$("#pasteToggle").checked},true);toast("تم تحديث منع اللصق")};
+}
+function field(name,label,value,type="text"){return `<div class="field"><label>${label}</label><input name="${name}" type="${type}" value="${esc(value??"")}"></div>`}
+async function renderSecurityCenter(){
+ if(state.role!=="director")throw new Error("هذا القسم متاح للمديرة فقط");
+ const [o,i,c]=await Promise.all([api("admin_security_center_overview",{},true),api("admin_security_center_incidents",{limit:300},true),api("admin_security_center_controls",{},true)]);
+ $("#pageContent").innerHTML=`<div class="grid"><div class="card span-12 hero"><h2>مركز أمن الصلاحيات</h2><p>مراقبة الحوادث والتحكم بإيقاف الحسابات والعمليات.</p><div class="row" style="margin-top:15px">${pill(`حوادث مفتوحة ${o.incidents.length}`,o.incidents.length?"warn":"ok")}${pill(`إيقافات فعالة ${c.controls.filter(x=>x.is_active).length}`)}${pill(`طالبات ${o.students.length}`)}</div></div>
+ <div class="card span-12"><div class="tabs"><button class="active" data-sec-tab="incidents">الحوادث</button><button data-sec-tab="controls">الإيقافات</button><button data-sec-tab="create">إنشاء إيقاف</button><button data-sec-tab="status">حالة الحماية</button></div><div id="securityPanel">${incidentTable(i.incidents)}</div></div></div>`;
+ $$("#pageContent [data-sec-tab]").forEach(b=>b.onclick=()=>{ $$("#pageContent [data-sec-tab]").forEach(x=>x.classList.toggle("active",x===b));const p=$("#securityPanel");if(b.dataset.secTab==="incidents")p.innerHTML=incidentTable(i.incidents);if(b.dataset.secTab==="controls")p.innerHTML=controlTable(c.controls);if(b.dataset.secTab==="create")p.innerHTML=controlForm(o.students);if(b.dataset.secTab==="status")p.innerHTML=`<div class="notice">التحكم بحسابات الطالبات والعمليات العامة مفعل. التحكم بأدوار الموظفات غير مفعل لأن تسجيل الدخول الحالي للأستاذة بكلمة مرور مشتركة.</div><pre style="white-space:pre-wrap;color:var(--muted)">${esc(JSON.stringify(o.enforcement,null,2))}</pre>`});
+}
+function incidentTable(rows){return rows.length?`<div class="table-wrap"><table><thead><tr><th>الحادثة</th><th>الخطورة</th><th>الحالة</th><th>الوقت</th><th>معالجة</th></tr></thead><tbody>${rows.map(x=>`<tr><td><b>${esc(x.title)}</b><br><small class="muted">${esc(x.description)}</small></td><td>${pill(x.severity,x.severity==="critical"?"bad":"warn")}</td><td>${esc(x.status)}</td><td>${date(x.detected_at)}</td><td><button class="btn small" data-action="resolve-incident:${x.id}">تحديث الحالة</button></td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">لا توجد حوادث مسجلة</div>`}
+function controlTable(rows){return rows.length?`<div class="table-wrap"><table><thead><tr><th>الهدف</th><th>مفتاح الإيقاف</th><th>السبب</th><th>الفترة</th><th>الحالة</th><th></th></tr></thead><tbody>${rows.map(x=>`<tr><td>${esc(x.target_type)} ${esc(x.target_id||"")}</td><td>${esc(x.control_key)}</td><td>${esc(x.reason)}</td><td>${date(x.starts_at)}<br>${date(x.ends_at)}</td><td>${pill(x.is_active?"فعال":"مرفوع",x.is_active?"bad":"ok")}</td><td>${x.is_active?btn("رفع الإيقاف","lift-control:"+x.id):""}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">لا توجد إيقافات</div>`}
+function controlForm(students){return `<form id="controlForm"><div class="form-grid"><div class="field"><label>نوع الهدف</label><select name="target_type"><option value="system">النظام بالكامل</option><option value="student">طالبة محددة</option></select></div><div class="field"><label>الطالبة (عند اختيار طالبة)</label><select name="target_id"><option value="">اختاري</option>${students.map(s=>`<option value="${s.id}">${esc(s.full_name)} · ${esc(s.student_code)}</option>`).join("")}</select></div><div class="field"><label>العملية المراد إيقافها</label><select name="control_key"><option>*</option><option>student.all</option><option>student.login</option><option>student.session</option><option>student.submit_answer</option><option>student.messaging</option><option>exam.access</option></select></div><div class="field"><label>ينتهي بتاريخ (اختياري)</label><input name="ends_at" type="datetime-local"></div></div><div class="field"><label>سبب الإيقاف</label><textarea name="reason" required></textarea></div><button class="btn primary">إنشاء الإيقاف فوراً</button></form>`}
+async function renderStudentPage(page){
+ if(page==="home"){
+  const r=await api("student_current",{session_token:state.studentToken});state.deadline=r.deadline_at||state.deadline;
+  if(r.question?.completed){$("#pageContent").innerHTML=`<div class="card hero"><h2>اكتمل الاختبار</h2><p>تم تسجيل إجاباتك وإنشاء التقرير. يمكنك مراسلة الأستاذة عند الحاجة.</p></div>`;return}
+  state.currentQuestion=r.question;
+  $("#pageContent").innerHTML=studentExamMarkup(r.question,r.paste_block_enabled);
+  startTimer();
+ }else if(page==="messages"){const r=await api("public_status");$("#pageContent").innerHTML=`<div class="card"><h3>مراسلة الأستاذة</h3><p class="muted">اكتبي استفسارك وسيصل إلى لوحة الإدارة.</p><form id="studentMessage"><div class="field"><label>الرسالة</label><textarea name="content" required maxlength="4000"></textarea></div><button class="btn primary">إرسال الرسالة</button></form></div>`;$("#studentMessage").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);await api("student_send_message",{session_token:state.studentToken,content:f.get("content")});e.target.reset();toast("تم إرسال الرسالة")}}
+ else $("#pageContent").innerHTML=`<div class="card"><h3>بيانات الطالبة</h3><p>${esc(state.student.full_name)}</p><p class="muted">رمز الطالبة: ${esc(state.student.student_code)}</p><p class="muted">لا تعرض هذه النسخة الدرجات قبل أن يوفر الخادم عملية اعتماد النتائج.</p></div>`;
+}
+function studentExamMarkup(q,paste){return `<div class="grid"><div class="card span-12 hero"><div class="between"><div><h2>اختبار التربية الإسلامية</h2><p>${esc(state.student.full_name)} · ${esc(state.student.student_code)}</p></div><div class="timer" id="examTimer">--:--:--</div></div><div class="progress" style="margin-top:18px"><span style="width:${q.position&&q.total_questions?100*(q.position-1)/q.total_questions:0}%"></span></div><small class="muted">السؤال ${q.position||1} من ${q.total_questions||"—"}</small></div><div class="card span-12"><h3>نص السؤال</h3><div class="question">${esc(q.verse_text)}</div><h3 style="margin-top:20px">المطلوب</h3><p style="font-size:18px;line-height:2">${esc(q.question_prompt)}</p><form id="answerForm"><div class="field"><label>إجابتك</label><textarea id="answerText" name="answer_text" required rows="6" placeholder="اكتبي إجابتك هنا…"></textarea></div><div class="row between"><small class="muted">${paste?"منع اللصق مفعّل حسب إعدادات الاختبار":"يرجى كتابة الإجابة بنفسك وعدم مغادرة صفحة الاختبار"}</small><button class="btn primary">إرسال الإجابة والانتقال للسؤال التالي</button></div></form></div></div>`}
+function startTimer(){stopTimer();const tick=()=>{const left=Math.max(0,Math.floor((new Date(state.deadline).getTime()-Date.now())/1000));const el=$("#examTimer");if(el)el.textContent=fmtTime(left);if(left<=0){stopTimer();toast("انتهى وقت الاختبار","error")}};tick();state.timer=setInterval(tick,1000)}
+function stopTimer(){if(state.timer)clearInterval(state.timer);state.timer=null}
+async function studentLogin(name){const fp=await fingerprint();const r=await api("student_login",{full_name:name,device_fingerprint:fp,device_label:navigator.platform||"Browser",browser_name:navigator.userAgent,operating_system:navigator.platform,user_agent:navigator.userAgent});state.studentToken=r.session_token;state.student=r.student;state.deadline=r.deadline_at;enterWorkspace("student",r.student);if(r.question?.completed){toast("الاختبار مكتمل")}else{state.currentQuestion=r.question;}}
+async function fingerprint(){if(state.visitorFingerprint)return state.visitorFingerprint;let v=localStorage.getItem("shger_device_fp");if(!v){v=crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random();localStorage.setItem("shger_device_fp",v)}state.visitorFingerprint=v;return v}
+async function trackVisitor(){try{const fp=await fingerprint();await api("visitor_track",{visitor_fingerprint:fp,page:location.pathname,device_name:navigator.platform,browser_name:navigator.userAgent,operating_system:navigator.platform,user_agent:navigator.userAgent})}catch(e){console.warn("visitor tracking",e)}}
+function modal(title,body){$("#modalHost").innerHTML=`<div class="modal-backdrop"><div class="modal"><div class="between"><h2>${title}</h2><button class="icon-btn" data-close>✕</button></div>${body}</div></div>`}
+function askConfirm(title,message,yesLabel="تأكيد"){
+ return new Promise(resolve=>{
+  modal(title,`<p class="muted" style="line-height:2">${esc(message)}</p><div class="row" style="justify-content:flex-end;margin-top:18px"><button class="btn" id="confirmNo">إلغاء</button><button class="btn danger" id="confirmYes">${yesLabel}</button></div>`);
+  $("#confirmNo").onclick=()=>{$("#modalHost").innerHTML="";resolve(false)};
+  $("#confirmYes").onclick=()=>{$("#modalHost").innerHTML="";resolve(true)};
+ });
+}
+async function actionClick(a){
+ try{
+ if(a.startsWith("go:"))return navigate(a.split(":")[1]);
+ if(a==="refresh"){state.dashboard=null;return navigate(state.currentPage)}
+ if(a==="toggle-access"){const d=state.dashboard||await api("admin_dashboard",{},true);await api("admin_set_access",{student_access_enabled:!d.access.student_access_enabled,exam_locked:d.access.student_access_enabled,message:d.access.student_access_enabled?"تم إغلاق الدخول من لوحة الإدارة":"الدخول متاح"},true);toast("تم تحديث الدخول");state.dashboard=null;return navigate("home")}
+ if(a.startsWith("student-details:")){const id=a.split(":")[1],r=await api("admin_student_details",{student_id:id},true);modal("ملف الطالبة",`<h3>${esc(r.student?.full_name)}</h3><p>الرمز: ${esc(r.student?.student_code)}</p><p>الحالة: ${esc(r.student?.student_status)}</p><p>الجلسات: ${r.sessions.length} · الإجابات: ${r.answers.length} · التقارير: ${r.reports.length}</p><div class="row">${btn("حظر","block-student:"+id)}${btn("إلغاء الحظر","unblock-student:"+id)}${btn("تصفير الجلسات","reset-student:"+id)}${btn("تصدير بيانات","export-student:"+id)}</div>`);return}
+ if(a.startsWith("block-student:")||a.startsWith("unblock-student:")){const [act,id]=a.split(":");await api(act==="block-student"?"admin_block_student":"admin_unblock_student",{student_id:id,reason:"إجراء من لوحة الإدارة"},true);toast("تم تحديث حالة الطالبة");$("#modalHost").innerHTML="";state.dashboard=null;return navigate("students")}
+ if(a.startsWith("reset-student:")){const id=a.split(":")[1];if(await askConfirm("تصفير جلسات الطالبة","سيتم إلغاء الجلسات النشطة فقط مع الاحتفاظ بالسجلات السابقة.","تصفير الجلسات")){await api("admin_reset_student",{student_id:id},true);toast("تم إلغاء الجلسات");$("#modalHost").innerHTML="";return navigate("students")}return}
+ if(a==="export-all"){const r=await api("admin_export_all_students_zip",{},true);downloadData(r.download_url,r.file_name);return}
+ if(a.startsWith("export-student:")){const r=await api("admin_export_student",{student_id:a.split(":")[1]},true);downloadBlob(JSON.stringify(r.data,null,2),"student-data.json","application/json");return}
+ if(a.startsWith("view-report:")){const r=await api("admin_export_reports",{},true),x=r.reports.find(x=>x.id===a.split(":")[1]);modal("تقرير الاختبار",`<pre style="white-space:pre-wrap;max-height:65vh;overflow:auto;line-height:1.8">${esc(x?.report_text||"لا يوجد نص")}</pre>`);return}
+ if(a.startsWith("retry-telegram:")){await api("admin_retry_telegram",{report_id:a.split(":")[1]},true);toast("تمت إعادة محاولة الإرسال");return}
+ if(a.startsWith("edit-question:")){const r=await api("admin_questions",{},true),q=r.questions.find(x=>x.id===a.split(":")[1]);modal("تعديل السؤال",`<form id="editQuestion"><div class="field"><label>نص الآية</label><textarea name="verse_text" required>${esc(q.verse_text)}</textarea></div><div class="field"><label>المطلوب</label><textarea name="question_prompt" required>${esc(q.question_prompt)}</textarea></div><div class="form-grid"><div class="field"><label>الترتيب</label><input name="position" type="number" value="${q.position}"></div><label class="row"><input type="checkbox" name="is_active" ${q.is_active?"checked":""}> نشط</label></div><button class="btn primary">حفظ</button></form>`);$("#editQuestion").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);await api("admin_update_question",{question_id:q.id,verse_text:f.get("verse_text"),question_prompt:f.get("question_prompt"),position:Number(f.get("position")),is_active:f.has("is_active")},true);$("#modalHost").innerHTML="";toast("تم تعديل السؤال");renderQuestions()};return}
+ if(a.startsWith("delete-question:")){const id=a.split(":")[1];if(await askConfirm("حذف السؤال","هل أنتِ متأكدة من حذف هذا السؤال؟","حذف السؤال")){await api("admin_delete_question",{question_id:id},true);toast("تم الحذف");renderQuestions()}return}
+ if(a.startsWith("read-notification:")){await api("admin_mark_notification_read",{notification_id:a.split(":")[1]},true);return navigate("notifications")}
+ if(a==="read-all"){await api("admin_mark_notifications_read",{},true);toast("تم تعليم الإشعارات كمقروءة");return navigate("notifications")}
+ if(a.startsWith("reply-message:")){const id=a.split(":")[1];modal("الرد على الطالبة",`<form id="replyForm"><div class="field"><label>نص الرد</label><textarea name="content" required></textarea></div><button class="btn primary">إرسال الرد</button></form>`);$("#replyForm").onsubmit=async e=>{e.preventDefault();await api("admin_reply_message",{parent_id:id,content:new FormData(e.target).get("content")},true);$("#modalHost").innerHTML="";toast("تم إرسال الرد");renderMessages()};return}
+ if(a.startsWith("delete-message:")){if(await askConfirm("حذف الرسالة","سيتم حذف الرسالة والردود المرتبطة بها.","حذف")){await api("admin_delete_message",{message_id:a.split(":")[1]},true);toast("تم الحذف");renderMessages()}return}
+ if(a.startsWith("block-messaging:")){await api("admin_block_messaging",{student_id:a.split(":")[1],blocked:true},true);toast("تم إيقاف المراسلة");return}
+ if(a.startsWith("delete-note:")){await api("admin_delete_note",{note_id:a.split(":")[1]},true);toast("تم حذف الملاحظة");return}
+ if(a.startsWith("visitor-history:")){const r=await api("admin_visitor_history",{visitor_id:a.split(":")[1]},true);modal("سجل الزائر",simpleRows(r.history,x=>`${x.title||x.record_type} · ${x.content||""} · ${date(x.created_at)}`));return}
+ if(a.startsWith("visitor-block:")){const [,id,v]=a.split(":");await api("admin_block_visitor",{visitor_id:id,blocked:v==="true",reason:"إجراء إداري"},true);toast("تم تحديث حالة الزائر");return navigate("visitors")}
+ if(a.startsWith("visitor-rename:")){const id=a.split(":")[1];modal("تسمية الزائر",`<form id="renameVisitor"><div class="field"><label>الاسم الجديد</label><input name="visitor_name" required></div><button class="btn primary">حفظ</button></form>`);$("#renameVisitor").onsubmit=async e=>{e.preventDefault();await api("admin_rename_visitor",{visitor_id:id,visitor_name:new FormData(e.target).get("visitor_name")},true);$("#modalHost").innerHTML="";toast("تم تحديث الاسم");renderVisitors()};return}
+ if(a.startsWith("resolve-incident:")){const id=a.split(":")[1];modal("معالجة الحادثة",`<form id="resolveForm"><div class="field"><label>الحالة</label><select name="status"><option value="investigating">قيد التحقيق</option><option value="contained">تم الاحتواء</option><option value="resolved">تم الحل</option><option value="dismissed">تجاهل</option></select></div><div class="field"><label>ملاحظة المعالجة</label><textarea name="resolution_note"></textarea></div><button class="btn primary">حفظ الحالة</button></form>`);$("#resolveForm").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);await api("admin_security_center_resolve_incident",{incident_id:id,status:f.get("status"),resolution_note:f.get("resolution_note")},true);$("#modalHost").innerHTML="";toast("تم تحديث الحادثة");renderSecurityCenter()};return}
+ if(a.startsWith("lift-control:")){const id=a.split(":")[1];modal("رفع الإيقاف",`<form id="liftForm"><div class="field"><label>سبب رفع الإيقاف</label><textarea name="reason" required></textarea></div><button class="btn primary">رفع الإيقاف</button></form>`);$("#liftForm").onsubmit=async e=>{e.preventDefault();await api("admin_security_center_lift_control",{control_id:id,reason:new FormData(e.target).get("reason")},true);$("#modalHost").innerHTML="";toast("تم رفع الإيقاف");renderSecurityCenter()};return}
+ if(a==="logout"){showLogin();return}
+ }catch(e){toast(e.message,"error")}
+}
+function downloadBlob(text,name,type){const b=new Blob([text],{type}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;a.click();URL.revokeObjectURL(u)}
+function downloadData(url,name){const a=document.createElement("a");a.href=url;a.download=name;a.click()}
+$("#navigation").addEventListener("click",e=>{const b=e.target.closest("[data-page]");if(b)navigate(b.dataset.page)});
+$("#pageContent").addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(b)actionClick(b.dataset.action)});
+$("#pageContent").addEventListener("submit",async e=>{if(e.target.id==="answerForm"){e.preventDefault();try{const q=state.currentQuestion;const r=await api("submit_answer",{session_token:state.studentToken,question_id:q.id,visit_id:q.visit_id,answer_text:$("#answerText").value});toast("تم حفظ الإجابة");if(r.question?.completed){stopTimer();$("#pageContent").innerHTML=`<div class="card hero"><h2>أكملتِ الاختبار بنجاح</h2><p>تم حفظ إجاباتك وإنشاء تقرير الاختبار.</p></div>`}else{state.currentQuestion=r.question;renderStudentPage("home")}}catch(err){toast(err.message,"error")}}});
+$("#pageContent").addEventListener("paste",async e=>{if(state.role!=="student"||!e.target.matches("textarea,input"))return;state.pasteAttempts++;try{const text=(e.clipboardData||window.clipboardData).getData("text");await api("student_paste_event",{session_token:state.studentToken,pasted_text:text,question_id:state.currentQuestion?.id,attempt_count:state.pasteAttempts});if(state.exam?.paste_block_enabled)e.preventDefault()}catch(err){console.warn(err)}});
+$("#pageContent").addEventListener("contextmenu",e=>{if(state.role==="student"&&state.exam?.paste_block_enabled)e.preventDefault()});
+$("#pageContent").addEventListener("copy",e=>{if(state.role==="student"&&state.exam?.paste_block_enabled)e.preventDefault()});
+$("#menuToggle").onclick=()=>$("#sidebar").classList.toggle("open");
+$("#settingsBtn").onclick=openSettings;
+$("#refreshBtn").onclick=()=>{state.dashboard=null;navigate(state.currentPage)};
+$("#logoutBtn").onclick=()=>{if(state.role==="student")api("record_activity",{session_token:state.studentToken,event_type:"student_logout"}).catch(()=>{});showLogin()};
+$("#sidebarLogout").onclick=()=>$("#logoutBtn").click();
+$$("[data-login-tab]").forEach(b=>b.onclick=()=>{state.loginTab=b.dataset.loginTab;$$("[data-login-tab]").forEach(x=>x.classList.toggle("active",x===b));$("#studentLoginForm").classList.toggle("hidden",state.loginTab!=="student");$("#adminLoginForm").classList.toggle("hidden",state.loginTab==="student");$("#adminPasswordLabel").textContent=state.loginTab==="director"?"كلمة مرور المديرة":"كلمة مرور الأستاذة"});
+$("#studentLoginForm").onsubmit=async e=>{e.preventDefault();try{await studentLogin($("#studentFullName").value.trim());toast("تم تسجيل الدخول");}catch(err){toast(err.message,"error")}};
+$("#adminLoginForm").onsubmit=async e=>{e.preventDefault();try{const r=await api(state.loginTab==="director"?"director_login":"teacher_login",{password:$("#adminPassword").value});state.adminToken=r.token;enterWorkspace(r.role,{full_name:r.role==="director"?"المديرة":"الأستاذة"});toast("تم تسجيل الدخول بنجاح")}catch(err){toast(err.message,"error")}};
+$("#modalHost").addEventListener("submit",async e=>{
+ if(e.target.id==="controlForm"){
+  e.preventDefault();
+  try{
+   const f=new FormData(e.target),target=f.get("target_type"),targetId=f.get("target_id"),key=f.get("control_key");
+   if(target==="student"&&!targetId){toast("اختاري الطالبة أولاً","error");return}
+   const data={target_type:target,control_key:key,reason:f.get("reason"),...(target==="student"?{target_id:targetId}:{}),...(f.get("ends_at")?{ends_at:new Date(f.get("ends_at")).toISOString()}:{})};
+   await api("admin_security_center_create_control",data,true);
+   toast("تم إنشاء الإيقاف الأمني");renderSecurityCenter();
+  }catch(err){toast(err.message,"error")}
+ }
+});
+document.addEventListener("click",e=>{if(e.target.matches("[data-close]"))$("#modalHost").innerHTML=""});
+(async()=>{if(!state.apiUrl){setConnection(false,"أدخلي رابط API");$("#publicNotice").textContent="اضغطي ⚙ لإضافة رابط Supabase Edge Function أولاً."}else{try{await loadPublic();await trackVisitor()}catch(e){setConnection(false,"تعذر الاتصال");$("#publicNotice").textContent=e.message}}})();
+})();
+</script>
+</body>
+</html>
