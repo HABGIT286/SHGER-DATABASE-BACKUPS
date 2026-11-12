@@ -770,14 +770,17 @@ localStorage.setItem(STORAGE.theme,document.body.classList.contains("day")?"day"
 
 /* اتصال Supabase */
 async function api(action,payload={}){
-const response=await fetch(API_URL,{
+let response;
+try{
+response=await fetch(API_URL,{
 method:"POST",
 mode:"cors",
-headers:{
-"Content-Type":"application/json"
-},
+headers:{"Content-Type":"application/json"},
 body:JSON.stringify({action,...payload})
 });
+}catch(networkError){
+throw Error("تعذر الاتصال بدالة SHGER. تحققي من نشر clever-processor، وإيقاف Verify JWT، ومن إعدادات CORS والإنترنت. التفاصيل: "+(networkError?.message||"NetworkError"));
+}
 
 let data;
 try{data=await response.json();}
