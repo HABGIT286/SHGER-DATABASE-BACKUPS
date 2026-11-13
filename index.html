@@ -330,7 +330,7 @@ footer{text-align:center;padding:20px 0;color:var(--muted);font-size:9px}
 <div class="question-box">
 <div style="font-size:10px;color:var(--gold)">السؤال الحالي</div>
 <div class="verse" id="verseText"></div>
-<div class="prompt" id="questionPrompt"></div>
+<div class="prompt" id="currentQuestionPrompt"></div>
 </div>
 <div class="field">
 <label>إجابتك</label>
@@ -556,10 +556,10 @@ footer{text-align:center;padding:20px 0;color:var(--muted);font-size:9px}
 
 <div id="tab-storage" class="hidden">
 <h3 class="panel-title">إدارة تخزين ودورة الاختبار</h3>
-<p class="panel-sub">من هنا تستطيعين مسح تسجيلات الطالبات وإجاباتهن وتقاريرهن وجلساتهن لبدء اختبار جديد، مع الاحتفاظ بالأسئلة وإعدادات الموقع.</p>
+<p class="panel-sub">من هنا تستطيعين إغلاق المحاولات والجلسات التشغيلية لبدء دورة جديدة، مع الاحتفاظ بالإجابات والدرجات والسجلات التاريخية والأسئلة والإعدادات.</p>
 
 <div class="notice">
-عملية المسح يجب أن ينفذها الخادم داخل معاملة قاعدة بيانات. لن يحذف هذا الإجراء الأسئلة أو إعدادات الأستاذة.
+تُغلق المحاولات والجلسات من الخادم مع الاحتفاظ بالإجابات والدرجات والأحداث التاريخية. لا تُحذف السجلات.
 </div>
 
 <div class="detail-grid">
@@ -572,11 +572,11 @@ footer{text-align:center;padding:20px 0;color:var(--muted);font-size:9px}
 <div style="height:15px"></div>
 <button class="btn danger full" onclick="clearExamData()">
 <i data-lucide="database-zap"></i>
-مسح بيانات الطالبات وبدء دورة جديدة
+إغلاق المحاولات الحالية وبدء دورة جديدة
 </button>
 
 <div class="notice">
-سيتم طلب تأكيدين قبل المسح. إذا لم تكن عملية المسح الكاملة مضافة في الخادم، سيرفض الموقع الطلب ولن يدّعي نجاح الحذف.
+سيُطلب تأكيدان قبل الإغلاق. هذه العملية لا تحذف إجابات الطالبات أو درجاتهن أو سجلاتهن التاريخية.
 </div>
 </div>
 
@@ -624,8 +624,10 @@ footer{text-align:center;padding:20px 0;color:var(--muted);font-size:9px}
 <script>
 "use strict";
 
-/* إعداد الاتصال */
-const API_URL="https://kkhmmbozjhzdawsmrgoa.supabase.co/functions/v1/clever-processor";
+/* إعداد الاتصال بمشروع Supabase الجديد */
+const SUPABASE_URL="https://kkhmmbozjhzdawsmrgoa.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_W50rHZNSn1ZNszlEdD6LGg_LQjBQiPj";
+const API_URL=`${SUPABASE_URL}/functions/v1/clever-processor`;
 
 const STORAGE={
 studentToken:"shger_student_session",
@@ -775,7 +777,7 @@ try{
 response=await fetch(API_URL,{
 method:"POST",
 mode:"cors",
-headers:{"Content-Type":"application/json"},
+headers:{"Content-Type":"application/json","apikey":SUPABASE_PUBLISHABLE_KEY},
 body:JSON.stringify({action,...payload})
 });
 }catch(networkError){
@@ -928,7 +930,7 @@ currentQuestion=question;
 questionOpenedAt=question.opened_at||new Date().toISOString();
 
 $("verseText").textContent=question.verse_text||"";
-$("questionPrompt").textContent=question.question_prompt||"";
+$("currentQuestionPrompt").textContent=question.question_prompt||"";
 $("answerText").value="";
 $("answerText").disabled=false;
 $("submitButton").disabled=false;
@@ -1857,13 +1859,13 @@ showError("teacherErrorBox",error.message);
 /* مسح جميع تسجيلات دورة الاختبار */
 async function clearExamData(){
 
-const first=await shgerConfirm("تنبيه مهم:\nسيتم حذف محاولات الاختبار وإجاباتها ودرجاتها وجلساتها. ستبقى ملفات الطالبات والأسئلة وإعدادات الموقع. هل تريدين المتابعة؟","مسح بيانات الاختبار");
+const first=await shgerConfirm("تنبيه مهم:\nسيتم إغلاق المحاولات الجارية وإلغاء جلساتها التشغيلية مع الاحتفاظ بالإجابات والدرجات والسجل التاريخي. لن تُحذف بيانات الطالبات. هل تريدين المتابعة؟","أرشفة المحاولات الحالية");
 
 if(!first)return;
 
-const second=await shgerPrompt("للتأكيد النهائي اكتبي العبارة التالية حرفياً:\nمسح بيانات الاختبار","","تأكيد نهائي للمسح");
+const second=await shgerPrompt("للتأكيد النهائي اكتبي العبارة التالية حرفياً:\nأرشفة المحاولات الحالية","","تأكيد نهائي للمسح");
 
-if(second!=="مسح بيانات الاختبار"){
+if(second!=="أرشفة المحاولات الحالية"){
 toast("تم إلغاء عملية المسح");
 return;
 }
@@ -1878,7 +1880,7 @@ preserve_questions:true,
 preserve_settings:true
 });
 
-toast(result.message||"تم تنفيذ عملية المسح");
+toast(result.message||"تم إغلاق المحاولات مع الاحتفاظ بالسجل التاريخي");
 await loadDashboard();
 
 }catch(error){
