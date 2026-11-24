@@ -1,0 +1,45 @@
+name: Run Telegram Library Bot
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Validate Telegram token
+        env:
+          TOKKEN: ${{ secrets.TOKKEN }}
+        run: |
+          python - <<'PY'
+          import os, json, urllib.request
+          token=os.getenv('TOKKEN','').strip()
+          if not token:
+              raise SystemExit('Missing repository secret TOKKEN')
+          req=urllib.request.Request(f'https://api.telegram.org/bot{token}/getMe')
+          with urllib.request.urlopen(req, timeout=20) as response:
+              data=json.load(response)
+          if not data.get('ok'):
+              raise SystemExit('Telegram token validation failed')
+          print('Token valid. Bot username:', data['result'].get('username'))
+          PY
+      - name: Start bot polling
+        env:
+          TOKKEN: ${{ secrets.TOKKEN }}
+          ADMIN_ID: ${{ secrets.ADMIN_ID }}
+          ADMIN_CODE: ${{ secrets.ADMIN_CODE }}
+          GROUP_LINK: ${{ secrets.GROUP_LINK }}
+          DB_PATH: library.sqlite3
+        run: python bot.py --bot-only
