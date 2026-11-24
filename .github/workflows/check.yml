@@ -1,0 +1,34 @@
+name: Validate Business Library
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Check bot token secret (optional API check)
+        env:
+          TOKKEN: ${{ secrets.TOKKEN }}
+        run: |
+          python - <<'PY'
+          import os, sys, urllib.request, json
+          token=os.getenv('TOKKEN','')
+          if not token:
+              print('TOKKEN secret not configured; skipping Telegram API check.')
+              sys.exit(0)
+          req=urllib.request.Request(f'https://api.telegram.org/bot{token}/getMe')
+          with urllib.request.urlopen(req,timeout=15) as r:
+              data=json.load(r)
+          if not data.get('ok'):
+              raise SystemExit('Telegram token validation failed')
+          print('Telegram token valid for bot:', data['result'].get('username'))
+          PY
+      - name: Python syntax check
+        run: python -m py_compile bot.py
