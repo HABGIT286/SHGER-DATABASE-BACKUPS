@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command, CommandStart
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -91,17 +92,16 @@ async def file_proxy(book_id:str):
 async def start(m:Message,state:FSMContext):
  await state.clear()
  name=m.from_user.first_name or 'طالب'
- # Explicit InlineKeyboardMarkup avoids builder/type conversion issues.
+ # Inline buttons are attached to the message; no reply keyboard is shown.
+ builder=InlineKeyboardBuilder()
  site_url=os.getenv('SITE_URL','').strip()
- rows=[]
  if site_url and site_url.startswith(('https://','http://')):
-  rows.append([InlineKeyboardButton(text='📚 فتح المكتبة',url=site_url)])
- rows.append([
+  builder.row(InlineKeyboardButton(text='📚 فتح المكتبة',url=site_url))
+ builder.row(
   InlineKeyboardButton(text='👥 JOIN GROUP',url=GROUP_LINK),
   InlineKeyboardButton(text='🤖 MY BOT',url='https://t.me/ONX44')
- ])
- rows.append([InlineKeyboardButton(text='📤 طريقة إضافة كتاب',callback_data='help:upload')])
- kb=InlineKeyboardMarkup(inline_keyboard=rows)
+ )
+ kb=builder.as_markup()
  await m.answer(
   f'أهلاً بك {html.escape(name)} ✨\n\nمكتبة طلاب إدارة الأعمال — لإضافة كتاب أرسل الملف مباشرة إلى البوت، ثم اكتب عنوانه ووصفه.',
   reply_markup=kb
@@ -114,9 +114,6 @@ async def receive_doc(m:Message,state:FSMContext):
  await state.set_state(UploadFlow.title);await m.answer('📖 وصل الملف بنجاح.\n\nأرسل الآن <b>عنوان الكتاب</b> الذي سيظهر في المكتبة.',parse_mode='HTML')
 @dp.message(UploadFlow.title)
 async def title_received(m:Message,state:FSMContext):
- if not m.text or not m.text.strip():
-  await m.answer('أرسل عنوانًا نصيًا للكتاب من فضلك.')
-  return
  await state.update_data(title=m.text.strip()[:250]);await state.set_state(UploadFlow.description);await m.answer('✍️ أرسل وصف الكتاب أو ملاحظة أو رابط.\nإذا لا توجد ملاحظة، اكتب: بدون')
 @dp.message(UploadFlow.description)
 async def desc_received(m:Message,state:FSMContext):
@@ -135,21 +132,15 @@ async def confirm_upload(q:CallbackQuery,state:FSMContext):
 @dp.callback_query(F.data=='upload:cancel')
 async def cancel_upload(q:CallbackQuery,state:FSMContext):await state.clear();await q.message.edit_text('تم إلغاء رفع الكتاب.');await q.answer()
 
-# Admin: /admin -> enter ADMIN_CODE -> select a book from inline list.
-@dp.callback_query(F.data=='help:upload')
-async def upload_help(q:CallbackQuery):
- await q.message.answer('📤 <b>طريقة إضافة كتاب</b>\n1) أرسل ملف الكتاب مباشرة إلى البوت.\n2) اكتب عنوان الكتاب.\n3) اكتب الوصف أو الرابط، أو اكتب «بدون».\n4) راجع التفاصيل واضغط «رفع الآن».',parse_mode='HTML')
- await q.answer()
-
+# Admin: send ADMIN_CODE as a standalone message, then choose book and action.
 @dp.message(AdminFlow.code)
 async def admin_code(m:Message,state:FSMContext):
  if not is_admin(m.from_user.id) or not ADMIN_CODE or m.text!=ADMIN_CODE:await state.clear();await m.answer('رمز غير صحيح أو لا تملك صلاحية الإدارة.');return
  await state.clear();books=book_rows()
  if not books:await m.answer('لا توجد ملفات مسجلة.');return
  await state.set_state(AdminFlow.pick);await state.update_data(admin_ok=True)
- listing='\n'.join(f'{i+1}. {html.escape(b.get("title") or b.get("file_name") or "كتاب")}' for i,b in enumerate(books))
- kb=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=f'{i+1}. {((b.get("title") or b.get("file_name") or "كتاب")[:45])}',callback_data=f'admin:select:{b["id"]}')] for i,b in enumerate(books)])
- await m.answer('🛠 <b>لوحة إدارة الكتب</b>\n\n'+listing+'\n\nاختر الكتاب من الأزرار التالية:',parse_mode='HTML',reply_markup=kb)
+ await m.answer('🛠 <b>لوحة إدارة الكتب</b>\n\n'+ '\n'.join(f'{i+1}. {html.escape(b.get("title") or b.get("file_name") or "كتاب")} — {b["id"]}' for i,b in enumerate(books)),parse_mode='HTML')
+ await m.answer('أرسل رقم الكتاب الذي تريد تعديله.')
 @dp.message(AdminFlow.pick)
 async def admin_pick(m:Message,state:FSMContext):
  try:idx=int(m.text)-1;books=book_rows();b=books[idx]
@@ -159,31 +150,18 @@ async def admin_pick(m:Message,state:FSMContext):
  await m.answer(f'اختر الإجراء للكتاب: <b>{html.escape(b.get("title") or "بدون عنوان")}</b>',parse_mode='HTML',reply_markup=kb)
 @dp.callback_query(F.data.startswith('admin:'))
 async def admin_action(q:CallbackQuery,state:FSMContext):
- if not is_admin(q.from_user.id):
-  await q.answer('هذا الخيار خاص بالمدير.',show_alert=True);return
- parts=q.data.split(':')
- if len(parts)==3 and parts[1]=='select':
-  bid=parts[2];b=get_book(bid)
-  if not b:await q.answer('الكتاب غير موجود',show_alert=True);return
-  await state.update_data(book_id=bid);await state.set_state(AdminFlow.action)
-  kb=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='✏️ تعديل عنوان الكتاب',callback_data='admin:title')],[InlineKeyboardButton(text='📝 تعديل الوصف أو الرابط',callback_data='admin:desc')],[InlineKeyboardButton(text='🗑 حذف الكتاب',callback_data='admin:delete')],[InlineKeyboardButton(text='📌 تثبيت / إلغاء التثبيت',callback_data='admin:pin')]])
-  await q.message.answer(f'📘 الكتاب المحدد: <b>{html.escape(b.get("title") or b.get("file_name") or "بدون عنوان")}</b>\nاختر العملية:',parse_mode='HTML',reply_markup=kb)
-  await q.answer();return
  data=await state.get_data();bid=data.get('book_id');b=get_book(bid)
  if not b:await q.answer('الكتاب غير موجود',show_alert=True);return
- action=parts[1] if len(parts)>1 else ''
- if action=='title':await state.set_state(AdminFlow.edit_title);await q.message.answer('✏️ أرسل العنوان الجديد:')
- elif action=='desc':await state.set_state(AdminFlow.edit_description);await q.message.answer('📝 أرسل الوصف الجديد أو الرابط. اكتب «بدون» لمسح الوصف:')
+ action=q.data.split(':')[1]
+ if action=='title':await state.set_state(AdminFlow.edit_title);await q.message.answer('أرسل العنوان الجديد:')
+ elif action=='desc':await state.set_state(AdminFlow.edit_description);await q.message.answer('أرسل الوصف الجديد أو الرابط. اكتب «بدون» لمسح الوصف:')
  elif action=='delete':
-  c=sqlite3.connect(DB);c.execute('DELETE FROM books WHERE id=?',(bid,));c.commit();c.close();await state.clear();await q.message.answer('🗑 حُذف الكتاب من المكتبة بنجاح.');
+  c=sqlite3.connect(DB);c.execute('DELETE FROM books WHERE id=?',(bid,));c.commit();c.close();await state.clear();await q.message.answer('حُذف الكتاب من الموقع.');
  elif action=='pin':
-  c=sqlite3.connect(DB);c.execute('UPDATE books SET pinned=? WHERE id=?',(0 if b['pinned'] else 1,bid));c.commit();c.close();await state.clear();await q.message.answer('📌 تم تحديث حالة تثبيت الكتاب.')
+  c=sqlite3.connect(DB);c.execute('UPDATE books SET pinned=? WHERE id=?',(0 if b['pinned'] else 1,bid));c.commit();c.close();await state.clear();await q.message.answer('تم تحديث حالة تثبيت الكتاب.');
  await q.answer()
 @dp.message(AdminFlow.edit_title)
 async def edit_title(m:Message,state:FSMContext):
- if not m.text or not m.text.strip():
-  await m.answer('أرسل العنوان كنص من فضلك.')
-  return
  d=await state.get_data();c=sqlite3.connect(DB);c.execute('UPDATE books SET title=? WHERE id=?',(m.text.strip()[:250],d['book_id']));c.commit();c.close();await state.clear();await m.answer('تم تحديث العنوان.')
 @dp.message(AdminFlow.edit_description)
 async def edit_description(m:Message,state:FSMContext):
