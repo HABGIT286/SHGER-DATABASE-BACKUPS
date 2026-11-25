@@ -1,1381 +1,407 @@
-
+"""Business Administration Library: Telegram bot + FastAPI API.
+Environment: TOKKEN, ADMIN_ID, ADMIN_CODE, GROUP_LINK, SITE_URL, PORT(optional).
 """
-Business Administration Library
-Telegram Bot + FastAPI + SQLite
-Inline keyboard only.
-"""
-
 from __future__ import annotations
-
-import os
-import re
-import json
-import time
-import uuid
-import html
-import asyncio
-import logging
-import sqlite3
-import mimetypes
-
+import os, html, sqlite3, logging, asyncio, uuid, mimetypes
 from pathlib import Path
+from datetime import datetime, timezone
 from contextlib import asynccontextmanager
-from typing import Optional
+from typing import Any
 
+import httpx
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse, StreamingResponse
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command, CommandStart
-from aiogram.types import (
-    Message,
-    CallbackQuery,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
-)
-from aiogram.enums import ParseMode
-from aiogram.client.default import DefaultBotProperties
-from aiogram.exceptions import TelegramBadRequest, TelegramConflictError
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.storage.memory import MemoryStorage
 
-from fastapi import FastAPI, HTTPException, Request, Query
-from fastapi.responses import (
-    FileResponse,
-    HTMLResponse,
-    JSONResponse,
-)
-from fastapi.middleware.cors import CORSMiddleware
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger("business_library")
 
-
-# =========================================================
-# CONFIGURATION
-# =========================================================
-
-BASE = Path(__file__).resolve().parent
-
+ROOT = Path(__file__).resolve().parent
 TOKEN = os.getenv("TOKKEN", "").strip()
-ADMIN_ID = os.getenv("ADMIN_ID", "").strip()
 ADMIN_CODE = os.getenv("ADMIN_CODE", "").strip()
-
-GROUP_LINK = os.getenv(
-    "GROUP_LINK",
-    "https://t.me/+mZe3EZzQBCYxOTUy"
-).strip()
-
+try:
+    ADMIN_ID = int(os.getenv("ADMIN_ID", "0") or "0")
+except ValueError:
+    ADMIN_ID = 0
+GROUP_LINK = os.getenv("GROUP_LINK", "https://t.me/+mZe3EZzQBCYxOTUy").strip()
 SITE_URL = os.getenv("SITE_URL", "").strip()
+DATA_DIR = Path(os.getenv("DATA_DIR", str(ROOT))).resolve()
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+DB_PATH = DATA_DIR / "library.sqlite3"
 
-DEV_LINK = "https://t.me/ONX44"
-
-DB_PATH = BASE / "library.sqlite3"
-
-BOT_USERNAME = ""
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
-)
-
-logger = logging.getLogger("business_library")
+bot: Bot | None = Bot(TOKEN) if TOKEN else None
+dp: Dispatcher | None = Dispatcher(storage=MemoryStorage()) if bot else None
 
 
-# =========================================================
-# VALIDATION
-# =========================================================
+class Upload(StatesGroup):
+    title = State()
+    description = State()
+    review = State()
 
-if not TOKEN:
-    raise RuntimeError(
-        "TOKKEN is missing. Add it to GitHub Actions Secrets."
-    )
-
-
-# =========================================================
-# BOT
-# =========================================================
-
-bot = Bot(
-    token=TOKEN,
-    default=DefaultBotProperties(
-        parse_mode=ParseMode.HTML
-    )
-)
-
-dp = Dispatcher()
+class Admin(StatesGroup):
+    code = State()
+    select = State()
+    title = State()
+    description = State()
 
 
-# =========================================================
-# DATABASE
-# =========================================================
+def connect() -> sqlite3.Connection:
+    con = sqlite3.connect(DB_PATH, timeout=30)
+    con.row_factory = sqlite3.Row
+    return con
 
-def db():
-    conn = sqlite3.connect(DB_PATH, timeout=30)
-    conn.row_factory = sqlite3.Row
+def init_db() -> None:
+    with connect() as con:
+        con.execute("""CREATE TABLE IF NOT EXISTS books (
+            id TEXT PRIMARY KEY, telegram_file_id TEXT NOT NULL, file_name TEXT,
+            title TEXT, description TEXT, file_size INTEGER, mime_type TEXT,
+            created_at TEXT, uploader_id INTEGER, pinned INTEGER NOT NULL DEFAULT 0
+        )""")
+        con.execute("CREATE TABLE IF NOT EXISTS stats (key TEXT PRIMARY KEY, value INTEGER NOT NULL DEFAULT 0)")
+        con.executemany("INSERT OR IGNORE INTO stats(key,value) VALUES(?,0)", [("visits",), ("downloads",)])
 
-    conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA foreign_keys=ON")
+def list_books() -> list[dict[str, Any]]:
+    with connect() as con:
+        return [dict(row) for row in con.execute("SELECT * FROM books ORDER BY pinned DESC, created_at DESC")]
 
-    return conn
+def get_book(book_id: str) -> dict[str, Any] | None:
+    with connect() as con:
+        row = con.execute("SELECT * FROM books WHERE id=?", (book_id,)).fetchone()
+        return dict(row) if row else None
 
+def stat_values() -> dict[str, int]:
+    with connect() as con:
+        return {row["key"]: row["value"] for row in con.execute("SELECT key,value FROM stats")}
 
-def init_db():
-    with db() as conn:
+def inc_stat(key: str) -> None:
+    with connect() as con:
+        con.execute("UPDATE stats SET value=value+1 WHERE key=?", (key,))
 
-        conn.executescript("""
-        CREATE TABLE IF NOT EXISTS files (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            filename TEXT NOT NULL,
-            description TEXT DEFAULT '',
-            category TEXT DEFAULT 'عام',
-            uploader INTEGER DEFAULT 0,
-            file_id TEXT DEFAULT '',
-            file_type TEXT DEFAULT '',
-            size INTEGER DEFAULT 0,
-            downloads INTEGER DEFAULT 0,
-            likes INTEGER DEFAULT 0,
-            pinned INTEGER DEFAULT 0,
-            published INTEGER DEFAULT 1,
-            created_at INTEGER DEFAULT 0
-        );
+def is_admin(uid: int | None) -> bool:
+    return bool(uid and ADMIN_ID and uid == ADMIN_ID)
 
-        CREATE TABLE IF NOT EXISTS likes (
-            user_id INTEGER NOT NULL,
-            file_id INTEGER NOT NULL,
-            PRIMARY KEY(user_id, file_id)
-        );
+def safe_text(value: Any) -> str:
+    return html.escape(str(value or ""))
 
-        CREATE TABLE IF NOT EXISTS visits (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            visitor TEXT DEFAULT '',
-            created_at INTEGER DEFAULT 0
-        );
-
-        CREATE TABLE IF NOT EXISTS downloads (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            file_id INTEGER NOT NULL,
-            visitor TEXT DEFAULT '',
-            created_at INTEGER DEFAULT 0
-        );
-
-        CREATE TABLE IF NOT EXISTS activity (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            action TEXT NOT NULL,
-            user_id INTEGER DEFAULT 0,
-            details TEXT DEFAULT '',
-            created_at INTEGER DEFAULT 0
-        );
-        """)
-
-        conn.commit()
+# Each inline button is created with exactly one action field: URL or callback_data.
+def url_button(label: str, url: str) -> InlineKeyboardButton:
+    return InlineKeyboardButton(text=label, url=url)
+def callback_button(label: str, callback: str) -> InlineKeyboardButton:
+    return InlineKeyboardButton(text=label, callback_data=callback)
 
 
-def log_activity(action, user_id=0, details=""):
-    with db() as conn:
-        conn.execute(
-            """
-            INSERT INTO activity(action, user_id, details, created_at)
-            VALUES(?,?,?,?)
-            """,
-            (action, user_id, details, int(time.time()))
-        )
-
-
-def get_file(file_id):
-    with db() as conn:
-        return conn.execute(
-            "SELECT * FROM files WHERE id=?",
-            (file_id,)
-        ).fetchone()
-
-
-def file_exists(file_id):
-    with db() as conn:
-        return conn.execute(
-            "SELECT id FROM files WHERE id=?",
-            (file_id,)
-        ).fetchone() is not None
-
-
-# =========================================================
-# INLINE KEYBOARDS
-# All buttons are InlineKeyboardButton.
-# =========================================================
-
-def main_keyboard():
-
-    rows = []
-
-    if SITE_URL:
-        rows.append([
-            InlineKeyboardButton(
-                text="📚 فتح المكتبة الإلكترونية",
-                url=SITE_URL
-            )
-        ]
-
-    rows.extend([
-        [
-            InlineKeyboardButton(
-                text="📖 مجموعة المكتبة",
-                url=GROUP_LINK
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text="ℹ️ معلومات المكتبة",
-                callback_data="library_info"
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text="👨‍💻 المطور",
-                url=DEV_LINK
-            )
-        ],
-    ])
-
+def home_keyboard() -> InlineKeyboardMarkup:
+    rows: list[list[InlineKeyboardButton]] = []
+    if SITE_URL.startswith(("https://", "http://")):
+        rows.append([url_button("📚 فتح المكتبة", SITE_URL)])
+    if GROUP_LINK.startswith(("https://", "http://")):
+        rows.append([url_button("👥 JOIN GROUP", GROUP_LINK), url_button("🤖 MY BOT", "https://t.me/ONX44")])
+    rows.append([callback_button("📤 طريقة إضافة كتاب", "help:upload")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
-
-def info_keyboard():
-
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="📚 المكتبة",
-                    url=SITE_URL
-                )
-            ] if SITE_URL else [
-                InlineKeyboardButton(
-                    text="📖 المجموعة",
-                    url=GROUP_LINK
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🔙 العودة",
-                    callback_data="home"
-                )
-            ]
-        ]
-    )
-
-
-def admin_keyboard():
-
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="📚 عرض الملفات",
-                    callback_data="admin_files"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="📊 الإحصائيات",
-                    callback_data="admin_stats"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🔙 الرئيسية",
-                    callback_data="home"
-                )
-            ]
-        ]
-    )
-
-
-def file_admin_keyboard(file_id):
-
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="📌 تثبيت / إلغاء تثبيت",
-                    callback_data=f"pin:{file_id}"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="✏️ تعديل الوصف",
-                    callback_data=f"edit:{file_id}"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🗑 حذف الملف",
-                    callback_data=f"delete:{file_id}"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🔙 الإدارة",
-                    callback_data="admin_files"
-                )
-            ]
-        ]
-    )
-
-
-# =========================================================
-# ADMIN STATE
-# =========================================================
-
-admin_sessions = set()
-awaiting_admin_code = set()
-awaiting_description = set()
-awaiting_edit_description = {}
-
-pending_uploads = {}
-
-
-def is_admin(user_id):
-    if not ADMIN_ID:
-        return False
-
-    return str(user_id) == ADMIN_ID
-
-
-def admin_allowed(user_id):
-    return user_id in admin_sessions and is_admin(user_id)
-
-
-# =========================================================
-# START
-# =========================================================
-
-@dp.message(CommandStart())
-async def start(message: Message):
-
-    text = (
-        "╭━━━ ❮Ᏼ𝙾𝙾𝙺 • 𝗕𝗢𝗧 ❯ ━━━╮\n\n"
-        "أهلاً بك في المكتبة الإلكترونية "
-        "الخاصة بقسم إدارة الأعمال 📚\n\n"
-        "منصة تجمع الكتب والملازم والمواد "
-        "الدراسية وتتيح الوصول إليها بسهولة.\n\n"
-        "اختر أحد الخيارات أدناه:\n\n"
-        "╰━━━━━━━━━━━━━━━━━━╯"
-    )
-
-    await message.answer(
-        text,
-        reply_markup=main_keyboard()
-    )
-
-
-# =========================================================
-# HELP
-# =========================================================
-
-@dp.message(Command("help"))
-async def help_command(message: Message):
-
-    text = (
-        "📚 <b>دليل استخدام المكتبة</b>\n\n"
-        "/start — فتح القائمة الرئيسية\n"
-        "/help — عرض المساعدة\n"
-        "/about — معلومات المكتبة\n"
-        "/cancel — إلغاء العملية الحالية\n\n"
-        "يمكنك استخدام أزرار الرسائل للتنقل "
-        "داخل المكتبة."
-    )
-
-    await message.answer(
-        text,
-        reply_markup=main_keyboard()
-    )
-
-
-@dp.message(Command("about"))
-async def about_command(message: Message):
-
-    await message.answer(
-        "📖 <b>عن المكتبة</b>\n\n"
-        "مكتبة إلكترونية مخصصة لطلبة قسم إدارة الأعمال، "
-        "تهدف إلى تنظيم المواد والكتب الدراسية وتسهيل "
-        "الوصول إلى المصادر التعليمية.\n\n"
-        "نسعى إلى جعل المحتوى الدراسي أكثر سهولة "
-        "وتنظيماً.",
-        reply_markup=info_keyboard()
-    )
-
-
-# =========================================================
-# CANCEL
-# =========================================================
-
-@dp.message(Command("cancel"))
-async def cancel_command(message: Message):
-
-    user_id = message.from_user.id
-
-    awaiting_admin_code.discard(user_id)
-    awaiting_description.discard(user_id)
-    awaiting_edit_description.pop(user_id, None)
-    pending_uploads.pop(user_id, None)
-
-    await message.answer(
-        "تم إلغاء العملية.",
-        reply_markup=main_keyboard()
-    )
-
-
-# =========================================================
-# CALLBACKS
-# =========================================================
-
-@dp.callback_query(F.data == "home")
-async def home_callback(callback: CallbackQuery):
-
-    await callback.answer()
-
-    try:
-        await callback.message.edit_text(
-            "❮Ᏼ𝙾𝙾𝙆 • 𝗕𝗢𝗧 ❯\n\n"
-            "القائمة الرئيسية للمكتبة 📚\n"
-            "اختر ما تريد:",
-            reply_markup=main_keyboard()
-        )
-    except TelegramBadRequest:
-        pass
-
-
-@dp.callback_query(F.data == "library_info")
-async def library_info_callback(callback: CallbackQuery):
-
-    await callback.answer()
-
-    text = (
-        "📚 <b>مكتبة إدارة الأعمال</b>\n\n"
-        "مساحة تعليمية تجمع مصادر ومراجع ومواد "
-        "دراسية متخصصة في إدارة الأعمال.\n\n"
-        "يمكنك زيارة الموقع الإلكتروني أو الانضمام "
-        "إلى مجموعة المكتبة للوصول إلى التحديثات."
-    )
-
-    try:
-        await callback.message.edit_text(
-            text,
-            reply_markup=info_keyboard()
-        )
-    except TelegramBadRequest:
-        pass
-
-
-# =========================================================
-# ADMIN LOGIN
-# =========================================================
-
-@dp.message(Command("admin"))
-async def admin_login(message: Message):
-
-    user_id = message.from_user.id
-
-    if not is_admin(user_id):
-        await message.answer("⛔ ليس لديك صلاحية الإدارة.")
-        return
-
-    awaiting_admin_code.add(user_id)
-
-    await message.answer(
-        "🔐 <b>لوحة الإدارة</b>\n\n"
-        "أرسل رمز الإدارة لإكمال تسجيل الدخول.\n"
-        "للإلغاء استخدم /cancel"
-    )
-
-
-@dp.message(lambda m: m.from_user and m.from_user.id in awaiting_admin_code)
-async def check_admin_code(message: Message):
-
-    user_id = message.from_user.id
-
-    awaiting_admin_code.discard(user_id)
-
-    if not ADMIN_CODE or message.text != ADMIN_CODE:
-        await message.answer("❌ رمز الإدارة غير صحيح.")
-        return
-
-    admin_sessions.add(user_id)
-
-    await message.answer(
-        "✅ تم تسجيل دخول الإدارة بنجاح.",
-        reply_markup=admin_keyboard()
-    )
-
-
-# =========================================================
-# ADMIN MENU CALLBACKS
-# =========================================================
-
-@dp.callback_query(F.data == "admin_stats")
-async def admin_stats_callback(callback: CallbackQuery):
-
-    if not admin_allowed(callback.from_user.id):
-        await callback.answer("غير مصرح.", show_alert=True)
-        return
-
-    await callback.answer()
-
-    with db() as conn:
-
-        files_count = conn.execute(
-            "SELECT COUNT(*) FROM files WHERE published=1"
-        ).fetchone()[0]
-
-        downloads_count = conn.execute(
-            "SELECT COUNT(*) FROM downloads"
-        ).fetchone()[0]
-
-        visits_count = conn.execute(
-            "SELECT COUNT(*) FROM visits"
-        ).fetchone()[0]
-
-        likes_count = conn.execute(
-            "SELECT COUNT(*) FROM likes"
-        ).fetchone()[0]
-
-    text = (
-        "📊 <b>إحصائيات المكتبة</b>\n\n"
-        f"📚 الملفات المنشورة: <b>{files_count}</b>\n"
-        f"⬇️ التنزيلات: <b>{downloads_count}</b>\n"
-        f"👁 الزيارات: <b>{visits_count}</b>\n"
-        f"❤️ الإعجابات: <b>{likes_count}</b>"
-    )
-
-    await callback.message.edit_text(
-        text,
-        reply_markup=admin_keyboard()
-    )
-
-
-@dp.callback_query(F.data == "admin_files")
-async def admin_files_callback(callback: CallbackQuery):
-
-    if not admin_allowed(callback.from_user.id):
-        await callback.answer("غير مصرح.", show_alert=True)
-        return
-
-    await callback.answer()
-
-    with db() as conn:
-        files = conn.execute(
-            """
-            SELECT * FROM files
-            ORDER BY pinned DESC, id DESC
-            LIMIT 30
-            """
-        ).fetchall()
-
-    if not files:
-
-        await callback.message.edit_text(
-            "لا توجد ملفات في المكتبة حتى الآن.",
-            reply_markup=admin_keyboard()
-        )
-
-        return
-
-    for f in files:
-
-        text = (
-            f"📄 <b>{html.escape(f['name'])}</b>\n"
-            f"🆔 ID: <code>{f['id']}</code>\n"
-            f"📂 القسم: {html.escape(f['category'])}\n"
-            f"📌 مثبت: {'نعم' if f['pinned'] else 'لا'}\n"
-            f"⬇️ تنزيلات: {f['downloads']}\n"
-            f"❤️ إعجابات: {f['likes']}\n\n"
-            f"{html.escape(f['description'][:700])}"
-        )
-
-        await callback.message.answer(
-            text,
-            reply_markup=file_admin_keyboard(f["id"])
-        )
-
-    await callback.message.answer(
-        "⚙️ <b>إدارة الملفات</b>",
-        reply_markup=admin_keyboard()
-    )
-
-
-# =========================================================
-# PIN / UNPIN
-# =========================================================
-
-@dp.callback_query(F.data.startswith("pin:"))
-async def pin_file_callback(callback: CallbackQuery):
-
-    if not admin_allowed(callback.from_user.id):
-        await callback.answer("غير مصرح.", show_alert=True)
-        return
-
-    file_id = int(callback.data.split(":")[1])
-
-    f = get_file(file_id)
-
-    if not f:
-        await callback.answer("الملف غير موجود.", show_alert=True)
-        return
-
-    new_value = 0 if f["pinned"] else 1
-
-    with db() as conn:
-        conn.execute(
-            "UPDATE files SET pinned=? WHERE id=?",
-            (new_value, file_id)
-        )
-
-    log_activity(
-        "pin" if new_value else "unpin",
-        callback.from_user.id,
-        str(file_id)
-    )
-
-    await callback.answer(
-        "تم تثبيت الملف 📌" if new_value else "تم إلغاء التثبيت"
-    )
-
-    try:
-        await callback.message.edit_reply_markup(
-            reply_markup=file_admin_keyboard(file_id)
-        )
-    except TelegramBadRequest:
-        pass
-
-
-# =========================================================
-# EDIT DESCRIPTION
-# =========================================================
-
-@dp.callback_query(F.data.startswith("edit:"))
-async def edit_file_callback(callback: CallbackQuery):
-
-    if not admin_allowed(callback.from_user.id):
-        await callback.answer("غير مصرح.", show_alert=True)
-        return
-
-    file_id = int(callback.data.split(":")[1])
-
-    f = get_file(file_id)
-
-    if not f:
-        await callback.answer("الملف غير موجود.", show_alert=True)
-        return
-
-    awaiting_edit_description[callback.from_user.id] = file_id
-
-    await callback.answer()
-
-    await callback.message.answer(
-        f"✏️ أرسل الوصف الجديد للملف:\n"
-        f"<b>{html.escape(f['name'])}</b>\n\n"
-        "استخدم /cancel للإلغاء."
-    )
-
-
-@dp.message(lambda m: m.from_user and m.from_user.id in awaiting_edit_description)
-async def receive_edit_description(message: Message):
-
-    user_id = message.from_user.id
-
-    file_id = awaiting_edit_description.pop(user_id, None)
-
-    if not file_id:
-        return
-
-    if not message.text:
-        await message.answer("أرسل الوصف كنص.")
-        awaiting_edit_description[user_id] = file_id
-        return
-
-    with db() as conn:
-        conn.execute(
-            "UPDATE files SET description=? WHERE id=?",
-            (message.text[:4000], file_id)
-        )
-
-    log_activity("edit_description", user_id, str(file_id))
-
-    await message.answer(
-        "✅ تم تحديث وصف الملف.",
-        reply_markup=admin_keyboard()
-    )
-
-
-# =========================================================
-# DELETE FILE
-# =========================================================
-
-@dp.callback_query(F.data.startswith("delete:"))
-async def delete_file_callback(callback: CallbackQuery):
-
-    if not admin_allowed(callback.from_user.id):
-        await callback.answer("غير مصرح.", show_alert=True)
-        return
-
-    file_id = int(callback.data.split(":")[1])
-
-    f = get_file(file_id)
-
-    if not f:
-        await callback.answer("الملف غير موجود.", show_alert=True)
-        return
-
-    with db() as conn:
-
-        conn.execute("DELETE FROM likes WHERE file_id=?", (file_id,))
-        conn.execute("DELETE FROM downloads WHERE file_id=?", (file_id,))
-        conn.execute("DELETE FROM files WHERE id=?", (file_id,))
-
-    filepath = BASE / f["filename"]
-
-    try:
-        if filepath.exists():
-            filepath.unlink()
-    except Exception:
-        logger.exception("Unable to delete physical file")
-
-    log_activity("delete_file", callback.from_user.id, str(file_id))
-
-    await callback.answer("تم حذف الملف.", show_alert=True)
-
-    try:
-        await callback.message.edit_text(
-            "🗑 تم حذف الملف بنجاح."
-        )
-    except TelegramBadRequest:
-        pass
-
-
-# =========================================================
-# DOCUMENT UPLOAD
-# =========================================================
-
-@dp.message(F.document)
-async def receive_document(message: Message):
-
-    user_id = message.from_user.id
-
-    if not admin_allowed(user_id):
-        await message.answer(
-            "📩 لاستقبال ملفات المكتبة، "
-            "يجب أن تكون ضمن الإدارة."
-        )
-        return
-
-    document = message.document
-
-    pending_uploads[user_id] = {
-        "file_id": document.file_id,
-        "file_unique_id": document.file_unique_id,
-        "name": document.file_name or "document",
-        "size": document.file_size or 0,
-        "mime": document.mime_type or "",
-    }
-
-    awaiting_description.add(user_id)
-
-    await message.answer(
-        "📄 <b>تم استلام الملف</b>\n\n"
-        f"الاسم: {html.escape(document.file_name or 'ملف')}\n"
-        f"الحجم: {document.file_size or 0:,} bytes\n\n"
-        "الآن أرسل وصف الملف ليتم نشره في المكتبة.\n\n"
-        "يمكنك استخدام /cancel للإلغاء."
-    )
-
-
-# =========================================================
-# RECEIVE DESCRIPTION & PUBLISH
-# =========================================================
-
-@dp.message(lambda m: m.from_user and m.from_user.id in awaiting_description)
-async def receive_description(message: Message):
-
-    user_id = message.from_user.id
-
-    if not admin_allowed(user_id):
-        awaiting_description.discard(user_id)
-        pending_uploads.pop(user_id, None)
-        return
-
-    if not message.text:
-        await message.answer("أرسل وصف الملف كنص.")
-        return
-
-    upload = pending_uploads.get(user_id)
-
-    if not upload:
-        awaiting_description.discard(user_id)
-        await message.answer("انتهت جلسة رفع الملف. أرسل الملف مجددًا.")
-        return
-
-    description = message.text[:4000]
-
-    safe_name = re.sub(
-        r'[\\/:*?"<>|]+',
-        "_",
-        upload["name"]
-    ).strip()
-
-    unique_name = f"{uuid.uuid4().hex[:12]}_{safe_name}"
-
-    try:
-
-        telegram_file = await bot.get_file(upload["file_id"])
-
-        destination = BASE / unique_name
-
-        await bot.download_file(
-            telegram_file.file_path,
-            destination=destination
-        )
-
-        with db() as conn:
-
-            cursor = conn.execute(
-                """
-                INSERT INTO files(
-                    name, filename, description, category,
-                    uploader, file_id, file_type, size,
-                    created_at, published
-                )
-                VALUES(?,?,?,?,?,?,?,?,?,?)
-                """,
-                (
-                    upload["name"],
-                    unique_name,
-                    description,
-                    "عام",
-                    user_id,
-                    upload["file_id"],
-                    upload["mime"],
-                    upload["size"],
-                    int(time.time()),
-                    1
-                )
-            )
-
-            new_id = cursor.lastrowid
-
-        log_activity(
-            "publish_file",
-            user_id,
-            str(new_id)
-        )
-
-        awaiting_description.discard(user_id)
-        pending_uploads.pop(user_id, None)
-
-        await message.answer(
-            "✅ <b>تم نشر الملف بنجاح!</b>\n\n"
-            f"📄 الاسم: {html.escape(upload['name'])}\n"
-            f"🆔 رقم الملف: <code>{new_id}</code>\n\n"
-            "أصبح الملف متاحًا في واجهة المكتبة.",
-            reply_markup=admin_keyboard()
-        )
-
-    except Exception:
-
-        logger.exception("Upload/publish failed")
-
-        awaiting_description.discard(user_id)
-        pending_uploads.pop(user_id, None)
-
-        await message.answer(
-            "❌ حدث خطأ أثناء حفظ الملف. "
-            "راجع سجل التشغيل وحاول مرة أخرى."
-        )
-
-
-# =========================================================
-# ADMIN TEXT COMMANDS
-# =========================================================
-
-@dp.message(Command("stats"))
-async def stats_command(message: Message):
-
-    if not admin_allowed(message.from_user.id):
-        await message.answer("⛔ غير مصرح.")
-        return
-
-    with db() as conn:
-
-        files_count = conn.execute(
-            "SELECT COUNT(*) FROM files WHERE published=1"
-        ).fetchone()[0]
-
-        visits_count = conn.execute(
-            "SELECT COUNT(*) FROM visits"
-        ).fetchone()[0]
-
-        downloads_count = conn.execute(
-            "SELECT COUNT(*) FROM downloads"
-        ).fetchone()[0]
-
-        likes_count = conn.execute(
-            "SELECT COUNT(*) FROM likes"
-        ).fetchone()[0]
-
-    await message.answer(
-        "📊 <b>الإحصائيات</b>\n\n"
-        f"📚 الملفات: {files_count}\n"
-        f"👁 الزيارات: {visits_count}\n"
-        f"⬇️ التنزيلات: {downloads_count}\n"
-        f"❤️ الإعجابات: {likes_count}",
-        reply_markup=admin_keyboard()
-    )
-
-
-# =========================================================
-# FASTAPI LIFESPAN
-# =========================================================
-
-polling_task: Optional[asyncio.Task] = None
-
-
-async def polling_runner():
-
-    try:
-
-        logger.info("Starting Telegram polling...")
-
-        await dp.start_polling(
-            bot,
-            allowed_updates=dp.resolve_used_update_types(),
-            handle_signals=False,
-            close_bot_session=False
-        )
-
-    except TelegramConflictError:
-
-        logger.critical(
-            "Telegram polling conflict: another bot instance "
-            "is using the same token."
-        )
-
-    except asyncio.CancelledError:
-
-        raise
-
-    except Exception:
-
-        logger.exception("Telegram polling stopped due to error")
-
+def upload_review_keyboard() -> InlineKeyboardMarkup:
+    rows: list[list[InlineKeyboardButton]] = [[callback_button("⬆️ نشر الكتاب", "upload:publish")]]
+    links: list[InlineKeyboardButton] = []
+    if GROUP_LINK.startswith(("https://", "http://")):
+        links.append(url_button("👥 JOIN GROUP", GROUP_LINK))
+    links.append(url_button("🤖 MY BOT", "https://t.me/ONX44"))
+    rows.append(links)
+    rows.append([callback_button("إلغاء", "upload:cancel")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+def admin_books_keyboard(books: list[dict]) -> InlineKeyboardMarkup:
+    rows = []
+    for b in books:
+        title = (b.get("title") or b.get("file_name") or "كتاب")[:55]
+        rows.append([callback_button(f"📘 {title}", f"admin:book:{b['id']}")])
+    rows.append([callback_button("↩️ إغلاق", "admin:close")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+def admin_actions_keyboard(book: dict) -> InlineKeyboardMarkup:
+    pin_label = "📌 إلغاء التثبيت" if book.get("pinned") else "📌 تثبيت الكتاب"
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [callback_button("✏️ تعديل العنوان", "admin:edit_title")],
+        [callback_button("📝 تعديل الوصف / الرابط", "admin:edit_desc")],
+        [callback_button(pin_label, "admin:toggle_pin")],
+        [callback_button("🗑 حذف الكتاب", "admin:delete")],
+        [callback_button("📚 العودة إلى القائمة", "admin:list"), callback_button("إغلاق", "admin:close")],
+    ])
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
-    global polling_task, BOT_USERNAME
-
     init_db()
-
+    polling: asyncio.Task | None = None
+    if bot and dp:
+        # Do not launch multiple polling loops within this process.
+        polling = asyncio.create_task(dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types(), handle_signals=False))
+        log.info("Telegram polling task started")
+    elif not TOKEN:
+        log.error("TOKKEN is empty; bot polling will not start")
     try:
-
-        me = await bot.get_me()
-        BOT_USERNAME = me.username or ""
-
-        logger.info(
-            "Telegram bot connected: @%s",
-            BOT_USERNAME
-        )
-
-    except Exception:
-
-        logger.exception("Unable to connect to Telegram")
-        raise
-
-    polling_task = asyncio.create_task(polling_runner())
-
-    logger.info("FastAPI started.")
-
-    try:
-
         yield
-
     finally:
-
-        logger.info("Stopping bot polling...")
-
-        if polling_task:
-
-            polling_task.cancel()
-
+        if dp and polling:
+            await dp.stop_polling()
+            polling.cancel()
             try:
-                await polling_task
+                await polling
             except asyncio.CancelledError:
                 pass
+        if bot:
+            await bot.session.close()
 
-        await bot.session.close()
+app = FastAPI(title="Business Administration Library API", version="3.0", lifespan=lifespan)
 
-        logger.info("Application shutdown complete.")
+@app.get("/")
+def site_home():
+    page = ROOT / "index.html"
+    if not page.exists():
+        raise HTTPException(404, "index.html is missing in repository root")
+    return FileResponse(page)
 
-
-# =========================================================
-# FASTAPI APPLICATION
-# =========================================================
-
-app = FastAPI(
-    title="Business Administration Library",
-    description="Business Administration electronic library API",
-    version="3.0.0",
-    lifespan=lifespan
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-# =========================================================
-# WEBSITE
-# =========================================================
-
-@app.get("/", response_class=HTMLResponse)
-async def index():
-
-    index_path = BASE / "index.html"
-
-    if not index_path.exists():
-        return HTMLResponse(
-            "<h1>Business Administration Library</h1>"
-            "<p>index.html not found.</p>",
-            status_code=404
-        )
-
-    return HTMLResponse(
-        index_path.read_text(encoding="utf-8")
-    )
-
-
-# =========================================================
-# FILE SERVING
-# =========================================================
-
-@app.get("/files/{filename}")
-async def serve_file(filename: str):
-
-    if "/" in filename or "\\" in filename:
-        raise HTTPException(400, "Invalid filename")
-
-    filepath = BASE / filename
-
-    if not filepath.exists() or not filepath.is_file():
-        raise HTTPException(404, "File not found")
-
-    with db() as conn:
-
-        row = conn.execute(
-            "SELECT id FROM files WHERE filename=? AND published=1",
-            (filename,)
-        ).fetchone()
-
-    if not row:
-        raise HTTPException(404, "File not published")
-
-    return FileResponse(
-        filepath,
-        filename=filename
-    )
-
-
-# =========================================================
-# API FILES
-# =========================================================
-
-@app.get("/api/files")
-async def api_files(
-    category: Optional[str] = Query(default=None),
-    search: Optional[str] = Query(default=None),
-    limit: int = Query(default=500, ge=1, le=1000)
-):
-
-    query = """
-        SELECT id, name, filename, description, category,
-               file_type, size, downloads, likes, pinned,
-               created_at
-        FROM files
-        WHERE published=1
-    """
-
-    params = []
-
-    if category:
-
-        query += " AND category=?"
-        params.append(category)
-
-    if search:
-
-        query += " AND (name LIKE ? OR description LIKE ?)"
-        term = f"%{search}%"
-        params.extend([term, term])
-
-    query += " ORDER BY pinned DESC, created_at DESC LIMIT ?"
-    params.append(limit)
-
-    with db() as conn:
-
-        rows = conn.execute(
-            query,
-            params
-        ).fetchall()
-
-    return {
-        "success": True,
-        "count": len(rows),
-        "files": [
-            {
-                **dict(row),
-                "url": f"/files/{row['filename']}"
-            }
-            for row in rows
-        ]
-    }
-
-
-# =========================================================
-# API STATS
-# =========================================================
-
+@app.get("/1.jpg")
+def site_image():
+    img = ROOT / "1.jpg"
+    if not img.exists():
+        raise HTTPException(404, "1.jpg not found")
+    return FileResponse(img)
+@app.get("/api/books")
+def api_books():
+    books = list_books()
+    s = stat_values()
+    fields = ("id", "file_name", "title", "description", "file_size", "mime_type", "created_at", "pinned")
+    return {"books": [{key: b.get(key) for key in fields} for b in books], "total": len(books), "downloads": s.get("downloads", 0)}
 @app.get("/api/stats")
-async def api_stats():
-
-    with db() as conn:
-
-        files = conn.execute(
-            "SELECT COUNT(*) FROM files WHERE published=1"
-        ).fetchone()[0]
-
-        visits = conn.execute(
-            "SELECT COUNT(*) FROM visits"
-        ).fetchone()[0]
-
-        downloads = conn.execute(
-            "SELECT COUNT(*) FROM downloads"
-        ).fetchone()[0]
-
-        likes = conn.execute(
-            "SELECT COUNT(*) FROM likes"
-        ).fetchone()[0]
-
-    return {
-        "success": True,
-        "files": files,
-        "visits": visits,
-        "downloads": downloads,
-        "likes": likes
-    }
-
-
-# =========================================================
-# VISITS
-# =========================================================
-
+def api_stats():
+    s = stat_values()
+    return {"visits": s.get("visits", 0), "downloads": s.get("downloads", 0), "books": len(list_books())}
 @app.post("/api/visit")
-async def api_visit(request: Request):
+def api_visit():
+    inc_stat("visits")
+    return {"ok": True}
+@app.post("/api/download/{book_id}")
+def api_download_count(book_id: str):
+    if not get_book(book_id):
+        raise HTTPException(404, "Book not found")
+    inc_stat("downloads")
+    return {"ok": True}
+@app.post("/api/pin/{book_id}")
+def api_pin(book_id: str):
+    # This endpoint is retained for compatibility with the frontend.
+    with connect() as con:
+        row = con.execute("SELECT pinned FROM books WHERE id=?", (book_id,)).fetchone()
+        if row is None:
+            raise HTTPException(404, "Book not found")
+        con.execute("UPDATE books SET pinned=? WHERE id=?", (0 if row["pinned"] else 1, book_id))
+    return {"ok": True}
+@app.get("/api/file/{book_id}")
+async def api_file(book_id: str):
+    book = get_book(book_id)
+    if not book:
+        raise HTTPException(404, "Book not found")
+    if not bot:
+        raise HTTPException(503, "Telegram bot is not configured")
+    try:
+        telegram_file = await bot.get_file(book["telegram_file_id"])
+        tg_url = f"https://api.telegram.org/file/bot{TOKEN}/{telegram_file.file_path}"
+        filename = (book.get("file_name") or book.get("title") or "download").replace('"', "").replace("\\", "_")
+        mime = book.get("mime_type") or mimetypes.guess_type(filename)[0] or "application/octet-stream"
+        async def stream_file():
+            async with httpx.AsyncClient(timeout=120) as client:
+                async with client.stream("GET", tg_url) as response:
+                    if response.status_code != 200:
+                        raise RuntimeError("Telegram file request failed")
+                    async for chunk in response.aiter_bytes():
+                        yield chunk
+        return StreamingResponse(stream_file(), media_type=mime, headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+    except Exception as exc:
+        log.exception("File proxy failed")
+        raise HTTPException(502, "Unable to fetch file from Telegram") from exc
 
-    visitor = (
-        request.headers.get("x-forwarded-for")
-        or request.client.host
-        if request.client
-        else "unknown"
-    )
 
-    visitor = visitor.split(",")[0][:100]
-
-    with db() as conn:
-
-        conn.execute(
-            "INSERT INTO visits(visitor, created_at) VALUES(?,?)",
-            (visitor, int(time.time()))
+# ---------------- Bot handlers ----------------
+if dp:
+    @dp.message(CommandStart())
+    async def start(message: Message, state: FSMContext):
+        await state.clear()
+        first_name = safe_text(message.from_user.first_name or "طالب")
+        # Explicit InlineKeyboardButton objects; each button has URL or callback_data.
+        await message.answer(
+            f"أهلاً بك {first_name} ✨\n\nمكتبة طلاب إدارة الأعمال. لإضافة كتاب أرسل الملف هنا، ثم أدخل عنوانه ووصفه.",
+            reply_markup=home_keyboard()
         )
 
-    return {
-        "success": True
-    }
+    @dp.message(Command("cancel"))
+    async def cancel_command(message: Message, state: FSMContext):
+        await state.clear()
+        await message.answer("تم إلغاء العملية.")
 
+    @dp.message(Command("admin"))
+    async def admin_command(message: Message, state: FSMContext):
+        if not is_admin(message.from_user.id):
+            await message.answer("⛔ هذا الأمر خاص بالمدير.")
+            return
+        await state.clear()
+        await state.set_state(Admin.code)
+        await message.answer("🔐 أرسل رمز الإدارة الآن:")
 
-# =========================================================
-# LIKE
-# =========================================================
+    @dp.message(F.document)
+    async def document_received(message: Message, state: FSMContext):
+        await state.clear()
+        doc = message.document
+        await state.update_data(file_id=doc.file_id, filename=doc.file_name or "file", size=doc.file_size, mime=doc.mime_type, owner=message.from_user.id)
+        await state.set_state(Upload.title)
+        await message.answer("📖 وصل الملف بنجاح.\n\nأرسل عنوان الكتاب:")
 
-@app.post("/api/files/{file_id}/like")
-async def api_like(
-    file_id: int,
-    request: Request
-):
+    @dp.message(Upload.title)
+    async def upload_title(message: Message, state: FSMContext):
+        if not message.text or not message.text.strip():
+            await message.answer("أرسل عنوانًا نصيًا للكتاب.")
+            return
+        await state.update_data(title=message.text.strip()[:250])
+        await state.set_state(Upload.description)
+        await message.answer("✍️ أرسل وصفًا أو رابطًا، أو اكتب (بدون):")
 
-    if not file_exists(file_id):
-        raise HTTPException(404, "File not found")
+    @dp.message(Upload.description)
+    async def upload_description(message: Message, state: FSMContext):
+        desc = (message.text or "").strip()
+        if desc.lower() in ("بدون", "لا يوجد", "-"):
+            desc = ""
+        await state.update_data(description=desc)
+        data = await state.get_data()
+        await state.set_state(Upload.review)
+        review = f"📚 <b>مراجعة النشر</b>\n\n<b>العنوان:</b> {safe_text(data.get('title'))}\n<b>الوصف:</b> {safe_text(desc or '—')}\n<b>الملف:</b> {safe_text(data.get('filename'))}"
+        await message.answer(review, parse_mode="HTML", reply_markup=upload_review_keyboard())
 
-    visitor = (
-        request.headers.get("x-forwarded-for")
-        or request.client.host
-        if request.client
-        else "unknown"
-    )
+    @dp.callback_query(F.data == "upload:publish")
+    async def upload_publish(query: CallbackQuery, state: FSMContext):
+        data = await state.get_data()
+        if not data.get("file_id") or not data.get("title"):
+            await query.answer("انتهت بيانات الملف؛ أرسل الملف من جديد.", show_alert=True)
+            return
+        book_id = uuid.uuid4().hex[:12]
+        now = datetime.now(timezone.utc).isoformat()
+        with connect() as con:
+            con.execute("INSERT INTO books(id,telegram_file_id,file_name,title,description,file_size,mime_type,created_at,uploader_id,pinned) VALUES(?,?,?,?,?,?,?,?,?,0)", (book_id, data["file_id"], data.get("filename"), data["title"], data.get("description"), data.get("size"), data.get("mime"), now, data.get("owner")))
+        await state.clear()
+        if query.message:
+            await query.message.edit_text("✨ تم نشر الكتاب في المكتبة بنجاح. يمكنك فتح الموقع لمشاهدته.")
+        await query.answer("تم نشر الكتاب")
 
-    visitor = visitor.split(",")[0][:100]
+    @dp.callback_query(F.data == "upload:cancel")
+    async def upload_cancel(query: CallbackQuery, state: FSMContext):
+        await state.clear()
+        if query.message:
+            await query.message.edit_text("تم إلغاء نشر الكتاب.")
+        await query.answer()
 
-    with db() as conn:
+    @dp.callback_query(F.data == "help:upload")
+    async def upload_help(query: CallbackQuery):
+        if query.message:
+            await query.message.answer("📤 <b>طريقة إضافة كتاب</b>\n1. أرسل الملف مباشرة إلى البوت.\n2. اكتب عنوان الكتاب.\n3. اكتب وصفًا أو رابطًا، أو (بدون).\n4. راجع البيانات واضغط نشر الكتاب.", parse_mode="HTML")
+        await query.answer()
 
-        existing = conn.execute(
-            "SELECT id FROM files WHERE id=? AND published=1",
-            (file_id,)
-        ).fetchone()
+    @dp.message(Admin.code)
+    async def admin_code_handler(message: Message, state: FSMContext):
+        if not is_admin(message.from_user.id) or not ADMIN_CODE or (message.text or "").strip() != ADMIN_CODE:
+            await state.clear()
+            await message.answer("❌ رمز الإدارة غير صحيح أو لا تملك صلاحية الإدارة.")
+            return
+        await state.set_state(Admin.select)
+        books = list_books()
+        if not books:
+            await message.answer("لا توجد كتب في المكتبة حتى الآن.")
+            return
+        lines = [f"{i}. {safe_text(b.get('title') or b.get('file_name') or 'كتاب')}" for i, b in enumerate(books, 1)]
+        await message.answer("🛠 <b>لوحة الإدارة</b>\n\n" + "\n".join(lines) + "\n\nاختر كتابًا من الأزرار:", parse_mode="HTML", reply_markup=admin_books_keyboard(books))
 
-        if not existing:
-            raise HTTPException(404, "File not found")
+    @dp.callback_query(F.data.startswith("admin:"))
+    async def admin_callbacks(query: CallbackQuery, state: FSMContext):
+        if not is_admin(query.from_user.id):
+            await query.answer("هذه الأزرار خاصة بالمدير.", show_alert=True)
+            return
+        action = query.data or ""
+        if action == "admin:close":
+            await state.clear()
+            if query.message:
+                await query.message.edit_text("تم إغلاق لوحة الإدارة.")
+            await query.answer()
+            return
+        if action == "admin:list":
+            books = list_books()
+            await state.set_state(Admin.select)
+            if query.message:
+                await query.message.edit_text("اختر كتابًا:", reply_markup=admin_books_keyboard(books))
+            await query.answer()
+            return
+        if action.startswith("admin:book:"):
+            book_id = action.split(":", 2)[2]
+            book = get_book(book_id)
+            if not book:
+                await query.answer("الكتاب غير موجود.", show_alert=True)
+                return
+            await state.update_data(book_id=book_id)
+            if query.message:
+                await query.message.edit_text(f"📘 <b>{safe_text(book.get('title') or book.get('file_name'))}</b>\nاختر إجراءً:", parse_mode="HTML", reply_markup=admin_actions_keyboard(book))
+            await query.answer()
+            return
+        data = await state.get_data()
+        book_id = data.get("book_id")
+        book = get_book(book_id) if book_id else None
+        if not book:
+            await query.answer("اختر كتابًا أولًا.", show_alert=True)
+            return
+        if action == "admin:edit_title":
+            await state.set_state(Admin.title)
+            if query.message:
+                await query.message.answer("أرسل العنوان الجديد:")
+        elif action == "admin:edit_desc":
+            await state.set_state(Admin.description)
+            if query.message:
+                await query.message.answer("أرسل الوصف الجديد أو الرابط، أو (بدون) لمسحه:")
+        elif action == "admin:toggle_pin":
+            with connect() as con:
+                con.execute("UPDATE books SET pinned=? WHERE id=?", (0 if book["pinned"] else 1, book_id))
+            refreshed = get_book(book_id)
+            if query.message and refreshed:
+                await query.message.edit_reply_markup(reply_markup=admin_actions_keyboard(refreshed))
+            await query.answer("تم تحديث التثبيت")
+        elif action == "admin:delete":
+            with connect() as con:
+                con.execute("DELETE FROM books WHERE id=?", (book_id,))
+            await state.clear()
+            if query.message:
+                await query.message.edit_text("🗑 تم حذف الكتاب من المكتبة.")
+            await query.answer("تم الحذف")
 
-        # API likes are visitor-based for websites
-        # The visitor key is used as a stable lightweight identity.
-        pseudo_user = abs(hash(visitor)) % (2**31)
+    @dp.message(Admin.title)
+    async def admin_edit_title(message: Message, state: FSMContext):
+        if not message.text or not message.text.strip():
+            await message.answer("أرسل عنوانًا نصيًا.")
+            return
+        data = await state.get_data()
+        with connect() as con:
+            con.execute("UPDATE books SET title=? WHERE id=?", (message.text.strip()[:250], data.get("book_id")))
+        await state.clear()
+        await message.answer("✏️ تم تحديث العنوان.")
 
-        liked = conn.execute(
-            "SELECT 1 FROM likes WHERE user_id=? AND file_id=?",
-            (pseudo_user, file_id)
-        ).fetchone()
+    @dp.message(Admin.description)
+    async def admin_edit_description(message: Message, state: FSMContext):
+        data = await state.get_data()
+        desc = (message.text or "").strip()
+        if desc.lower() in ("بدون", "لا يوجد", "-"):
+            desc = ""
+        with connect() as con:
+            con.execute("UPDATE books SET description=? WHERE id=?", (desc, data.get("book_id")))
+        await state.clear()
+        await message.answer("📝 تم تحديث الوصف.")
 
-        if liked:
-
-            conn.execute(
-                "DELETE FROM likes WHERE user_id=? AND file_id=?",
-                (pseudo_user, file_id)
-            )
-
-            conn.execute(
-                "UPDATE files SET likes=MAX(0, likes-1) WHERE id=?",
-                (file_id,)
-            )
-
-            state = False
-
-        else:
-
-            conn.execute(
-                "INSERT OR IGNORE INTO likes(user_id,file_id) VALUES(?,?)",
-                (pseudo_user, file_id)
-            )
-
-            conn.execute(
-                "UPDATE files SET likes=likes+1 WHERE id=?",
-                (file_id,)
-            )
-
-            state = True
-
-        count = conn.execute(
-            "SELECT likes FROM files WHERE id=?",
-            (file_id,)
-        ).fetchone()[0]
-
-    return {
-        "success": True,
-        "liked": state,
-        "likes": count
-    }
-
-
-# =========================================================
-# DOWNLOAD TRACKING
-# =========================================================
-
-@app.post("/api/files/{file_id}/download")
-async def api_download(
-    file_id: int,
-    request: Request
-):
-
-    with db() as conn:
-
-        f = conn.execute(
-            """
-            SELECT filename, name FROM files
-            WHERE id=? AND published=1
-            """,
-            (file_id,)
-        ).fetchone()
-
-        if not f:
-            raise HTTPException(404, "File not found")
-
-        filepath = BASE / f["filename"]
-
-        if not filepath.exists():
-            raise HTTPException(404, "File unavailable")
-
-        visitor = (
-            request.headers.get("x-forwarded-for")
-            or request.client.host
-            if request.client
-            else "unknown"
-        )
-
-        visitor = visitor.split(",")[0][:100]
-
-        conn.execute(
-            "UPDATE files SET downloads=downloads+1 WHERE id=?",
-            (file_id,)
-        )
-
-        conn.execute(
-            "INSERT INTO downloads(file_id, visitor, created_at) VALUES(?,?,?)",
-            (file_id, visitor, int(time.time()))
-        )
-
-    return FileResponse(
-        filepath,
-        filename=f["name"]
-    )
-
-
-# =========================================================
-# HEALTH CHECK
-# =========================================================
-
-@app.get("/health")
-async def health():
-
-    return {
-        "status": "ok",
-        "service": "Business Administration Library",
-        "bot": "configured",
-        "time": int(time.time())
-    }
-
-
-# =========================================================
-# TELEGRAM BOT STATUS
-# =========================================================
-
-@app.get("/api/bot")
-async def bot_status():
-
-    return {
-        "success": True,
-        "username": BOT_USERNAME,
-        "url": (
-            f"https://t.me/{BOT_USERNAME}"
-            if BOT_USERNAME
-            else None
-        )
-    }
-
-
-# =========================================================
-# RUN DIRECTLY
-# =========================================================
 
 if __name__ == "__main__":
-
     import uvicorn
-
-    uvicorn.run(
-        "bot:app",
-        host="0.0.0.0",
-        port=int(os.getenv("PORT", "8000")),
-        reload=False,
-        log_level="info"
-    )
+    uvicorn.run("bot:app", host="0.0.0.0", port=int(os.getenv("PORT", "8000")), reload=False, workers=1)
