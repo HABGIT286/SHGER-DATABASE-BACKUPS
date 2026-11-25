@@ -1,4 +1,4 @@
-name: تشغيل مكتبة الأعمال والبوت
+name: Business Library Bot + Site
 
 on:
   workflow_dispatch:
@@ -9,30 +9,26 @@ permissions:
   contents: read
 
 concurrency:
-  group: business-library-runtime
+  group: business-library-single-instance
   cancel-in-progress: true
 
 jobs:
-  run-library:
+  run-bot:
     runs-on: ubuntu-latest
     timeout-minutes: 350
-
     steps:
-      - name: تنزيل ملفات المستودع
+      - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: إعداد Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
-
-      - name: تثبيت المكتبات
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
-      - name: تشغيل الموقع والبوت معاً
+      - name: Run FastAPI and Telegram bot
         env:
           TOKKEN: ${{ secrets.TOKKEN }}
           ADMIN_ID: ${{ secrets.ADMIN_ID }}
@@ -41,17 +37,7 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL }}
           PYTHONUNBUFFERED: "1"
         run: |
-          if [ -z "$TOKKEN" ]; then
-            echo "ERROR: Secret TOKKEN is missing."
-            exit 1
-          fi
-          if [ -z "$ADMIN_ID" ]; then
-            echo "ERROR: Secret ADMIN_ID is missing."
-            exit 1
-          fi
-          if [ -z "$ADMIN_CODE" ]; then
-            echo "ERROR: Secret ADMIN_CODE is missing."
-            exit 1
-          fi
-          echo "Starting FastAPI app and Telegram bot through bot.py..."
-          exec uvicorn bot:app --host 0.0.0.0 --port 8000
+          test -n "$TOKKEN" || (echo "Missing secret TOKKEN" && exit 1)
+          test -n "$ADMIN_ID" || (echo "Missing secret ADMIN_ID" && exit 1)
+          test -n "$ADMIN_CODE" || (echo "Missing secret ADMIN_CODE" && exit 1)
+          python bot.py
