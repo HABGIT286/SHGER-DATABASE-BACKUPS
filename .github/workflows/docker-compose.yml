@@ -1,0 +1,19 @@
+services:
+  business-library:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      TOKKEN: "PUT_TELEGRAM_BOT_TOKEN_HERE"
+      ADMIN_ID: "PUT_YOUR_TELEGRAM_NUMERIC_ID_HERE"
+      ADMIN_CODE: "SET_A_PRIVATE_ADMIN_CODE"
+      GROUP_LINK: "https://t.me/+mZe3EZzQBCYxOTUy"
+      SITE_URL: "https://YOUR-DOMAIN-OR-HOST"
+      PORT: "8000"
+      DATA_DIR: "/app/data"
+    volumes:
+      - library_data:/app/data
+      - ./static:/app/static
+volumes:
+  library_data:
