@@ -1,49 +1,61 @@
-
-name: Run Library Bot
+name: Business Library Bot + Site
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
+workflow_dispatch:
+push:
+branches:
+- main
 
 concurrency:
-  group: library-bot-instance
-  cancel-in-progress: true
+group: THREHRMBOT-ONE-INSTANCE
+cancel-in-progress: true
 
 jobs:
-  run:
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
+run-bot:
+runs-on: ubuntu-latest
+timeout-minutes: 360
 
-    steps:
-      - name: Stop previous workflow
-        run: echo "Previous workflow runs in this group will be cancelled."
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v4
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  - name: Setup Python
+    uses: actions/setup-python@v5
+    with:
+      python-version: "3.11"
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+  - name: Install dependencies
+    run: |
+      python -m pip install --upgrade pip
+      python -m pip install aiogram fastapi uvicorn httpx
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install aiogram fastapi uvicorn
+  - name: Check secrets
+    env:
+      TOKKEN: ${{ secrets.TOKKEN }}
+      ADMIN_ID: ${{ secrets.ADMIN_ID }}
+      ADMIN_CODE: ${{ secrets.ADMIN_CODE }}
+    run: |
+      test -n "$TOKKEN" || exit 1
+      test -n "$ADMIN_ID" || exit 1
+      test -n "$ADMIN_CODE" || exit 1
+      echo "Secrets verified."
 
-      - name: Validate bot.py
-        run: |
-          python -m py_compile bot.py
+  - name: Validate bot.py
+    run: |
+      python -m py_compile bot.py
+      echo "Python syntax is valid."
 
-      - name: Run bot and website
-        env:
-          TOKKEN: ${{ secrets.TOKKEN }}
-          ADMIN_ID: ${{ secrets.ADMIN_ID }}
-          ADMIN_CODE: ${{ secrets.ADMIN_CODE }}
-          GROUP_LINK: ${{ vars.GROUP_LINK }}
-          SITE_URL: ${{ vars.SITE_URL }}
-          PORT: "8000"
-        run: |
-          python bot.py
+  - name: Verify dependencies
+    run: |
+      python -c "import aiogram, fastapi, uvicorn, httpx; print('All dependencies OK')"
+
+  - name: Start bot and website
+    env:
+      TOKKEN: ${{ secrets.TOKKEN }}
+      ADMIN_ID: ${{ secrets.ADMIN_ID }}
+      ADMIN_CODE: ${{ secrets.ADMIN_CODE }}
+      GROUP_LINK: ${{ vars.GROUP_LINK }}
+      SITE_URL: ${{ vars.SITE_URL }}
+      PORT: "8000"
+    run: |
+      python bot.py
