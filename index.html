@@ -1,0 +1,3140 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b0b0b">
+  <meta name="description" content="المكتبة الطلابية لقسم إدارة الأعمال">
+  <title>مكتبة إدارة الأعمال | المكتبة الطلابية</title>
+
+  <!-- ============================================================
+       BUSINESS ADMINISTRATION STUDENT LIBRARY
+       Single-file frontend: HTML + CSS + JavaScript
+       API endpoints are provided by the Telegram bot / FastAPI service.
+       ============================================================ -->
+  <style>
+    /* Premium Arabic display fonts. Hosted by Google Fonts; fallback fonts
+       are kept for offline/blocked-network environments. */
+    @import url('https://fonts.googleapis.com/css2?family=Katibeh&family=Rakkas&family=Amiri:wght@400;700&display=swap');
+
+    /* ------------------------------------------------------------
+       01. Design tokens and theme variables
+       ------------------------------------------------------------ */
+    :root {
+      color-scheme: dark;
+      --page: #080909;
+      --page-soft: #0d0e0e;
+      --surface: #111313;
+      --surface-2: #171918;
+      --surface-3: #1c1e1d;
+      --ink: #f5f0e4;
+      --ink-soft: #c5bca8;
+      --ink-muted: #8e897d;
+      --gold: #c9a75b;
+      --gold-bright: #f0d58a;
+      --gold-dim: #806638;
+      --line: rgba(201, 167, 91, .24);
+      --line-strong: rgba(201, 167, 91, .52);
+      --shadow: 0 24px 70px rgba(0, 0, 0, .42);
+      --shadow-soft: 0 12px 32px rgba(0, 0, 0, .24);
+      --radius-xl: 30px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --ease: cubic-bezier(.2, .8, .2, 1);
+      --font-display: "Rakkas", "Amiri", "Noto Naskh Arabic", serif;
+      --font-body: "Katibeh", "Amiri", "Noto Naskh Arabic", "Tahoma", sans-serif;
+      --content-width: 1240px;
+    }
+
+
+    /* ------------------------------------------------------------
+       02. Light champagne theme
+       ------------------------------------------------------------ */
+    [data-theme="champagne"] {
+      color-scheme: light;
+      --page: #e7dfcf;
+      --page-soft: #eee8dc;
+      --surface: #f8f4eb;
+      --surface-2: #f1e9d8;
+      --surface-3: #e8dcc3;
+      --ink: #342518;
+      --ink-soft: #6d5839;
+      --ink-muted: #988361;
+      --gold: #ad8740;
+      --gold-bright: #d2ad63;
+      --gold-dim: #8e6e36;
+      --line: rgba(143, 108, 47, .23);
+      --line-strong: rgba(143, 108, 47, .5);
+      --shadow: 0 24px 60px rgba(72, 52, 20, .12);
+      --shadow-soft: 0 10px 24px rgba(72, 52, 20, .09);
+    }
+
+
+    /* ------------------------------------------------------------
+       03. White / gold theme
+       ------------------------------------------------------------ */
+    [data-theme="ivory"] {
+      color-scheme: light;
+      --page: #f6f5f1;
+      --page-soft: #fffefa;
+      --surface: #ffffff;
+      --surface-2: #f9f7f2;
+      --surface-3: #f0eadf;
+      --ink: #2a241b;
+      --ink-soft: #6d6250;
+      --ink-muted: #9b907e;
+      --gold: #b58b43;
+      --gold-bright: #d9b86e;
+      --gold-dim: #8e6d35;
+      --line: rgba(181, 139, 67, .2);
+      --line-strong: rgba(181, 139, 67, .46);
+      --shadow: 0 24px 60px rgba(55, 42, 22, .09);
+      --shadow-soft: 0 10px 24px rgba(55, 42, 22, .07);
+    }
+
+
+    /* ------------------------------------------------------------
+       04. Reset and global elements
+       ------------------------------------------------------------ */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 100px;
+    }
+
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--page);
+      color: var(--ink);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.85;
+      overflow-x: hidden;
+      transition: background .35s ease, color .35s ease;
+    }
+
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      background:
+        radial-gradient(circle at 85% 12%, rgba(201, 167, 91, .09), transparent 30%),
+        radial-gradient(circle at 5% 65%, rgba(201, 167, 91, .05), transparent 28%);
+    }
+
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+
+    button {
+      cursor: pointer;
+    }
+
+
+    button:focus-visible,
+    input:focus-visible,
+    a:focus-visible {
+      outline: 2px solid var(--gold-bright);
+      outline-offset: 3px;
+    }
+
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+
+    ::selection {
+      background: var(--gold);
+      color: #1a140a;
+    }
+
+
+    /* ------------------------------------------------------------
+       05. Shared containers and helpers
+       ------------------------------------------------------------ */
+    .container {
+      width: min(var(--content-width), calc(100% - 42px));
+      margin-inline: auto;
+    }
+
+
+    .section-space {
+      padding-block: 28px;
+    }
+
+
+    .muted {
+      color: var(--ink-muted);
+    }
+
+
+    .gold-text {
+      color: var(--gold-bright);
+    }
+
+
+    .serif {
+      font-family: var(--font-display);
+    }
+
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+
+    .hidden {
+      display: none !important;
+    }
+
+
+    /* ------------------------------------------------------------
+       06. SVG icon system
+       Icons are inline vector artwork; no emoji-based UI.
+       ------------------------------------------------------------ */
+    .icon {
+      width: 21px;
+      height: 21px;
+      flex: 0 0 auto;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.65;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+
+    .icon-sm {
+      width: 16px;
+      height: 16px;
+    }
+
+
+    .icon-lg {
+      width: 26px;
+      height: 26px;
+    }
+
+
+    .icon-xl {
+      width: 32px;
+      height: 32px;
+    }
+
+
+    /* ------------------------------------------------------------
+       07. Ambient background decoration
+       ------------------------------------------------------------ */
+    .ambient {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+
+    .ambient-orb {
+      position: absolute;
+      width: 420px;
+      height: 420px;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: .1;
+      background: var(--gold);
+      animation: orbFloat 18s ease-in-out infinite alternate;
+    }
+
+
+    .ambient-orb:first-child {
+      top: -180px;
+      right: -140px;
+    }
+
+
+    .ambient-orb:last-child {
+      bottom: -240px;
+      left: -160px;
+      animation-delay: -8s;
+    }
+
+
+    .grain {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");
+    }
+
+
+    /* ------------------------------------------------------------
+       08. Header and navigation
+       ------------------------------------------------------------ */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: color-mix(in srgb, var(--page) 82%, transparent);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border-bottom: 1px solid var(--line);
+    }
+
+
+    .header-inner {
+      min-height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 13px;
+      min-width: 0;
+    }
+
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: 14px;
+      background: linear-gradient(145deg, var(--surface-2), var(--surface));
+      color: var(--gold-bright);
+      box-shadow: inset 0 0 18px rgba(201, 167, 91, .06);
+    }
+
+
+    .brand-copy {
+      min-width: 0;
+    }
+
+
+    .brand-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+
+
+    .brand-subtitle {
+      margin: -2px 0 0;
+      color: var(--ink-muted);
+      font-size: 11px;
+      letter-spacing: .04em;
+    }
+
+
+    .main-nav {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 13px;
+      border-radius: 12px;
+      color: var(--ink-soft);
+      font-size: 13px;
+      transition: color .2s ease, background .2s ease;
+    }
+
+
+    .nav-link:hover,
+    .nav-link.active {
+      color: var(--gold-bright);
+      background: rgba(201, 167, 91, .09);
+    }
+
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+
+    .icon-button {
+      width: 42px;
+      height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      color: var(--ink-soft);
+      background: var(--surface);
+      transition: transform .22s var(--ease), border-color .22s ease, color .22s ease;
+    }
+
+
+    .icon-button:hover {
+      transform: translateY(-2px);
+      border-color: var(--gold);
+      color: var(--gold-bright);
+    }
+
+
+    .menu-toggle {
+      display: none;
+    }
+
+
+    /* ------------------------------------------------------------
+       09. Hero banner
+       ------------------------------------------------------------ */
+    .hero {
+      position: relative;
+      padding: 46px 0 25px;
+    }
+
+
+    .hero-frame {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-xl);
+      padding: clamp(24px, 5vw, 54px);
+      background:
+        linear-gradient(135deg, rgba(201, 167, 91, .1), transparent 38%),
+        var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+
+    .hero-frame::before {
+      content: "";
+      position: absolute;
+      width: 380px;
+      height: 380px;
+      border: 1px solid rgba(201, 167, 91, .12);
+      border-radius: 50%;
+      top: -180px;
+      left: -120px;
+      box-shadow: 0 0 0 38px rgba(201, 167, 91, .025), 0 0 0 78px rgba(201, 167, 91, .02);
+    }
+
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 850px;
+    }
+
+
+    .hero-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--gold-bright);
+      font-size: 12px;
+      letter-spacing: .12em;
+      margin-bottom: 14px;
+    }
+
+
+    .hero-kicker::before,
+    .hero-kicker::after {
+      content: "";
+      width: 28px;
+      height: 1px;
+      background: var(--gold);
+      opacity: .7;
+    }
+
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(34px, 6vw, 64px);
+      font-weight: 800;
+      line-height: 1.35;
+      margin: 0;
+      letter-spacing: -.025em;
+    }
+
+
+    .hero-title .accent {
+      color: var(--gold-bright);
+      text-shadow: 0 0 32px rgba(201, 167, 91, .18);
+    }
+
+
+    .hero-description {
+      max-width: 680px;
+      color: var(--ink-soft);
+      margin: 18px 0 24px;
+      font-size: 15px;
+    }
+
+
+    .hero-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 22px;
+    }
+
+
+    .detail-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--ink-soft);
+      background: rgba(201, 167, 91, .04);
+      font-size: 12px;
+    }
+
+
+    .detail-chip .icon {
+      color: var(--gold);
+      width: 15px;
+      height: 15px;
+    }
+
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 11px;
+      margin-top: 28px;
+    }
+
+
+    /* ------------------------------------------------------------
+       10. Buttons
+       ------------------------------------------------------------ */
+    .button {
+      position: relative;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      min-height: 46px;
+      padding: 11px 19px;
+      border: 1px solid var(--line-strong);
+      border-radius: 14px;
+      background: var(--surface-2);
+      color: var(--ink);
+      font-weight: 700;
+      font-size: 13px;
+      overflow: hidden;
+      transition: transform .22s var(--ease), background .22s ease, color .22s ease, border-color .22s ease, box-shadow .22s ease;
+    }
+
+
+    .button::after {
+      content: "";
+      position: absolute;
+      top: -120%;
+      left: -35%;
+      width: 35%;
+      height: 340%;
+      transform: rotate(25deg);
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .12), transparent);
+      transition: left .65s ease;
+    }
+
+
+    .button:hover::after {
+      left: 130%;
+    }
+
+
+    .button:hover {
+      transform: translateY(-2px);
+      border-color: var(--gold);
+      box-shadow: 0 8px 25px rgba(201, 167, 91, .09);
+    }
+
+
+    .button:active {
+      transform: translateY(0) scale(.98);
+    }
+
+
+    .button-primary {
+      background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+      border-color: var(--gold);
+      color: #211808;
+    }
+
+
+    .button-primary:hover {
+      color: #211808;
+      box-shadow: 0 10px 28px rgba(201, 167, 91, .22);
+    }
+
+
+    .button-quiet {
+      background: transparent;
+      color: var(--ink-soft);
+    }
+
+
+    .button-small {
+      min-height: 36px;
+      padding: 8px 12px;
+      border-radius: 11px;
+      font-size: 12px;
+    }
+
+
+    /* ------------------------------------------------------------
+       11. Statistics cards
+       ------------------------------------------------------------ */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+
+    .stat-card {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+      transition: transform .28s var(--ease), border-color .28s ease;
+    }
+
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--line-strong);
+    }
+
+
+    .stat-card::before {
+      content: "";
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: var(--gold);
+      opacity: .035;
+      top: -50px;
+      left: -45px;
+    }
+
+
+    .stat-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      color: var(--gold-bright);
+      background: rgba(201, 167, 91, .07);
+    }
+
+
+    .stat-label {
+      color: var(--ink-muted);
+      font-size: 12px;
+      margin: 0;
+    }
+
+
+    .stat-value {
+      display: block;
+      margin-top: 12px;
+      font-size: 29px;
+      font-weight: 800;
+      letter-spacing: .03em;
+      line-height: 1.2;
+      font-variant-numeric: tabular-nums;
+    }
+
+
+    .stat-note {
+      color: var(--ink-muted);
+      font-size: 11px;
+      margin-top: 7px;
+    }
+
+
+    /* ------------------------------------------------------------
+       12. Section headings and ornamental dividers
+       ------------------------------------------------------------ */
+    .section-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+
+    .section-heading-main {
+      min-width: 0;
+    }
+
+
+    .section-eyebrow {
+      display: block;
+      color: var(--gold);
+      font-size: 11px;
+      letter-spacing: .13em;
+      margin-bottom: 4px;
+    }
+
+
+    .section-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(24px, 3vw, 34px);
+      line-height: 1.45;
+      font-weight: 800;
+    }
+
+
+    .section-description {
+      margin: 6px 0 0;
+      color: var(--ink-muted);
+      font-size: 13px;
+    }
+
+
+    .ornament {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--gold);
+      opacity: .65;
+      margin-block: 18px;
+    }
+
+
+    .ornament::before,
+    .ornament::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+
+    /* ------------------------------------------------------------
+       13. Book controls / toolbar
+       ------------------------------------------------------------ */
+    .library-panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background: var(--surface);
+      padding: clamp(16px, 3vw, 28px);
+      box-shadow: var(--shadow-soft);
+    }
+
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+
+    .search-box {
+      position: relative;
+      flex: 1 1 300px;
+      max-width: 540px;
+    }
+
+
+    .search-box .icon {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--ink-muted);
+      pointer-events: none;
+    }
+
+
+    .search-input {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface-2);
+      color: var(--ink);
+      padding: 10px 48px 10px 14px;
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+
+    .search-input::placeholder {
+      color: var(--ink-muted);
+    }
+
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(201, 167, 91, .1);
+    }
+
+
+    .toolbar-right {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 9px;
+    }
+
+
+    .sort-select {
+      min-height: 43px;
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface-2);
+      color: var(--ink-soft);
+    }
+
+
+    .filter-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      padding: 5px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface-2);
+      margin-bottom: 22px;
+    }
+
+
+    .filter-tab {
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 8px 15px;
+      color: var(--ink-muted);
+      background: transparent;
+      font-size: 12px;
+      font-weight: 700;
+      transition: background .2s ease, color .2s ease, border-color .2s ease;
+    }
+
+
+    .filter-tab:hover {
+      color: var(--ink);
+    }
+
+
+    .filter-tab.active {
+      background: rgba(201, 167, 91, .12);
+      color: var(--gold-bright);
+      border-color: var(--line);
+    }
+
+
+    .results-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--ink-muted);
+      font-size: 12px;
+      margin-bottom: 14px;
+    }
+
+
+    /* ------------------------------------------------------------
+       14. Books grid and book cards
+       ------------------------------------------------------------ */
+    .books-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+
+    .book-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 235px;
+      border: 1px solid var(--line);
+      border-radius: 19px;
+      background: linear-gradient(155deg, var(--surface-2), var(--surface));
+      padding: 18px;
+      overflow: hidden;
+      transition: transform .28s var(--ease), border-color .28s ease, box-shadow .28s ease;
+      animation: cardReveal .45s var(--ease) both;
+    }
+
+
+    .book-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--line-strong);
+      box-shadow: 0 15px 36px rgba(0, 0, 0, .14);
+    }
+
+
+    .book-card::after {
+      content: "";
+      position: absolute;
+      width: 160px;
+      height: 160px;
+      border: 1px solid rgba(201, 167, 91, .08);
+      border-radius: 50%;
+      left: -85px;
+      bottom: -95px;
+      pointer-events: none;
+    }
+
+
+    .book-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+
+    .book-type-icon {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      color: var(--gold-bright);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(201, 167, 91, .08);
+    }
+
+
+    .book-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      justify-content: flex-end;
+    }
+
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 8px;
+      color: var(--ink-muted);
+      font-size: 10px;
+      line-height: 1.5;
+      background: rgba(201, 167, 91, .04);
+    }
+
+
+    .badge-pinned {
+      color: var(--gold-bright);
+      border-color: var(--line-strong);
+      background: rgba(201, 167, 91, .1);
+    }
+
+
+    .book-title {
+      margin: 15px 0 5px;
+      font-size: 17px;
+      line-height: 1.6;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+
+    .book-description {
+      color: var(--ink-soft);
+      font-size: 12px;
+      line-height: 1.8;
+      margin: 0 0 14px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 65px;
+      overflow-wrap: anywhere;
+    }
+
+
+    .book-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px 14px;
+      color: var(--ink-muted);
+      font-size: 11px;
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+
+    .meta-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+
+    .meta-item .icon {
+      width: 14px;
+      height: 14px;
+      color: var(--gold);
+    }
+
+
+    .book-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+
+    .book-actions .button {
+      flex: 1;
+    }
+
+
+    .pin-button {
+      width: 42px;
+      min-width: 42px;
+      padding: 0;
+      flex: 0 0 42px !important;
+    }
+
+
+    .pin-button.is-pinned {
+      color: var(--gold-bright);
+      background: rgba(201, 167, 91, .12);
+      border-color: var(--gold);
+    }
+
+
+    /* ------------------------------------------------------------
+       15. Empty state
+       ------------------------------------------------------------ */
+    .empty-state {
+      text-align: center;
+      padding: 50px 18px;
+      border: 1px dashed var(--line-strong);
+      border-radius: 20px;
+      background: var(--surface-2);
+    }
+
+
+    .empty-icon {
+      width: 68px;
+      height: 68px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 16px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      color: var(--gold);
+      background: rgba(201, 167, 91, .07);
+    }
+
+
+    .empty-state h3 {
+      margin: 0 0 6px;
+      font-family: var(--font-display);
+      font-size: 22px;
+    }
+
+
+    .empty-state p {
+      margin: 0;
+      color: var(--ink-muted);
+      font-size: 13px;
+    }
+
+
+    /* ------------------------------------------------------------
+       16. Latest additions strip
+       ------------------------------------------------------------ */
+    .latest-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+
+    .latest-item {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
+      min-width: 0;
+      transition: border-color .2s ease, transform .2s ease;
+    }
+
+
+    .latest-item:hover {
+      transform: translateY(-2px);
+      border-color: var(--line-strong);
+    }
+
+
+    .latest-cover {
+      width: 48px;
+      height: 56px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 48px;
+      color: var(--gold-bright);
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: linear-gradient(135deg, var(--surface-3), var(--surface-2));
+    }
+
+
+    .latest-info {
+      min-width: 0;
+    }
+
+
+    .latest-info strong {
+      display: block;
+      font-size: 13px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+
+    .latest-info span {
+      color: var(--ink-muted);
+      font-size: 11px;
+    }
+
+
+    /* ------------------------------------------------------------
+       17. Activity log
+       ------------------------------------------------------------ */
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+
+    .activity-row {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+
+    .activity-row:last-child {
+      border-bottom: 0;
+    }
+
+
+    .activity-icon {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      color: var(--gold);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+
+    .activity-copy {
+      min-width: 0;
+    }
+
+
+    .activity-copy strong {
+      display: block;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+
+    .activity-copy small {
+      display: block;
+      color: var(--ink-muted);
+      font-size: 11px;
+    }
+
+
+    .activity-date {
+      color: var(--ink-muted);
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+
+    /* ------------------------------------------------------------
+       18. Community / Telegram section
+       ------------------------------------------------------------ */
+    .community-card {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 28px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-xl);
+      background:
+        radial-gradient(circle at 8% 50%, rgba(201, 167, 91, .11), transparent 28%),
+        var(--surface);
+      overflow: hidden;
+    }
+
+
+    .community-copy {
+      position: relative;
+      z-index: 1;
+    }
+
+
+    .community-copy h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 25px;
+    }
+
+
+    .community-copy p {
+      color: var(--ink-soft);
+      margin: 8px 0 0;
+      font-size: 13px;
+    }
+
+
+    .community-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      flex: 0 0 auto;
+    }
+
+
+    /* ------------------------------------------------------------
+       19. Footer
+       ------------------------------------------------------------ */
+    .site-footer {
+      margin-top: 38px;
+      border-top: 1px solid var(--line);
+      padding: 26px 0 34px;
+      color: var(--ink-muted);
+      font-size: 12px;
+    }
+
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+
+    .footer-mark {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: var(--gold);
+    }
+
+
+    .footer-links {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+
+    .footer-links a:hover {
+      color: var(--gold-bright);
+    }
+
+
+    /* ------------------------------------------------------------
+       20. Modal / book detail view
+       ------------------------------------------------------------ */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(0, 0, 0, .62);
+      backdrop-filter: blur(8px);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .25s ease, visibility .25s ease;
+    }
+
+
+    .modal-backdrop.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+
+    .modal-card {
+      width: min(540px, 100%);
+      max-height: min(85vh, 760px);
+      overflow-y: auto;
+      border: 1px solid var(--line-strong);
+      border-radius: 24px;
+      background: var(--surface);
+      box-shadow: 0 30px 100px rgba(0, 0, 0, .5);
+      transform: translateY(18px) scale(.98);
+      transition: transform .28s var(--ease);
+    }
+
+
+    .modal-backdrop.open .modal-card {
+      transform: translateY(0) scale(1);
+    }
+
+
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+
+
+    .modal-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 22px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+
+    .modal-body {
+      padding: 22px;
+    }
+
+
+    .modal-description {
+      white-space: pre-wrap;
+      color: var(--ink-soft);
+      overflow-wrap: anywhere;
+    }
+
+
+    .modal-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+
+    .modal-meta-box {
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      padding: 12px;
+      background: var(--surface-2);
+    }
+
+
+    .modal-meta-box span {
+      display: block;
+      color: var(--ink-muted);
+      font-size: 11px;
+    }
+
+
+    .modal-meta-box strong {
+      display: block;
+      margin-top: 3px;
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+
+    /* ------------------------------------------------------------
+       21. Toast notifications
+       ------------------------------------------------------------ */
+    .toast-stack {
+      position: fixed;
+      z-index: 900;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      width: min(360px, calc(100% - 32px));
+      pointer-events: none;
+    }
+
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 15px;
+      border: 1px solid var(--line-strong);
+      border-radius: 14px;
+      color: var(--ink);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      animation: toastIn .3s var(--ease) both;
+      font-size: 12px;
+    }
+
+
+    .toast .icon {
+      color: var(--gold-bright);
+    }
+
+
+    .toast.toast-out {
+      animation: toastOut .25s ease both;
+    }
+
+
+    /* ------------------------------------------------------------
+       22. Loading skeletons
+       ------------------------------------------------------------ */
+    .skeleton {
+      position: relative;
+      overflow: hidden;
+      background: var(--surface-2);
+      border-radius: 10px;
+    }
+
+
+    .skeleton::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      transform: translateX(-100%);
+      background: linear-gradient(90deg, transparent, rgba(201, 167, 91, .08), transparent);
+      animation: skeletonShimmer 1.4s infinite;
+    }
+
+
+    .skeleton-card {
+      min-height: 230px;
+      border: 1px solid var(--line);
+      border-radius: 19px;
+      padding: 18px;
+      background: var(--surface);
+    }
+
+
+    .skeleton-line {
+      height: 13px;
+      margin-top: 13px;
+    }
+
+
+    .skeleton-line.short {
+      width: 45%;
+    }
+
+
+    .skeleton-line.long {
+      width: 92%;
+    }
+
+
+    /* ------------------------------------------------------------
+       23. Scroll reveal
+       ------------------------------------------------------------ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity .65s ease, transform .65s var(--ease);
+    }
+
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+
+    /* ------------------------------------------------------------
+       24. Animations
+       ------------------------------------------------------------ */
+    @keyframes orbFloat {
+      from {
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+      to {
+        transform: translate3d(35px, 28px, 0) scale(1.1);
+      }
+    }
+
+
+    @keyframes cardReveal {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px) scale(.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+
+    @keyframes toastOut {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+    }
+
+
+    @keyframes skeletonShimmer {
+      to {
+        transform: translateX(100%);
+      }
+    }
+
+
+    @keyframes pulseGold {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(201, 167, 91, .12);
+      }
+      50% {
+        box-shadow: 0 0 0 6px rgba(201, 167, 91, 0);
+      }
+    }
+
+
+    /* ------------------------------------------------------------
+       25. Responsive layout: medium screens
+       ------------------------------------------------------------ */
+    @media (max-width: 1000px) {
+      .main-nav {
+        gap: 2px;
+      }
+      .nav-link {
+        padding: 8px 10px;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .books-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .latest-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+
+    /* ------------------------------------------------------------
+       26. Responsive layout: mobile navigation
+       ------------------------------------------------------------ */
+    @media (max-width: 760px) {
+      .header-inner {
+        min-height: 68px;
+      }
+      .main-nav {
+        position: absolute;
+        top: calc(100% + 1px);
+        right: 0;
+        left: 0;
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 12px 21px 16px;
+        border-bottom: 1px solid var(--line);
+        background: var(--page);
+        box-shadow: var(--shadow-soft);
+      }
+      .main-nav.open {
+        display: flex;
+      }
+      .nav-link {
+        justify-content: flex-start;
+        padding: 12px 14px;
+      }
+      .menu-toggle {
+        display: grid;
+      }
+      .brand-title {
+        font-size: 14px;
+      }
+      .brand-subtitle {
+        font-size: 10px;
+      }
+      .hero {
+        padding-top: 26px;
+      }
+      .hero-frame {
+        border-radius: 24px;
+      }
+      .hero-title {
+        font-size: clamp(31px, 8vw, 46px);
+      }
+      .hero-description {
+        font-size: 13px;
+      }
+      .section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .community-card {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .community-actions {
+        width: 100%;
+      }
+      .community-actions .button {
+        flex: 1;
+      }
+    }
+
+
+    /* ------------------------------------------------------------
+       27. Responsive layout: narrow mobile
+       ------------------------------------------------------------ */
+    @media (max-width: 520px) {
+      .container {
+        width: calc(100% - 26px);
+      }
+      .brand-mark {
+        width: 39px;
+        height: 39px;
+        border-radius: 12px;
+      }
+      .header-actions {
+        gap: 6px;
+      }
+      .icon-button {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+      }
+      .hero-frame {
+        padding: 23px 19px;
+      }
+      .hero-title {
+        font-size: 32px;
+      }
+      .hero-actions .button {
+        width: 100%;
+      }
+      .hero-details {
+        gap: 7px;
+      }
+      .detail-chip {
+        font-size: 10px;
+        padding: 6px 9px;
+      }
+      .stats-grid {
+        gap: 9px;
+      }
+      .stat-card {
+        padding: 14px;
+        border-radius: 16px;
+      }
+      .stat-value {
+        font-size: 24px;
+      }
+      .stat-icon {
+        width: 35px;
+        height: 35px;
+      }
+      .library-panel {
+        padding: 12px;
+        border-radius: 20px;
+      }
+      .toolbar {
+        align-items: stretch;
+      }
+      .search-box {
+        flex-basis: 100%;
+      }
+      .toolbar-right {
+        width: 100%;
+      }
+      .sort-select {
+        flex: 1;
+      }
+      .filter-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      }
+      .filter-tab {
+        flex: 0 0 auto;
+      }
+      .books-grid {
+        grid-template-columns: 1fr;
+      }
+      .book-card {
+        min-height: 210px;
+      }
+      .latest-strip {
+        grid-template-columns: 1fr;
+      }
+      .activity-row {
+        grid-template-columns: 36px minmax(0, 1fr);
+        gap: 9px;
+        padding: 12px;
+      }
+      .activity-date {
+        grid-column: 2;
+      }
+      .activity-icon {
+        width: 34px;
+        height: 34px;
+      }
+      .community-card {
+        padding: 20px;
+      }
+      .community-actions {
+        flex-direction: column;
+      }
+      .footer-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .footer-links {
+        flex-wrap: wrap;
+      }
+      .toast-stack {
+        right: 13px;
+        bottom: 13px;
+      }
+    }
+
+
+    /* ------------------------------------------------------------
+       28. Accessibility: reduce motion and contrast
+       ------------------------------------------------------------ */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+
+
+    /* ------------------------------------------------------------
+       29. Fine visual adjustments
+       ------------------------------------------------------------ */
+    .gold-rule {
+      height: 1px;
+      width: 100%;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      opacity: .45;
+    }
+
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      display: inline-block;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 10px rgba(201, 167, 91, .4);
+    }
+
+
+    .live-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--ink-muted);
+      font-size: 11px;
+    }
+
+
+    .live-label .status-dot {
+      animation: pulseGold 2.4s ease infinite;
+    }
+
+
+    .count-up {
+      font-variant-numeric: tabular-nums;
+    }
+
+
+    .mobile-bottom-space {
+      height: 20px;
+    }
+  
+    /* ============================================================
+       PREMIUM POLISH — refined Arabic typography, glass and desktop frame
+       ============================================================ */
+    @import url('https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap');
+    :root {
+      --font-display: "Aref Ruqaa", "Amiri", serif;
+      --font-body: "Amiri", "Noto Naskh Arabic", serif;
+      --glass-edge: rgba(225, 205, 154, .22);
+      --glass-highlight: rgba(255,255,255,.085);
+      --silver: #c9cdd2;
+      --silver-soft: #e8ebee;
+    }
+    /* Desktop canvas is intentionally preserved on phones; the user can pan/zoom. */
+    body { min-width: 1100px; }
+    .container { width: min(1240px, calc(100% - 64px)); }
+    .site-header, .hero-frame, .stat-card, .book-card, .community-card,
+    .activity-item, .modal-card, .filter-tab, .button, .icon-button {
+      backdrop-filter: blur(18px) saturate(145%);
+      -webkit-backdrop-filter: blur(18px) saturate(145%);
+    }
+    .site-header {
+      background: color-mix(in srgb, var(--page) 78%, transparent);
+      border-bottom-color: var(--glass-edge);
+      box-shadow: 0 12px 40px rgba(0,0,0,.14);
+    }
+    .hero-frame {
+      background:
+        radial-gradient(ellipse at 90% 12%, rgba(222,195,132,.16), transparent 44%),
+        linear-gradient(145deg, var(--glass-highlight), transparent 42%),
+        color-mix(in srgb, var(--surface) 78%, transparent);
+      border-color: rgba(213,185,120,.42);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 28px 90px rgba(0,0,0,.32);
+    }
+    .hero-title {
+      font-family: "Aref Ruqaa", "Amiri", serif !important;
+      font-weight: 700;
+      letter-spacing: 0;
+      text-shadow: 0 3px 20px rgba(0,0,0,.22), 0 0 35px rgba(211,178,106,.12);
+    }
+    .hero-title .accent { color: var(--silver-soft); }
+    .brand-title, .section-title, .book-title, .modal-title,
+    .stat-value, .detail-chip, .nav-link, .button, .hero-description,
+    .hero-kicker, .filter-tab, .activity-item, .community-card,
+    .empty-state, .toast, .search-input, .sort-select {
+      font-family: var(--font-body);
+    }
+    .book-card, .stat-card, .community-card, .activity-item, .modal-card {
+      border: 1px solid var(--glass-edge);
+      background: linear-gradient(145deg, rgba(255,255,255,.075), rgba(255,255,255,.018)), var(--surface);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.09), var(--shadow-soft);
+    }
+    .book-card:hover, .stat-card:hover, .community-card:hover {
+      border-color: rgba(224,194,128,.58);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 22px 55px rgba(0,0,0,.24), 0 0 26px rgba(201,167,91,.08);
+      transform: translateY(-5px);
+    }
+    .icon, .icon-button svg, .button svg { stroke-width: 1.55; }
+    .detail-chip { border-color: rgba(220,194,132,.24); background: rgba(255,255,255,.045); }
+    .button-primary { box-shadow: 0 8px 24px rgba(194,157,83,.18), inset 0 1px 0 rgba(255,255,255,.2); }
+    .button:active, .icon-button:active, .filter-tab:active { transform: scale(.965); }
+    [data-theme="champagne"] .hero-title .accent,
+    [data-theme="ivory"] .hero-title .accent { color: var(--gold-bright); }
+    [data-theme="champagne"] .book-card,
+    [data-theme="champagne"] .stat-card,
+    [data-theme="champagne"] .community-card,
+    [data-theme="ivory"] .book-card,
+    [data-theme="ivory"] .stat-card,
+    [data-theme="ivory"] .community-card {
+      background: linear-gradient(145deg, rgba(255,255,255,.65), rgba(255,255,255,.12)), var(--surface);
+      border-color: rgba(167,132,67,.25);
+    }
+    /* Prevent text selection, long-press selection and the default blue highlight. */
+    html, body, body * {
+      -webkit-user-select: none !important;
+      user-select: none !important;
+      -webkit-touch-callout: none !important;
+      -webkit-tap-highlight-color: transparent !important;
+    }
+    input, textarea, select, [contenteditable="true"] {
+      -webkit-user-select: text !important;
+      user-select: text !important;
+      -webkit-touch-callout: default !important;
+    }
+    ::selection { background: transparent !important; color: inherit !important; }
+    ::-moz-selection { background: transparent !important; color: inherit !important; }
+    @media (max-width: 760px) {
+      /* Keep desktop-like proportions on mobile rather than collapsing into a mobile UI. */
+      body { min-width: 1100px; }
+      .container { width: min(1240px, calc(100% - 64px)); }
+      .site-header .container { width: min(1240px, calc(100% - 64px)); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+
+  </style>
+</head>
+<body data-theme="blackgold">
+  <!-- Decorative atmosphere layer -->
+  <div class="ambient" aria-hidden="true">
+    <span class="ambient-orb"></span>
+    <span class="ambient-orb"></span>
+  </div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- Inline icon definitions for consistent stroke artwork -->
+  <svg class="sr-only" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-book" viewBox="0 0 24 24">
+      <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 1 4 17.5z"/>
+      <path d="M4 5.5v12M8 7h8M8 11h8M8 15h5"/>
+    </symbol>
+    <symbol id="i-search" viewBox="0 0 24 24">
+      <circle cx="10.8" cy="10.8" r="6.8"/>
+      <path d="m16 16 4.5 4.5"/>
+    </symbol>
+    <symbol id="i-download" viewBox="0 0 24 24">
+      <path d="M12 3v11M7.5 9.5 12 14l4.5-4.5M4 17v3h16v-3"/>
+    </symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24">
+      <path d="m15 4 5 5-4 1-3 3-1 4-5-5 4-1 3-3zM8 16l-4 4"/>
+    </symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24">
+      <rect x="3" y="5" width="18" height="16" rx="2"/>
+      <path d="M7 3v4M17 3v4M3 10h18"/>
+    </symbol>
+    <symbol id="i-file" viewBox="0 0 24 24">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <path d="M14 2v6h6M8 13h8M8 17h6"/>
+    </symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24">
+      <path d="M3 3v18h18M7 15l4-5 4 3 5-7"/>
+    </symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24">
+      <path d="M4 6h16M4 12h16M4 18h16"/>
+    </symbol>
+    <symbol id="i-close" viewBox="0 0 24 24">
+      <path d="m6 6 12 12M18 6 6 18"/>
+    </symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24">
+      <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.8 8.8 0 1 0 11 11z"/>
+    </symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="4"/>
+      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+    </symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24">
+      <path d="M5 12h14M13 6l6 6-6 6"/>
+    </symbol>
+    <symbol id="i-star" viewBox="0 0 24 24">
+      <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 3 1.1-6.3L3 9.6l6.2-.9z"/>
+    </symbol>
+    <symbol id="i-users" viewBox="0 0 24 24">
+      <path d="M16 20v-1.5a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V20M9 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM18 8a3 3 0 1 0 0-6M22 20v-1.5a4 4 0 0 0-3-3.9"/>
+    </symbol>
+    <symbol id="i-telegram" viewBox="0 0 24 24">
+      <path d="m21 3-3.2 18-6.1-4.6-3.4 3.3-.6-5.8L21 3zM7.7 11.2 18.1 5.1"/>
+    </symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M12 7v5l3.5 2"/>
+    </symbol>
+    <symbol id="i-info" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M12 11v5M12 8h.01"/>
+    </symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24">
+      <path d="M20 7v5h-5M4 17v-5h5"/>
+      <path d="M6.5 9A6 6 0 0 1 17 6.5L20 9M4 15l3 2.5A6 6 0 0 0 17.5 15"/>
+    </symbol>
+    <symbol id="i-link" viewBox="0 0 24 24">
+      <path d="M10 13a5 5 0 0 0 7h1a5 5 0 0 0 3-1.1l2-2a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7-7L5 6a5 5 0 0 0 7 7l1-1"/>
+    </symbol>
+  </svg>
+
+
+  <!-- ------------------------------------------------------------
+       Site header / navigation
+       ------------------------------------------------------------ -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#home" aria-label="العودة إلى الرئيسية">
+        <span class="brand-mark">
+          <svg class="icon icon-lg"><use href="#i-book"></use></svg>
+        </span>
+        <span class="brand-copy">
+          <h1 class="brand-title">مكتبة إدارة الأعمال</h1>
+          <p class="brand-subtitle">BUSINESS ADMINISTRATION LIBRARY</p>
+        </span>
+      </a>
+
+      <nav class="main-nav" id="mainNav" aria-label="التنقل الرئيسي">
+        <a class="nav-link active" href="#home">الرئيسية</a>
+        <a class="nav-link" href="#library">الكتب</a>
+        <a class="nav-link" href="#latest">أحدث الإضافات</a>
+        <a class="nav-link" href="#activity">السجل</a>
+      </nav>
+
+      <div class="header-actions">
+        <button class="icon-button" id="themeButton" type="button" aria-label="تبديل الألوان" title="تبديل الثيم">
+          <svg class="icon"><use href="#i-sun"></use></svg>
+        </button>
+        <button class="icon-button menu-toggle" id="menuToggle" type="button" aria-label="فتح القائمة" aria-expanded="false">
+          <svg class="icon"><use href="#i-menu"></use></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+
+  <!-- ------------------------------------------------------------
+       Main page content
+       ------------------------------------------------------------ -->
+  <main id="home">
+    <div class="container">
+      <!-- Hero / academic identity -->
+      <section class="hero reveal" aria-labelledby="heroTitle">
+        <div class="hero-frame">
+          <div class="hero-content">
+            <span class="hero-kicker">المكتبة الطلابية الرقمية</span>
+            <h2 class="hero-title" id="heroTitle">
+              كُتُبُ إِدَارَةِ الأَعْمَالِ
+              <br>
+              <span class="accent">ومَصْدَرُ مَعْرِفَتِنَا</span>
+            </h2>
+            <p class="hero-description">
+              مساحة معرفية تجمع مراجع وملفات الدراسة، وتسهّل الوصول إلى الكتب
+              والملخصات والمواد التعليمية التي يحتاجها طلبة قسم إدارة الأعمال.
+            </p>
+            <div class="hero-details" aria-label="معلومات القسم">
+              <span class="detail-chip"><svg class="icon"><use href="#i-book"></use></svg> كلية الإدارة والاقتصاد</span>
+              <span class="detail-chip"><svg class="icon"><use href="#i-users"></use></svg> قسم إدارة الأعمال</span>
+              <span class="detail-chip"><svg class="icon"><use href="#i-calendar"></use></svg> المرحلة الثالثة</span>
+              <span class="detail-chip"><svg class="icon"><use href="#i-clock"></use></svg> الدراسة المسائية</span>
+              <span class="detail-chip">القاعة B</span>
+            </div>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#library">
+                <svg class="icon"><use href="#i-book"></use></svg>
+                تصفح الكتب
+              </a>
+              <a class="button button-quiet" href="https://t.me/+mZe3EZzQBCYxOTUy" target="_blank" rel="noopener">
+                <svg class="icon"><use href="#i-telegram"></use></svg>
+                الانضمام إلى المجموعة
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- Statistics overview -->
+      <section class="stats-grid reveal" aria-label="إحصائيات المكتبة">
+        <article class="stat-card">
+          <div class="stat-top">
+            <p class="stat-label">إجمالي الكتب</p>
+            <span class="stat-icon"><svg class="icon"><use href="#i-book"></use></svg></span>
+          </div>
+          <strong class="stat-value count-up" id="statBooks">0</strong>
+          <p class="stat-note">الملفات المتاحة في المكتبة</p>
+        </article>
+        <article class="stat-card">
+          <div class="stat-top">
+            <p class="stat-label">زيارات المكتبة</p>
+            <span class="stat-icon"><svg class="icon"><use href="#i-eye"></use></svg></span>
+          </div>
+          <strong class="stat-value count-up" id="statVisits">0</strong>
+          <p class="stat-note">عدد الزيارات المسجلة</p>
+        </article>
+        <article class="stat-card">
+          <div class="stat-top">
+            <p class="stat-label">عمليات التحميل</p>
+            <span class="stat-icon"><svg class="icon"><use href="#i-download"></use></svg></span>
+          </div>
+          <strong class="stat-value count-up" id="statDownloads">0</strong>
+          <p class="stat-note">عدد مرات تنزيل الملفات</p>
+        </article>
+        <article class="stat-card">
+          <div class="stat-top">
+            <p class="stat-label">كتب مثبتة</p>
+            <span class="stat-icon"><svg class="icon"><use href="#i-pin"></use></svg></span>
+          </div>
+          <strong class="stat-value count-up" id="statPinned">0</strong>
+          <p class="stat-note">المراجع المختارة في أعلى القائمة</p>
+        </article>
+      </section>
+
+
+      <!-- Latest uploads preview -->
+      <section class="section-space reveal" id="latest">
+        <div class="section-heading">
+          <div class="section-heading-main">
+            <span class="section-eyebrow">LATEST UPLOADS</span>
+            <h2 class="section-title">أحدث الكتب المضافة</h2>
+            <p class="section-description">آخر المواد التي تمت إضافتها إلى المكتبة.</p>
+          </div>
+          <a class="button button-quiet button-small" href="#library">
+            عرض المكتبة
+            <svg class="icon icon-sm"><use href="#i-arrow"></use></svg>
+          </a>
+        </div>
+        <div class="latest-strip" id="latestStrip">
+          <div class="latest-item">
+            <span class="latest-cover skeleton"></span>
+            <div class="latest-info">
+              <strong class="skeleton skeleton-line long"></strong>
+              <span class="skeleton skeleton-line short"></span>
+            </div>
+          </div>
+          <div class="latest-item">
+            <span class="latest-cover skeleton"></span>
+            <div class="latest-info">
+              <strong class="skeleton skeleton-line long"></strong>
+              <span class="skeleton skeleton-line short"></span>
+            </div>
+          </div>
+          <div class="latest-item">
+            <span class="latest-cover skeleton"></span>
+            <div class="latest-info">
+              <strong class="skeleton skeleton-line long"></strong>
+              <span class="skeleton skeleton-line short"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- Main library -->
+      <section class="section-space reveal" id="library">
+        <div class="section-heading">
+          <div class="section-heading-main">
+            <span class="section-eyebrow">THE COLLECTION</span>
+            <h2 class="section-title">رفوف المكتبة</h2>
+            <p class="section-description">ابحث عن كتاب، رتّب القائمة، أو افتح الكتب المثبتة.</p>
+          </div>
+          <span class="live-label"><span class="status-dot"></span> تحديث مباشر عند إعادة التحميل</span>
+        </div>
+
+        <div class="library-panel">
+          <div class="toolbar">
+            <label class="search-box" for="searchInput">
+              <svg class="icon"><use href="#i-search"></use></svg>
+              <input class="search-input" id="searchInput" type="search" placeholder="ابحث باسم الكتاب أو وصفه..." autocomplete="off">
+            </label>
+            <div class="toolbar-right">
+              <select class="sort-select" id="sortSelect" aria-label="ترتيب الكتب">
+                <option value="newest">الأحدث أولاً</option>
+                <option value="oldest">الأقدم أولاً</option>
+                <option value="title">حسب العنوان</option>
+                <option value="size">حسب الحجم</option>
+              </select>
+              <button class="button button-quiet button-small" id="refreshButton" type="button" title="إعادة تحميل الكتب">
+                <svg class="icon icon-sm"><use href="#i-refresh"></use></svg>
+                تحديث
+              </button>
+            </div>
+          </div>
+
+          <div class="filter-tabs" role="tablist" aria-label="تصفية الكتب">
+            <button class="filter-tab active" type="button" data-filter="all" role="tab" aria-selected="true">كل الكتب</button>
+            <button class="filter-tab" type="button" data-filter="recent" role="tab" aria-selected="false">حديثاً</button>
+            <button class="filter-tab" type="button" data-filter="pinned" role="tab" aria-selected="false">المثبتة</button>
+          </div>
+
+          <div class="results-line">
+            <span id="resultCount">جارٍ تحميل الكتب...</span>
+            <span id="loadStatus"> </span>
+          </div>
+
+          <div class="books-grid" id="booksGrid" aria-live="polite"></div>
+
+          <div class="empty-state hidden" id="emptyState">
+            <span class="empty-icon"><svg class="icon icon-xl"><use href="#i-book"></use></svg></span>
+            <h3 id="emptyTitle">لا توجد كتب هنا بعد</h3>
+            <p id="emptyDescription">عندما تتم إضافة ملفات جديدة ستظهر في هذه القائمة.</p>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- Activity / upload timeline -->
+      <section class="section-space reveal" id="activity">
+        <div class="section-heading">
+          <div class="section-heading-main">
+            <span class="section-eyebrow">LIBRARY ACTIVITY</span>
+            <h2 class="section-title">سجل الإضافات</h2>
+            <p class="section-description">ترتيب زمني للمواد التي وصلت إلى المكتبة.</p>
+          </div>
+        </div>
+        <div class="activity-list" id="activityList">
+          <div class="activity-row">
+            <span class="activity-icon"><svg class="icon"><use href="#i-clock"></use></svg></span>
+            <div class="activity-copy">
+              <strong>سيظهر سجل الكتب هنا</strong>
+              <small>يتم ترتيب السجل بحسب وقت الإضافة.</small>
+            </div>
+            <span class="activity-date">—</span>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- Student community links -->
+      <section class="section-space reveal" aria-label="روابط تلجرام">
+        <div class="community-card">
+          <div class="community-copy">
+            <span class="section-eyebrow">STUDENT COMMUNITY</span>
+            <h2>ابقَ قريباً من مجتمعك الدراسي</h2>
+            <p>تابع المجموعة، وتواصل مع بوت المكتبة، وشارك الملفات والمراجع.</p>
+          </div>
+          <div class="community-actions">
+            <a class="button button-primary" href="https://t.me/+mZe3EZzQBCYxOTUy" target="_blank" rel="noopener">
+              <svg class="icon"><use href="#i-users"></use></svg>
+              JOIN GROUP
+            </a>
+            <a class="button button-quiet" href="https://t.me/ONX44" target="_blank" rel="noopener">
+              <svg class="icon"><use href="#i-telegram"></use></svg>
+              MY BOT
+            </a>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="footer-mark"><svg class="icon icon-sm"><use href="#i-book"></use></svg></span>
+        <span>المكتبة الطلابية — قسم إدارة الأعمال</span>
+      </div>
+      <div class="footer-links">
+        <a href="#home">الرئيسية</a>
+        <a href="#library">الكتب</a>
+        <a href="https://t.me/+mZe3EZzQBCYxOTUy" target="_blank" rel="noopener">المجموعة</a>
+        <span>2025 — 2026</span>
+      </div>
+    </div>
+  </footer>
+  <div class="mobile-bottom-space" aria-hidden="true"></div>
+
+
+  <!-- Book details modal -->
+  <div class="modal-backdrop" id="bookModal" role="dialog" aria-modal="true" aria-labelledby="modalBookTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <span class="section-eyebrow">BOOK DETAILS</span>
+          <h2 class="modal-title" id="modalBookTitle">عنوان الكتاب</h2>
+        </div>
+        <button class="icon-button" id="modalClose" type="button" aria-label="إغلاق">
+          <svg class="icon"><use href="#i-close"></use></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-description" id="modalDescription"></p>
+        <div class="modal-meta-grid">
+          <div class="modal-meta-box"><span>حجم الملف</span><strong id="modalSize">—</strong></div>
+          <div class="modal-meta-box"><span>تاريخ الإضافة</span><strong id="modalDate">—</strong></div>
+          <div class="modal-meta-box"><span>نوع الملف</span><strong id="modalType">—</strong></div>
+          <div class="modal-meta-box"><span>الحالة</span><strong id="modalPinned">غير مثبت</strong></div>
+        </div>
+        <div class="modal-actions">
+          <button class="button button-primary" id="modalDownload" type="button">
+            <svg class="icon"><use href="#i-download"></use></svg>
+            تحميل الكتاب
+          </button>
+          <button class="button button-quiet" id="modalPin" type="button">
+            <svg class="icon"><use href="#i-pin"></use></svg>
+            تثبيت الكتاب
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Toast messages -->
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+
+
+  <!-- ------------------------------------------------------------
+       JavaScript: application state and API layer
+       ------------------------------------------------------------ -->
+  <script>
+    "use strict";
+
+    /* ------------------------------------------------------------
+       30. Configuration
+       ------------------------------------------------------------ */
+    const LIBRARY_CONFIG = Object.freeze({
+      apiRoot: "",
+      groupUrl: "https://t.me/+mZe3EZzQBCYxOTUy",
+      botUrl: "https://t.me/ONX44",
+      recentWindowDays: 1,
+      refreshIntervalMs: 0
+    });
+
+
+    /* ------------------------------------------------------------
+       31. State container
+       ------------------------------------------------------------ */
+    const LibraryState = {
+      books: [],
+      stats: {
+        books: 0,
+        visits: 0,
+        downloads: 0
+      },
+      filter: "all",
+      search: "",
+      sort: "newest",
+      activeBook: null,
+      loading: false,
+      failed: false
+    };
+
+
+    /* ------------------------------------------------------------
+       32. DOM references
+       ------------------------------------------------------------ */
+    const DOM = {
+      booksGrid: document.getElementById("booksGrid"),
+      resultCount: document.getElementById("resultCount"),
+      emptyState: document.getElementById("emptyState"),
+      emptyTitle: document.getElementById("emptyTitle"),
+      emptyDescription: document.getElementById("emptyDescription"),
+      searchInput: document.getElementById("searchInput"),
+      sortSelect: document.getElementById("sortSelect"),
+      filterTabs: document.querySelectorAll(".filter-tab"),
+      latestStrip: document.getElementById("latestStrip"),
+      activityList: document.getElementById("activityList"),
+      statBooks: document.getElementById("statBooks"),
+      statVisits: document.getElementById("statVisits"),
+      statDownloads: document.getElementById("statDownloads"),
+      statPinned: document.getElementById("statPinned"),
+      loadStatus: document.getElementById("loadStatus"),
+      refreshButton: document.getElementById("refreshButton"),
+      themeButton: document.getElementById("themeButton"),
+      menuToggle: document.getElementById("menuToggle"),
+      mainNav: document.getElementById("mainNav"),
+      modal: document.getElementById("bookModal"),
+      modalClose: document.getElementById("modalClose"),
+      modalBookTitle: document.getElementById("modalBookTitle"),
+      modalDescription: document.getElementById("modalDescription"),
+      modalSize: document.getElementById("modalSize"),
+      modalDate: document.getElementById("modalDate"),
+      modalType: document.getElementById("modalType"),
+      modalPinned: document.getElementById("modalPinned"),
+      modalDownload: document.getElementById("modalDownload"),
+      modalPin: document.getElementById("modalPin"),
+      toastStack: document.getElementById("toastStack")
+    };
+
+
+    /* ------------------------------------------------------------
+       33. Small formatting helpers
+       ------------------------------------------------------------ */
+    function safeText(value, fallback = "") {
+      if (value === null || value === undefined) return fallback;
+      return String(value);
+    }
+
+
+    function escapeHTML(value) {
+      return safeText(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+
+    function formatNumber(value) {
+      const numeric = Number(value || 0);
+      return new Intl.NumberFormat("ar-IQ").format(numeric);
+    }
+
+
+    function formatFileSize(bytes) {
+      const size = Number(bytes || 0);
+      if (!size || size < 0) return "غير محدد";
+      if (size < 1024) return `${size} بايت`;
+      if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+      if (size < 1024 * 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+      return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+    }
+
+
+    function formatDate(value, includeTime = false) {
+      if (!value) return "تاريخ غير محدد";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return safeText(value, "تاريخ غير محدد");
+      const options = includeTime
+        ? { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }
+        : { year: "numeric", month: "short", day: "numeric" };
+      return new Intl.DateTimeFormat("ar-IQ", options).format(date);
+    }
+
+
+    function fileExtension(book) {
+      const fileName = safeText(book.file_name || book.title || "");
+      const match = fileName.match(/\.([a-z0-9]{1,8})$/i);
+      return match ? match[1].toUpperCase() : "FILE";
+    }
+
+
+    function bookDate(book) {
+      const parsed = new Date(book.created_at || 0).getTime();
+      return Number.isNaN(parsed) ? 0 : parsed;
+    }
+
+
+    function isRecent(book) {
+      const created = bookDate(book);
+      if (!created) return false;
+      const cutoff = Date.now() - LIBRARY_CONFIG.recentWindowDays * 24 * 60 * 60 * 1000;
+      return created >= cutoff;
+    }
+
+
+    function isPinned(book) {
+      return Boolean(Number(book.pinned || 0));
+    }
+
+
+    /* ------------------------------------------------------------
+       34. API request wrapper
+       ------------------------------------------------------------ */
+    async function apiRequest(path, options = {}) {
+      const requestOptions = {
+        method: options.method || "GET",
+        headers: {
+          "Accept": "application/json",
+          ...(options.headers || {})
+        },
+        cache: options.cache || "no-store"
+      };
+      if (options.body) {
+        requestOptions.headers["Content-Type"] = "application/json";
+        requestOptions.body = JSON.stringify(options.body);
+      }
+      const response = await fetch(`${LIBRARY_CONFIG.apiRoot}${path}`, requestOptions);
+      if (!response.ok) {
+        const error = new Error(`API error ${response.status}`);
+        error.status = response.status;
+        throw error;
+      }
+      return response.status === 204 ? null : response.json();
+    }
+
+
+    /* ------------------------------------------------------------
+       35. API: fetch books and statistics
+       ------------------------------------------------------------ */
+    async function fetchBooks() {
+      const payload = await apiRequest("/api/books");
+      return Array.isArray(payload.books) ? payload.books : [];
+    }
+
+
+    async function fetchStats() {
+      try {
+        return await apiRequest("/api/stats");
+      } catch (error) {
+        console.warn("Statistics endpoint unavailable", error);
+        return null;
+      }
+    }
+
+
+    async function recordVisit() {
+      try {
+        await apiRequest("/api/visit", { method: "POST" });
+      } catch (error) {
+        console.warn("Visit could not be recorded", error);
+      }
+    }
+
+
+    /* ------------------------------------------------------------
+       36. Load / refresh sequence
+       ------------------------------------------------------------ */
+    async function loadLibrary({ showToast = false } = {}) {
+      LibraryState.loading = true;
+      DOM.loadStatus.textContent = "جارٍ التحديث";
+      DOM.refreshButton.disabled = true;
+      DOM.refreshButton.style.opacity = ".65";
+      try {
+        const [books, stats] = await Promise.all([fetchBooks(), fetchStats()]);
+        LibraryState.books = books;
+        LibraryState.stats.books = Number(stats?.books ?? books.length);
+        LibraryState.stats.visits = Number(stats?.visits ?? 0);
+        LibraryState.stats.downloads = Number(stats?.downloads ?? 0);
+        LibraryState.failed = false;
+        renderEverything();
+        DOM.loadStatus.textContent = "تم التحديث";
+        if (showToast) showToastMessage("تم تحديث قائمة الكتب", "success");
+      } catch (error) {
+        LibraryState.failed = true;
+        console.error("Library loading error", error);
+        renderEverything();
+        DOM.loadStatus.textContent = "تعذر الاتصال";
+        if (showToast) showToastMessage("تعذر الوصول إلى المكتبة. تحقق من اتصال الخادم.", "error");
+      } finally {
+        LibraryState.loading = false;
+        DOM.refreshButton.disabled = false;
+        DOM.refreshButton.style.opacity = "1";
+      }
+    }
+
+
+    /* ------------------------------------------------------------
+       37. Derived book list: filtering and sorting
+       ------------------------------------------------------------ */
+    function getFilteredBooks() {
+      let books = [...LibraryState.books];
+      if (LibraryState.filter === "pinned") {
+        books = books.filter(isPinned);
+      } else if (LibraryState.filter === "recent") {
+        books = books.filter(isRecent);
+      }
+      const searchTerm = LibraryState.search.trim().toLocaleLowerCase("ar");
+      if (searchTerm) {
+        books = books.filter((book) => {
+          const title = safeText(book.title || book.file_name).toLocaleLowerCase("ar");
+          const description = safeText(book.description).toLocaleLowerCase("ar");
+          const fileName = safeText(book.file_name).toLocaleLowerCase("ar");
+          return title.includes(searchTerm) || description.includes(searchTerm) || fileName.includes(searchTerm);
+        });
+      }
+      switch (LibraryState.sort) {
+        case "oldest":
+          books.sort((a, b) => bookDate(a) - bookDate(b));
+          break;
+        case "title":
+          books.sort((a, b) => safeText(a.title || a.file_name).localeCompare(safeText(b.title || b.file_name), "ar"));
+          break;
+        case "size":
+          books.sort((a, b) => Number(b.file_size || 0) - Number(a.file_size || 0));
+          break;
+        case "newest":
+        default:
+          books.sort((a, b) => bookDate(b) - bookDate(a));
+          break;
+      }
+      return books;
+    }
+
+
+    /* ------------------------------------------------------------
+       38. Book card template
+       ------------------------------------------------------------ */
+    function createBookCard(book, index) {
+      const id = safeText(book.id);
+      const title = safeText(book.title || book.file_name, "كتاب دون عنوان");
+      const description = safeText(book.description, "لا توجد ملاحظة مرفقة بهذا الكتاب.");
+      const pinned = isPinned(book);
+      const date = formatDate(book.created_at);
+      const size = formatFileSize(book.file_size);
+      const extension = fileExtension(book);
+      const card = document.createElement("article");
+      card.className = "book-card";
+      card.style.animationDelay = `${Math.min(index * 45, 320)}ms`;
+      card.dataset.bookId = id;
+      card.innerHTML = `
+        <div class="book-card-top">
+          <span class="book-type-icon" aria-hidden="true">
+            <svg class="icon icon-lg"><use href="#i-file"></use></svg>
+          </span>
+          <div class="book-badges">
+            <span class="badge">${escapeHTML(extension)}</span>
+            ${pinned ? '<span class="badge badge-pinned"><svg class="icon icon-sm"><use href="#i-star"></use></svg> مثبت</span>' : ""}
+            ${isRecent(book) ? '<span class="badge">جديد</span>' : ""}
+          </div>
+        </div>
+        <h3 class="book-title">${escapeHTML(title)}</h3>
+        <p class="book-description">${escapeHTML(description)}</p>
+        <div class="book-meta">
+          <span class="meta-item"><svg class="icon"><use href="#i-calendar"></use></svg>${escapeHTML(date)}</span>
+          <span class="meta-item"><svg class="icon"><use href="#i-file"></use></svg>${escapeHTML(size)}</span>
+        </div>
+        <div class="book-actions">
+          <button class="button button-primary button-small book-open" type="button" data-action="open" data-id="${escapeHTML(id)}">
+            <svg class="icon icon-sm"><use href="#i-info"></use></svg> التفاصيل
+          </button>
+          <button class="button button-quiet button-small pin-button ${pinned ? "is-pinned" : ""}" type="button" data-action="pin" data-id="${escapeHTML(id)}" aria-label="${pinned ? "إلغاء تثبيت" : "تثبيت"} الكتاب" title="${pinned ? "إلغاء تثبيت الكتاب" : "تثبيت الكتاب"}">
+            <svg class="icon icon-sm"><use href="#i-pin"></use></svg>
+          </button>
+        </div>`;
+      return card;
+    }
+
+
+    /* ------------------------------------------------------------
+       39. Render book list
+       ------------------------------------------------------------ */
+    function renderBooks() {
+      const books = getFilteredBooks();
+      DOM.booksGrid.innerHTML = "";
+      DOM.resultCount.textContent = `عرض ${formatNumber(books.length)} من ${formatNumber(LibraryState.books.length)} كتاب`;
+      if (!books.length) {
+        DOM.booksGrid.classList.add("hidden");
+        DOM.emptyState.classList.remove("hidden");
+        if (LibraryState.failed) {
+          DOM.emptyTitle.textContent = "تعذر تحميل المكتبة";
+          DOM.emptyDescription.textContent = "تأكد من تشغيل الخادم ثم أعد المحاولة.";
+        } else if (LibraryState.search) {
+          DOM.emptyTitle.textContent = "لم نعثر على نتيجة";
+          DOM.emptyDescription.textContent = "جرّب البحث بعنوان مختلف أو امسح عبارة البحث.";
+        } else if (LibraryState.filter === "pinned") {
+          DOM.emptyTitle.textContent = "لا توجد كتب مثبتة";
+          DOM.emptyDescription.textContent = "يمكنك تثبيت أي كتاب من زر الدبوس في بطاقة الكتاب.";
+        } else if (LibraryState.filter === "recent") {
+          DOM.emptyTitle.textContent = "لا توجد إضافات حديثة";
+          DOM.emptyDescription.textContent = "لا توجد كتب أضيفت خلال آخر 24 ساعة.";
+        } else {
+          DOM.emptyTitle.textContent = "المكتبة فارغة حالياً";
+          DOM.emptyDescription.textContent = "عندما يرفع المشرف كتاباً عبر البوت سيظهر هنا تلقائياً عند التحديث.";
+        }
+        return;
+      }
+      DOM.emptyState.classList.add("hidden");
+      DOM.booksGrid.classList.remove("hidden");
+      const fragment = document.createDocumentFragment();
+      books.forEach((book, index) => fragment.appendChild(createBookCard(book, index)));
+      DOM.booksGrid.appendChild(fragment);
+    }
+
+
+    /* ------------------------------------------------------------
+       40. Render newest books strip
+       ------------------------------------------------------------ */
+    function renderLatest() {
+      const latest = [...LibraryState.books]
+        .sort((a, b) => bookDate(b) - bookDate(a))
+        .slice(0, 3);
+      DOM.latestStrip.innerHTML = "";
+      if (!latest.length) {
+        DOM.latestStrip.innerHTML = `
+          <div class="latest-item">
+            <span class="latest-cover"><svg class="icon"><use href="#i-book"></use></svg></span>
+            <div class="latest-info"><strong>لا توجد إضافات حتى الآن</strong><span>سيظهر أحدث كتاب هنا</span></div>
+          </div>`;
+        return;
+      }
+      latest.forEach((book) => {
+        const item = document.createElement("a");
+        item.href = "#library";
+        item.className = "latest-item";
+        item.dataset.bookId = safeText(book.id);
+        item.innerHTML = `
+          <span class="latest-cover"><svg class="icon"><use href="#i-book"></use></svg></span>
+          <span class="latest-info">
+            <strong>${escapeHTML(book.title || book.file_name || "كتاب")}</strong>
+            <span>${escapeHTML(formatDate(book.created_at))}</span>
+          </span>`;
+        item.addEventListener("click", () => {
+          const found = LibraryState.books.find((candidate) => String(candidate.id) === String(book.id));
+          if (found) openBookDetails(found);
+        });
+        DOM.latestStrip.appendChild(item);
+      });
+    }
+
+
+    /* ------------------------------------------------------------
+       41. Render activity timeline
+       ------------------------------------------------------------ */
+    function renderActivity() {
+      const recent = [...LibraryState.books]
+        .sort((a, b) => bookDate(b) - bookDate(a))
+        .slice(0, 8);
+      DOM.activityList.innerHTML = "";
+      if (!recent.length) {
+        DOM.activityList.innerHTML = `
+          <div class="activity-row">
+            <span class="activity-icon"><svg class="icon"><use href="#i-clock"></use></svg></span>
+            <div class="activity-copy"><strong>لم تتم إضافة كتب بعد</strong><small>سيظهر سجل الإضافات بعد رفع أول كتاب.</small></div>
+            <span class="activity-date">—</span>
+          </div>`;
+        return;
+      }
+      recent.forEach((book) => {
+        const row = document.createElement("div");
+        row.className = "activity-row";
+        row.innerHTML = `
+          <span class="activity-icon"><svg class="icon"><use href="#i-file"></use></svg></span>
+          <div class="activity-copy">
+            <strong>${escapeHTML(book.title || book.file_name || "كتاب جديد")}</strong>
+            <small>تمت إضافة ملف ${escapeHTML(fileExtension(book))} إلى المكتبة</small>
+          </div>
+          <span class="activity-date">${escapeHTML(formatDate(book.created_at, true))}</span>`;
+        DOM.activityList.appendChild(row);
+      });
+    }
+
+
+    /* ------------------------------------------------------------
+       42. Statistic rendering and number transitions
+       ------------------------------------------------------------ */
+    function animateNumber(element, targetValue) {
+      if (!element) return;
+      const target = Math.max(0, Number(targetValue || 0));
+      const start = Number(element.dataset.current || 0);
+      const duration = 650;
+      const started = performance.now();
+      const easeOut = (progress) => 1 - Math.pow(1 - progress, 3);
+      function step(now) {
+        const progress = Math.min((now - started) / duration, 1);
+        const current = Math.round(start + (target - start) * easeOut(progress));
+        element.textContent = formatNumber(current);
+        if (progress < 1) requestAnimationFrame(step);
+        else element.dataset.current = String(target);
+      }
+      requestAnimationFrame(step);
+    }
+
+
+    function renderStats() {
+      const pinnedCount = LibraryState.books.filter(isPinned).length;
+      animateNumber(DOM.statBooks, LibraryState.stats.books || LibraryState.books.length);
+      animateNumber(DOM.statVisits, LibraryState.stats.visits);
+      animateNumber(DOM.statDownloads, LibraryState.stats.downloads);
+      animateNumber(DOM.statPinned, pinnedCount);
+    }
+
+
+    /* ------------------------------------------------------------
+       43. Full render pass
+       ------------------------------------------------------------ */
+    function renderEverything() {
+      renderBooks();
+      renderLatest();
+      renderActivity();
+      renderStats();
+    }
+
+
+    /* ------------------------------------------------------------
+       44. Book details modal
+       ------------------------------------------------------------ */
+    function openBookDetails(book) {
+      LibraryState.activeBook = book;
+      DOM.modalBookTitle.textContent = safeText(book.title || book.file_name, "كتاب دون عنوان");
+      DOM.modalDescription.textContent = safeText(book.description, "لا توجد ملاحظة مرفقة لهذا الكتاب.");
+      DOM.modalSize.textContent = formatFileSize(book.file_size);
+      DOM.modalDate.textContent = formatDate(book.created_at, true);
+      DOM.modalType.textContent = safeText(book.mime_type, fileExtension(book));
+      DOM.modalPinned.textContent = isPinned(book) ? "مثبت في المكتبة" : "غير مثبت";
+      DOM.modalPin.innerHTML = isPinned(book)
+        ? '<svg class="icon"><use href="#i-pin"></use></svg> إلغاء التثبيت'
+        : '<svg class="icon"><use href="#i-pin"></use></svg> تثبيت الكتاب';
+      DOM.modal.classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
+
+
+    function closeBookDetails() {
+      DOM.modal.classList.remove("open");
+      document.body.style.overflow = "";
+      LibraryState.activeBook = null;
+    }
+
+
+    /* ------------------------------------------------------------
+       45. Download action
+       ------------------------------------------------------------ */
+    async function downloadBook(book) {
+      if (!book || !book.id) return;
+      try {
+        await apiRequest(`/api/download/${encodeURIComponent(book.id)}`, { method: "POST" });
+      } catch (error) {
+        console.warn("Download count could not be updated", error);
+      }
+      const fileUrl = `${LIBRARY_CONFIG.apiRoot}/api/file/${encodeURIComponent(book.id)}`;
+      const anchor = document.createElement("a");
+      anchor.href = fileUrl;
+      anchor.download = safeText(book.file_name || book.title || "book");
+      anchor.rel = "noopener";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      showToastMessage("بدأ تجهيز الملف للتحميل", "success");
+      const stats = await fetchStats();
+      if (stats) {
+        LibraryState.stats.downloads = Number(stats.downloads || LibraryState.stats.downloads);
+        renderStats();
+      }
+    }
+
+
+    /* ------------------------------------------------------------
+       46. Pin toggle action
+       ------------------------------------------------------------ */
+    async function togglePin(bookId) {
+      const book = LibraryState.books.find((item) => String(item.id) === String(bookId));
+      if (!book) return;
+      try {
+        await apiRequest(`/api/pin/${encodeURIComponent(bookId)}`, { method: "POST" });
+        book.pinned = isPinned(book) ? 0 : 1;
+        renderEverything();
+        if (LibraryState.activeBook && String(LibraryState.activeBook.id) === String(bookId)) {
+          openBookDetails(book);
+        }
+        showToastMessage(isPinned(book) ? "تم تثبيت الكتاب" : "تم إلغاء تثبيت الكتاب", "success");
+      } catch (error) {
+        console.error("Pin action failed", error);
+        showToastMessage("لم نتمكن من تغيير حالة التثبيت", "error");
+      }
+    }
+
+
+    /* ------------------------------------------------------------
+       47. Toast notification helper
+       ------------------------------------------------------------ */
+    function showToastMessage(message, variant = "info") {
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      const iconName = variant === "error" ? "i-info" : "i-star";
+      toast.innerHTML = `<svg class="icon"><use href="#${iconName}"></use></svg><span>${escapeHTML(message)}</span>`;
+      DOM.toastStack.appendChild(toast);
+      window.setTimeout(() => {
+        toast.classList.add("toast-out");
+        window.setTimeout(() => toast.remove(), 260);
+      }, 3200);
+    }
+
+
+    /* ------------------------------------------------------------
+       48. Search event
+       ------------------------------------------------------------ */
+    function handleSearchInput(event) {
+      LibraryState.search = event.target.value || "";
+      renderBooks();
+    }
+
+
+    /* ------------------------------------------------------------
+       49. Filter selection event
+       ------------------------------------------------------------ */
+    function handleFilterChange(filterValue) {
+      LibraryState.filter = filterValue;
+      DOM.filterTabs.forEach((button) => {
+        const active = button.dataset.filter === filterValue;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      renderBooks();
+    }
+
+
+    /* ------------------------------------------------------------
+       50. Sorting event
+       ------------------------------------------------------------ */
+    function handleSortChange(event) {
+      LibraryState.sort = event.target.value;
+      renderBooks();
+    }
+
+
+    /* ------------------------------------------------------------
+       51. Delegated book-card actions
+       ------------------------------------------------------------ */
+    function handleBookGridClick(event) {
+      const button = event.target.closest("button[data-action]");
+      if (!button) return;
+      const action = button.dataset.action;
+      const bookId = button.dataset.id;
+      const book = LibraryState.books.find((item) => String(item.id) === String(bookId));
+      if (!book) return;
+      if (action === "open") {
+        openBookDetails(book);
+      } else if (action === "pin") {
+        togglePin(bookId);
+      }
+    }
+
+
+    /* ------------------------------------------------------------
+       52. Theme cycle
+       ------------------------------------------------------------ */
+    const THEME_SEQUENCE = ["blackgold", "champagne", "ivory"];
+    const THEME_LABELS = {
+      blackgold: "الأسود والذهبي",
+      champagne: "الشامبين والذهبي",
+      ivory: "الأبيض والذهبي"
+    };
+
+    function applyTheme(themeName, persist = true) {
+      const selected = THEME_SEQUENCE.includes(themeName) ? themeName : "blackgold";
+      document.body.dataset.theme = selected;
+      DOM.themeButton.innerHTML = selected === "blackgold"
+        ? '<svg class="icon"><use href="#i-sun"></use></svg>'
+        : selected === "champagne"
+          ? '<svg class="icon"><use href="#i-moon"></use></svg>'
+          : '<svg class="icon"><use href="#i-sun"></use></svg>';
+      DOM.themeButton.title = `الثيم الحالي: ${THEME_LABELS[selected]} — اضغط للتغيير`;
+      if (persist) {
+        try {
+          localStorage.setItem("businessLibraryTheme", selected);
+        } catch (error) {
+          console.warn("Theme preference could not be saved", error);
+        }
+      }
+    }
+
+
+    function cycleTheme() {
+      const current = document.body.dataset.theme || "blackgold";
+      const currentIndex = THEME_SEQUENCE.indexOf(current);
+      const next = THEME_SEQUENCE[(currentIndex + 1) % THEME_SEQUENCE.length];
+      applyTheme(next);
+      showToastMessage(`تم تغيير الثيم إلى ${THEME_LABELS[next]}`);
+    }
+
+
+    function restoreTheme() {
+      try {
+        const saved = localStorage.getItem("businessLibraryTheme");
+        if (saved) applyTheme(saved, false);
+      } catch (error) {
+        applyTheme("blackgold", false);
+      }
+    }
+
+
+    /* ------------------------------------------------------------
+       53. Mobile menu controls
+       ------------------------------------------------------------ */
+    function toggleMobileMenu(forceState) {
+      const open = typeof forceState === "boolean"
+        ? forceState
+        : !DOM.mainNav.classList.contains("open");
+      DOM.mainNav.classList.toggle("open", open);
+      DOM.menuToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      DOM.menuToggle.innerHTML = open
+        ? '<svg class="icon"><use href="#i-close"></use></svg>'
+        : '<svg class="icon"><use href="#i-menu"></use></svg>';
+    }
+
+
+    /* ------------------------------------------------------------
+       54. Scroll reveal observer
+       ------------------------------------------------------------ */
+    function initializeReveal() {
+      const revealElements = document.querySelectorAll(".reveal");
+      if (!("IntersectionObserver" in window)) {
+        revealElements.forEach((element) => element.classList.add("visible"));
+        return;
+      }
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.08, rootMargin: "0px 0px -40px 0px" });
+      revealElements.forEach((element) => observer.observe(element));
+    }
+
+
+    /* ------------------------------------------------------------
+       55. Event listeners
+       ------------------------------------------------------------ */
+    DOM.searchInput.addEventListener("input", handleSearchInput);
+    DOM.sortSelect.addEventListener("change", handleSortChange);
+    DOM.filterTabs.forEach((button) => {
+      button.addEventListener("click", () => handleFilterChange(button.dataset.filter));
+    });
+    DOM.booksGrid.addEventListener("click", handleBookGridClick);
+    DOM.refreshButton.addEventListener("click", () => loadLibrary({ showToast: true }));
+    DOM.themeButton.addEventListener("click", cycleTheme);
+    DOM.menuToggle.addEventListener("click", () => toggleMobileMenu());
+    DOM.mainNav.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => toggleMobileMenu(false));
+    });
+    DOM.modalClose.addEventListener("click", closeBookDetails);
+    DOM.modal.addEventListener("click", (event) => {
+      if (event.target === DOM.modal) closeBookDetails();
+    });
+    DOM.modalDownload.addEventListener("click", () => {
+      if (LibraryState.activeBook) downloadBook(LibraryState.activeBook);
+    });
+    DOM.modalPin.addEventListener("click", () => {
+      if (LibraryState.activeBook) togglePin(LibraryState.activeBook.id);
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeBookDetails();
+        toggleMobileMenu(false);
+      }
+    });
+
+
+    /* ------------------------------------------------------------
+       56. Active navigation highlight on scroll
+       ------------------------------------------------------------ */
+    function initializeActiveNavigation() {
+      const sections = ["home", "library", "latest", "activity"]
+        .map((id) => document.getElementById(id))
+        .filter(Boolean);
+      const links = [...DOM.mainNav.querySelectorAll(".nav-link")];
+      if (!("IntersectionObserver" in window)) return;
+      const observer = new IntersectionObserver((entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!visible) return;
+        links.forEach((link) => {
+          link.classList.toggle("active", link.getAttribute("href") === `#${visible.target.id}`);
+        });
+      }, { rootMargin: "-25% 0px -60% 0px", threshold: [0, .1, .3, .6] });
+      sections.forEach((section) => observer.observe(section));
+    }
+
+
+    /* ------------------------------------------------------------
+       57. Startup routine
+       ------------------------------------------------------------ */
+    async function startLibrary() {
+      restoreTheme();
+      initializeReveal();
+      initializeActiveNavigation();
+      await recordVisit();
+      await loadLibrary();
+    }
+
+
+
+    // Interaction guard: disable browser context menu, copy and long-press text actions.
+    document.addEventListener("contextmenu", (event) => event.preventDefault());
+    document.addEventListener("copy", (event) => { event.preventDefault(); });
+    document.addEventListener("cut", (event) => { event.preventDefault(); });
+    document.addEventListener("dragstart", (event) => { event.preventDefault(); });
+    document.addEventListener("selectstart", (event) => {
+      if (!event.target.closest("input, textarea, select, [contenteditable='true']")) event.preventDefault();
+    });
+    document.addEventListener("touchstart", (event) => {
+      if (event.target.closest("input, textarea, select, [contenteditable='true']")) return;
+      // Avoid accidental text selection after a long press; allow normal scrolling.
+    }, { passive: true });
+
+    /* ------------------------------------------------------------
+       58. Boot application
+       ------------------------------------------------------------ */
+    document.addEventListener("DOMContentLoaded", startLibrary);
+  </script>
+</body>
+</html>
