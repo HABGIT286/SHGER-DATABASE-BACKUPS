@@ -1,48 +1,38 @@
-
-name: Business Library Bot
+name: تشغيل مكتبة الأعمال والبوت
 
 on:
-  push:
-    branches:
-      - main
-      - master
-
   workflow_dispatch:
-
   schedule:
     - cron: "0 */6 * * *"
 
+permissions:
+  contents: read
+
 concurrency:
-  group: business-library-bot
+  group: business-library-runtime
   cancel-in-progress: true
 
 jobs:
-  run-bot:
+  run-library:
     runs-on: ubuntu-latest
     timeout-minutes: 350
 
     steps:
-      - name: Checkout repository
+      - name: تنزيل ملفات المستودع
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: إعداد Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.11"
           cache: pip
 
-      - name: Install libraries
+      - name: تثبيت المكتبات
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Verify required files
-        run: |
-          test -f bot.py
-          test -f index.html
-          echo "Project files verified."
-
-      - name: Start Telegram Bot
+      - name: تشغيل الموقع والبوت معاً
         env:
           TOKKEN: ${{ secrets.TOKKEN }}
           ADMIN_ID: ${{ secrets.ADMIN_ID }}
@@ -51,4 +41,17 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL }}
           PYTHONUNBUFFERED: "1"
         run: |
-          python bot.py
+          if [ -z "$TOKKEN" ]; then
+            echo "ERROR: Secret TOKKEN is missing."
+            exit 1
+          fi
+          if [ -z "$ADMIN_ID" ]; then
+            echo "ERROR: Secret ADMIN_ID is missing."
+            exit 1
+          fi
+          if [ -z "$ADMIN_CODE" ]; then
+            echo "ERROR: Secret ADMIN_CODE is missing."
+            exit 1
+          fi
+          echo "Starting FastAPI app and Telegram bot through bot.py..."
+          exec uvicorn bot:app --host 0.0.0.0 --port 8000
