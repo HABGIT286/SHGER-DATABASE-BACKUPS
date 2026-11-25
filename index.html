@@ -1976,7 +1976,68 @@
       *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
     }
 
-  </style>
+  
+    /* MADARIK EDITION — bespoke editorial interface */
+    @import url('https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap');
+    :root { --font-display:"Aref Ruqaa","Amiri",serif; --font-body:"Amiri","Noto Naskh Arabic",serif; --glass-blur:22px; }
+    body { min-width:0 !important; background-image:radial-gradient(ellipse at 50% -20%,color-mix(in srgb,var(--gold) 16%,transparent),transparent 55%); }
+    .container { width:min(1240px,calc(100% - 34px)) !important; }
+    .site-header { border-bottom-color:color-mix(in srgb,var(--gold) 32%,transparent); }
+    .brand-mark { border-radius:16px; box-shadow:0 0 28px color-mix(in srgb,var(--gold) 15%,transparent),inset 0 1px 0 rgba(255,255,255,.2); animation:brandBreath 5s ease-in-out infinite; }
+    .brand-title { font-family:var(--font-display)!important; font-size:24px!important; letter-spacing:0!important; }
+    .brand-subtitle { font-size:12px!important; }
+    .hero { padding-top:clamp(24px,5vw,54px); }
+    .hero-frame { min-height:390px; border-radius:34px!important; isolation:isolate; }
+    .hero-frame::after { content:"مَـدَارِك"; position:absolute; left:4%; bottom:-7%; font-family:var(--font-display); font-size:clamp(70px,15vw,190px); line-height:1; color:var(--gold); opacity:.035; pointer-events:none; white-space:nowrap; }
+    .hero-title { font-family:var(--font-display)!important; font-weight:700!important; font-size:clamp(38px,6vw,72px)!important; line-height:1.6!important; }
+    .hero-description { font-size:clamp(15px,1.3vw,18px); max-width:710px; line-height:2.1; }
+    .section-title,.community-copy h2,.modal-title,.empty-state h3 { font-family:var(--font-display)!important; font-weight:700!important; }
+    .section-heading { padding-bottom:15px; border-bottom:1px solid var(--line); }
+    .section-eyebrow { display:flex; align-items:center; gap:9px; letter-spacing:.08em; }
+    .section-index { display:inline-grid; place-items:center; min-width:30px; height:30px; border:1px solid var(--line-strong); border-radius:9px; font-family:serif; font-size:13px; letter-spacing:0; color:var(--gold-bright); background:color-mix(in srgb,var(--gold) 9%,var(--surface)); }
+    .stat-card,.book-card,.latest-item,.library-panel,.community-card,.activity-list,.modal-card { backdrop-filter:blur(var(--glass-blur)) saturate(155%); -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(155%); }
+    .stat-card { border-radius:23px; position:relative; overflow:hidden; }
+    .stat-card::after { content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; background:linear-gradient(120deg,rgba(255,255,255,.06),transparent 30%,transparent 65%,rgba(255,255,255,.02)); }
+    .stat-value { font-family:var(--font-display); font-size:clamp(26px,3vw,36px)!important; }
+    .books-grid { gap:18px!important; }
+    .book-card { border-radius:24px!important; min-height:260px!important; padding:22px!important; background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.012)),var(--surface)!important; position:relative; isolation:isolate; }
+    .book-card::before { content:attr(data-card-number); position:absolute; top:12px; left:14px; font-family:var(--font-display); font-size:25px; color:var(--gold); opacity:.12; z-index:-1; }
+    .book-card:hover { transform:translateY(-7px) scale(1.012)!important; }
+    .book-title { font-family:var(--font-body)!important; font-size:19px!important; font-weight:800!important; line-height:1.8!important; }
+    .book-description { font-size:14px!important; line-height:2!important; }
+    .book-type-icon { border-radius:16px!important; box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 22px rgba(0,0,0,.12); }
+    .button { border-radius:14px!important; }
+    #refreshButton svg { transition:transform .65s cubic-bezier(.2,.8,.2,1); }
+    #refreshButton:hover svg { transform:rotate(90deg); }
+    #refreshButton.is-loading svg { animation:refreshSpin .9s linear infinite; }
+    #refreshButton.is-loading { pointer-events:none; }
+    .theme-studio { position:fixed; z-index:250; left:18px; bottom:18px; width:min(330px,calc(100vw - 30px)); font-family:var(--font-body); }
+    .studio-toggle { width:100%; display:flex; align-items:center; gap:11px; padding:13px 16px; color:var(--ink); background:color-mix(in srgb,var(--surface) 76%,transparent); border:1px solid var(--line-strong); border-radius:18px; box-shadow:0 18px 50px rgba(0,0,0,.24); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); transition:transform .25s,border-color .25s; }
+    .studio-toggle:hover { transform:translateY(-3px); border-color:var(--gold); }
+    .studio-toggle-icon { color:var(--gold-bright); font-size:19px; animation:starFloat 3s ease-in-out infinite; }
+    .studio-chevron { margin-right:auto; transition:transform .25s; color:var(--gold); }
+    .theme-studio.open .studio-chevron { transform:rotate(180deg); }
+    .studio-panel { margin-bottom:9px; padding:17px; border:1px solid var(--line-strong); border-radius:22px; background:color-mix(in srgb,var(--surface) 88%,transparent); box-shadow:0 24px 70px rgba(0,0,0,.35); backdrop-filter:blur(28px); -webkit-backdrop-filter:blur(28px); animation:panelRise .25s ease both; }
+    .studio-title { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; gap:8px; }
+    .studio-title span { font-family:var(--font-display); font-size:18px; color:var(--gold-bright); }
+    .studio-title small { color:var(--ink-muted); font-size:11px; }
+    .theme-swatches { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .theme-choice { border:1px solid var(--line); background:var(--surface-2); border-radius:13px; padding:10px 6px; display:flex; flex-direction:column; align-items:center; gap:7px; color:var(--ink-soft); font-size:12px; transition:transform .2s,border-color .2s; }
+    .theme-choice:hover,.theme-choice.selected { transform:translateY(-2px); border-color:var(--gold); color:var(--gold-bright); }
+    .swatch { width:30px; height:30px; border-radius:50%; border:2px solid rgba(255,255,255,.18); box-shadow:0 4px 14px rgba(0,0,0,.2); }
+    .swatch-dark { background:linear-gradient(135deg,#111,#d0ad65); }.swatch-champagne { background:linear-gradient(135deg,#e9dfce,#b99047); }.swatch-ivory { background:linear-gradient(135deg,#fff,#d6b16c); }.swatch-emerald { background:linear-gradient(135deg,#071d18,#4bb98c); }.swatch-midnight { background:linear-gradient(135deg,#081326,#7294d7); }
+    .font-color-row { display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding:10px 12px; border:1px solid var(--line); border-radius:12px; color:var(--ink-soft); font-size:12px; }
+    .font-color-row input { width:38px; height:28px; border:0; background:transparent; cursor:pointer; }
+    .studio-reset { margin-top:10px; width:100%; border:1px solid var(--line); border-radius:11px; padding:9px; background:transparent; color:var(--ink-muted); font-size:12px; }
+    [data-theme="emerald"] { color-scheme:dark; --page:#071410; --page-soft:#0b1d17; --surface:#0c1d17; --surface-2:#10271e; --surface-3:#18372a; --ink:#e6f3eb; --ink-soft:#b2d1bd; --ink-muted:#769888; --gold:#4eae7e; --gold-bright:#8be0b0; --gold-dim:#337e59; --line:rgba(99,204,148,.22); --line-strong:rgba(99,204,148,.5); }
+    [data-theme="midnight"] { color-scheme:dark; --page:#080e1b; --page-soft:#0d1728; --surface:#101c2f; --surface-2:#15243a; --surface-3:#1d3150; --ink:#e9effb; --ink-soft:#b8c7df; --ink-muted:#7e94b7; --gold:#6e93d3; --gold-bright:#a8c7f4; --gold-dim:#496caa; --line:rgba(118,157,218,.24); --line-strong:rgba(118,157,218,.55); }
+    @keyframes refreshSpin { to { transform:rotate(360deg); } }
+    @keyframes brandBreath { 0%,100%{box-shadow:0 0 16px color-mix(in srgb,var(--gold) 8%,transparent)} 50%{box-shadow:0 0 28px color-mix(in srgb,var(--gold) 22%,transparent)} }
+    @keyframes starFloat { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-3px) rotate(12deg)} }
+    @keyframes panelRise { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    @media(max-width:760px){ .hero-frame{min-height:unset}.theme-studio{left:10px;bottom:10px;width:min(310px,calc(100vw - 20px))}.brand-title{font-size:21px!important}.hero-title{font-size:clamp(32px,9vw,48px)!important}.hero-frame::after{font-size:90px}.community-card{gap:14px} }
+    @media(prefers-reduced-motion:reduce){.studio-toggle-icon,.brand-mark{animation:none!important}}
+</style>
 </head>
 <body data-theme="blackgold">
   <!-- Decorative atmosphere layer -->
@@ -2070,8 +2131,8 @@
           <svg class="icon icon-lg"><use href="#i-book"></use></svg>
         </span>
         <span class="brand-copy">
-          <h1 class="brand-title">مكتبة إدارة الأعمال</h1>
-          <p class="brand-subtitle">BUSINESS ADMINISTRATION LIBRARY</p>
+          <h1 class="brand-title">مَدارِك</h1>
+          <p class="brand-subtitle">مكتبة إدارة الأعمال · المعرفة تصنع القرار</p>
         </span>
       </a>
 
@@ -2093,6 +2154,25 @@
     </div>
   </header>
 
+  <!-- Theme and typography studio -->
+  <aside class="theme-studio" id="themeStudio" aria-label="استوديو الثيمات">
+    <button class="studio-toggle" id="studioToggle" type="button" aria-expanded="false" aria-controls="studioPanel">
+      <span class="studio-toggle-icon">✦</span><span>تخصيص المظهر</span><span class="studio-chevron">⌄</span>
+    </button>
+    <div class="studio-panel" id="studioPanel" hidden>
+      <div class="studio-title"><span>استوديو المظهر</span><small>اختر أجواء مكتبتك</small></div>
+      <div class="theme-swatches" role="group" aria-label="الثيمات">
+        <button class="theme-choice" data-theme-choice="blackgold" type="button"><i class="swatch swatch-dark"></i><span>ليلي فاخر</span></button>
+        <button class="theme-choice" data-theme-choice="champagne" type="button"><i class="swatch swatch-champagne"></i><span>شامبين</span></button>
+        <button class="theme-choice" data-theme-choice="ivory" type="button"><i class="swatch swatch-ivory"></i><span>عاجي</span></button>
+        <button class="theme-choice" data-theme-choice="emerald" type="button"><i class="swatch swatch-emerald"></i><span>زمردي</span></button>
+        <button class="theme-choice" data-theme-choice="midnight" type="button"><i class="swatch swatch-midnight"></i><span>كحلي</span></button>
+      </div>
+      <label class="font-color-row" for="fontColorPicker"><span>لون الكتابة</span><input id="fontColorPicker" type="color" value="#f3e9d5" aria-label="اختيار لون الخط"></label>
+      <button class="studio-reset" id="studioReset" type="button">إعادة المظهر الافتراضي</button>
+    </div>
+  </aside>
+
 
   <!-- ------------------------------------------------------------
        Main page content
@@ -2105,9 +2185,9 @@
           <div class="hero-content">
             <span class="hero-kicker">المكتبة الطلابية الرقمية</span>
             <h2 class="hero-title" id="heroTitle">
-              كُتُبُ إِدَارَةِ الأَعْمَالِ
+              مَـدَارِكُ المَعْرِفَةِ
               <br>
-              <span class="accent">ومَصْدَرُ مَعْرِفَتِنَا</span>
+              <span class="accent">مَكْتَبَةُ إِدَارَةِ الأَعْمَالِ</span>
             </h2>
             <p class="hero-description">
               مساحة معرفية تجمع مراجع وملفات الدراسة، وتسهّل الوصول إلى الكتب
@@ -2176,7 +2256,7 @@
       <section class="section-space reveal" id="latest">
         <div class="section-heading">
           <div class="section-heading-main">
-            <span class="section-eyebrow">LATEST UPLOADS</span>
+            <span class="section-eyebrow"><span class="section-index">01</span> · LATEST UPLOADS</span>
             <h2 class="section-title">أحدث الكتب المضافة</h2>
             <p class="section-description">آخر المواد التي تمت إضافتها إلى المكتبة.</p>
           </div>
@@ -2570,6 +2650,7 @@
       LibraryState.loading = true;
       DOM.loadStatus.textContent = "جارٍ التحديث";
       DOM.refreshButton.disabled = true;
+      DOM.refreshButton.classList.add("is-loading");
       DOM.refreshButton.style.opacity = ".65";
       try {
         const [books, stats] = await Promise.all([fetchBooks(), fetchStats()]);
@@ -2590,6 +2671,7 @@
       } finally {
         LibraryState.loading = false;
         DOM.refreshButton.disabled = false;
+        DOM.refreshButton.classList.remove("is-loading");
         DOM.refreshButton.style.opacity = "1";
       }
     }
@@ -2648,6 +2730,7 @@
       card.className = "book-card";
       card.style.animationDelay = `${Math.min(index * 45, 320)}ms`;
       card.dataset.bookId = id;
+      card.dataset.cardNumber = String(index + 1).padStart(2, "0");
       card.innerHTML = `
         <div class="book-card-top">
           <span class="book-type-icon" aria-hidden="true">
@@ -2863,7 +2946,7 @@
       const anchor = document.createElement("a");
       anchor.href = fileUrl; anchor.download = safeText(book.file_name || book.title || "book"); anchor.rel = "noopener";
       document.body.appendChild(anchor); anchor.click(); anchor.remove();
-      showToastMessage("بدأ تحميل الكتاب", "success");
+      showToastMessage(`بدأ تحميل: ${safeText(book.file_name || book.title || "ملف الكتاب")}`, "success");
       const stats = await fetchStats();
       LibraryState.stats.downloads = Number(stats.downloads || LibraryState.stats.downloads); renderStats();
     }
@@ -2949,19 +3032,22 @@
     /* ------------------------------------------------------------
        52. Theme cycle
        ------------------------------------------------------------ */
-    const THEME_SEQUENCE = ["blackgold", "champagne", "ivory"];
+    const THEME_SEQUENCE = ["blackgold", "champagne", "ivory", "emerald", "midnight"];
     const THEME_LABELS = {
       blackgold: "الأسود والذهبي",
       champagne: "الشامبين والذهبي",
-      ivory: "الأبيض والذهبي"
+      ivory: "الأبيض والذهبي",
+      emerald: "الزمردي",
+      midnight: "الكحلي"
     };
 
     function applyTheme(themeName, persist = true) {
       const selected = THEME_SEQUENCE.includes(themeName) ? themeName : "blackgold";
       document.body.dataset.theme = selected;
+      document.querySelectorAll(".theme-choice").forEach(btn => btn.classList.toggle("selected", btn.dataset.themeChoice === selected));
       DOM.themeButton.innerHTML = selected === "blackgold"
         ? '<svg class="icon"><use href="#i-sun"></use></svg>'
-        : selected === "champagne"
+        : selected === "champagne" || selected === "emerald" || selected === "midnight"
           ? '<svg class="icon"><use href="#i-moon"></use></svg>'
           : '<svg class="icon"><use href="#i-sun"></use></svg>';
       DOM.themeButton.title = `الثيم الحالي: ${THEME_LABELS[selected]} — اضغط للتغيير`;
@@ -3084,6 +3170,41 @@
       sections.forEach((section) => observer.observe(section));
     }
 
+
+    /* ------------------------------------------------------------
+       Theme studio: explicit theme selection and persistent font tint
+       ------------------------------------------------------------ */
+    const themeStudio = document.getElementById("themeStudio");
+    const studioToggle = document.getElementById("studioToggle");
+    const studioPanel = document.getElementById("studioPanel");
+    const fontColorPicker = document.getElementById("fontColorPicker");
+    const studioThemeNames = { blackgold:"blackgold", champagne:"champagne", ivory:"ivory", emerald:"emerald", midnight:"midnight" };
+    function applyStudioTheme(theme) {
+      if (!Object.keys(studioThemeNames).includes(theme)) return;
+      document.body.dataset.theme = theme;
+      try { localStorage.setItem("businessLibraryTheme", theme); } catch (_) {}
+      document.querySelectorAll(".theme-choice").forEach(btn => btn.classList.toggle("selected", btn.dataset.themeChoice === theme));
+      DOM.themeButton.title = "المظهر الحالي: " + theme;
+    }
+    studioToggle.addEventListener("click", () => {
+      const opening = studioPanel.hidden;
+      studioPanel.hidden = !opening;
+      themeStudio.classList.toggle("open", opening);
+      studioToggle.setAttribute("aria-expanded", String(opening));
+    });
+    document.querySelectorAll(".theme-choice").forEach(btn => btn.addEventListener("click", () => applyStudioTheme(btn.dataset.themeChoice)));
+    fontColorPicker.addEventListener("input", () => {
+      document.documentElement.style.setProperty("--ink", fontColorPicker.value);
+      try { localStorage.setItem("businessLibraryFontColor", fontColorPicker.value); } catch (_) {}
+    });
+    document.getElementById("studioReset").addEventListener("click", () => {
+      applyStudioTheme("blackgold"); document.documentElement.style.removeProperty("--ink"); fontColorPicker.value="#f3e9d5";
+      try { localStorage.removeItem("businessLibraryFontColor"); } catch (_) {}
+      showToastMessage("عاد المظهر إلى إعداداته الأساسية");
+    });
+    try {
+      const savedTint=localStorage.getItem("businessLibraryFontColor"); if(savedTint){fontColorPicker.value=savedTint;document.documentElement.style.setProperty("--ink",savedTint);}
+    } catch (_) {}
 
     /* ------------------------------------------------------------
        57. Startup routine
