@@ -2,7 +2,7 @@
 Environment: TOKKEN, ADMIN_ID, ADMIN_CODE, GROUP_LINK, SITE_URL, PORT(optional).
 """
 from __future__ import annotations
-import os, html, sqlite3, logging, asyncio, uuid, mimetypes
+import os, html, sqlite3, logging, asyncio, uuid, mimetypes, base64, json, re
 from pathlib import Path
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
@@ -30,6 +30,10 @@ except ValueError:
     ADMIN_ID = 0
 GROUP_LINK = os.getenv("GROUP_LINK", "https://t.me/+mZe3EZzQBCYxOTUy").strip()
 SITE_URL = os.getenv("SITE_URL", "").strip()
+GH_TOKEN = os.getenv("GH_TOKEN", "").strip()
+GH_REPO = os.getenv("GITHUB_REPOSITORY", "").strip()
+GH_BRANCH = os.getenv("GH_BRANCH", "main").strip() or "main"
+GH_API = "https://api.github.com"
 DATA_DIR = Path(os.getenv("DATA_DIR", str(ROOT))).resolve()
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 DB_PATH = DATA_DIR / "library.sqlite3"
@@ -224,6 +228,59 @@ async def api_file(book_id: str):
         raise HTTPException(502, "Unable to fetch file from Telegram") from exc
 
 
+# ---------- Persistent GitHub repository storage ----------
+async def github_request(method: str, path: str, *, content: bytes | None = None, message: str = "Update library") -> dict:
+    if not GH_TOKEN or not GH_REPO:
+        raise RuntimeError("GH_TOKEN or GITHUB_REPOSITORY is missing")
+    headers = {"Authorization": f"Bearer {GH_TOKEN}", "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
+    async with httpx.AsyncClient(timeout=90) as client:
+        url = f"{GH_API}/repos/{GH_REPO}/contents/{path}"
+        if method == "GET":
+            response = await client.get(url, headers=headers)
+        else:
+            payload = {"message": message, "content": base64.b64encode(content or b"").decode(), "branch": GH_BRANCH}
+            # GitHub requires the existing file SHA for updates.
+            current = await client.get(url, headers=headers)
+            if current.status_code == 200:
+                payload["sha"] = current.json().get("sha")
+            elif current.status_code != 404:
+                current.raise_for_status()
+            response = await client.put(url, headers=headers, json=payload)
+        if response.status_code >= 400:
+            raise RuntimeError(f"GitHub API {response.status_code}: {response.text[:500]}")
+        return response.json() if response.content else {}
+
+async def publish_to_repository(book: dict, file_id: str) -> dict:
+    if not GH_TOKEN or not GH_REPO:
+        raise RuntimeError("GH_TOKEN secret is not configured in GitHub Actions")
+    # Retrieve bytes from Telegram then commit the book file into the repository.
+    telegram_file = await bot.get_file(file_id)
+    file_url = f"https://api.telegram.org/file/bot{TOKEN}/{telegram_file.file_path}"
+    async with httpx.AsyncClient(timeout=180) as client:
+        response = await client.get(file_url)
+        response.raise_for_status()
+        file_bytes = response.content
+    filename = Path(book.get("file_name") or "book.bin").name
+    safe_filename = re.sub(r"[^A-Za-z0-9._-]", "_", filename) or "book.bin"
+    repo_path = f"library_files/{book['id']}_{safe_filename}"
+    await github_request("PUT", repo_path, content=file_bytes, message=f"Publish library book: {book.get('title','book')}")
+    book["download_url"] = f"https://raw.githubusercontent.com/{GH_REPO}/{GH_BRANCH}/{repo_path}"
+    # Update books.json with the full metadata list, preserving existing entries.
+    try:
+        existing = await github_request("GET", "books.json")
+        decoded = base64.b64decode(existing.get("content", "")).decode("utf-8")
+        catalog = json.loads(decoded) if decoded.strip() else {"books": []}
+    except Exception as exc:
+        if "404" not in str(exc):
+            log.warning("Could not read current catalog, creating a new one: %s", exc)
+        catalog = {"books": []}
+    books = catalog.get("books", []) if isinstance(catalog, dict) else []
+    books = [b for b in books if str(b.get("id")) != str(book["id"])]
+    books.insert(0, book)
+    catalog = {"books": books, "updated_at": datetime.now(timezone.utc).isoformat()}
+    await github_request("PUT", "books.json", content=json.dumps(catalog, ensure_ascii=False, indent=2).encode(), message="Update library catalog")
+    return book
+
 # ---------------- Bot handlers ----------------
 if dp:
     @dp.message(CommandStart())
@@ -286,12 +343,26 @@ if dp:
             return
         book_id = uuid.uuid4().hex[:12]
         now = datetime.now(timezone.utc).isoformat()
+        book = {
+            "id": book_id, "file_name": data.get("filename"), "title": data["title"],
+            "description": data.get("description", ""), "file_size": data.get("size"),
+            "mime_type": data.get("mime"), "created_at": now, "pinned": 0,
+            "downloads": 0,
+        }
+        try:
+            await publish_to_repository(book, data["file_id"])
+        except Exception as exc:
+            log.exception("Publishing book to GitHub failed")
+            await query.answer("فشل الحفظ الدائم. تحقق من GH_TOKEN وصلاحياته.", show_alert=True)
+            if query.message:
+                await query.message.edit_text("❌ لم يُنشر الكتاب؛ لم يتم حفظه في GitHub.\nالخطأ: " + safe_text(str(exc)[:350]))
+            return
         with connect() as con:
             con.execute("INSERT INTO books(id,telegram_file_id,file_name,title,description,file_size,mime_type,created_at,uploader_id,pinned) VALUES(?,?,?,?,?,?,?,?,?,0)", (book_id, data["file_id"], data.get("filename"), data["title"], data.get("description"), data.get("size"), data.get("mime"), now, data.get("owner")))
         await state.clear()
         if query.message:
-            await query.message.edit_text("✨ تم نشر الكتاب في المكتبة بنجاح. يمكنك فتح الموقع لمشاهدته.")
-        await query.answer("تم نشر الكتاب")
+            await query.message.edit_text("✨ تم نشر الكتاب وحفظه بشكل دائم في GitHub، وسيظهر بالموقع بعد تحديث الصفحات.")
+        await query.answer("تم حفظ الكتاب ونشره")
 
     @dp.callback_query(F.data == "upload:cancel")
     async def upload_cancel(query: CallbackQuery, state: FSMContext):

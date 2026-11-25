@@ -2378,6 +2378,7 @@
        ------------------------------------------------------------ */
     const LIBRARY_CONFIG = Object.freeze({
       apiRoot: "",
+      catalogUrl: "./books.json",
       groupUrl: "https://t.me/+mZe3EZzQBCYxOTUy",
       botUrl: "https://t.me/ONX44",
       recentWindowDays: 1,
@@ -2543,29 +2544,24 @@
        35. API: fetch books and statistics
        ------------------------------------------------------------ */
     async function fetchBooks() {
-      const payload = await apiRequest("/api/books");
+      const response = await fetch(LIBRARY_CONFIG.catalogUrl + "?v=" + Date.now(), { cache: "no-store" });
+      if (!response.ok) throw new Error("Catalog fetch failed: " + response.status);
+      const payload = await response.json();
       return Array.isArray(payload.books) ? payload.books : [];
     }
 
-
     async function fetchStats() {
-      try {
-        return await apiRequest("/api/stats");
-      } catch (error) {
-        console.warn("Statistics endpoint unavailable", error);
-        return null;
-      }
+      const local = JSON.parse(localStorage.getItem("businessLibraryStats") || "{}" );
+      return { books: LibraryState.books.length, visits: Number(local.visits || 0), downloads: Number(local.downloads || 0) };
     }
-
 
     async function recordVisit() {
       try {
-        await apiRequest("/api/visit", { method: "POST" });
-      } catch (error) {
-        console.warn("Visit could not be recorded", error);
-      }
+        const local = JSON.parse(localStorage.getItem("businessLibraryStats") || "{}");
+        local.visits = Number(local.visits || 0) + 1;
+        localStorage.setItem("businessLibraryStats", JSON.stringify(local));
+      } catch (_) {}
     }
-
 
     /* ------------------------------------------------------------
        36. Load / refresh sequence
@@ -2578,7 +2574,7 @@
       try {
         const [books, stats] = await Promise.all([fetchBooks(), fetchStats()]);
         LibraryState.books = books;
-        LibraryState.stats.books = Number(stats?.books ?? books.length);
+        LibraryState.stats.books = books.length;
         LibraryState.stats.visits = Number(stats?.visits ?? 0);
         LibraryState.stats.downloads = Number(stats?.downloads ?? 0);
         LibraryState.failed = false;
@@ -2857,27 +2853,20 @@
        ------------------------------------------------------------ */
     async function downloadBook(book) {
       if (!book || !book.id) return;
+      const fileUrl = book.download_url || book.file_url;
+      if (!fileUrl) { showToastMessage("رابط تحميل الكتاب غير متوفر", "error"); return; }
       try {
-        await apiRequest(`/api/download/${encodeURIComponent(book.id)}`, { method: "POST" });
-      } catch (error) {
-        console.warn("Download count could not be updated", error);
-      }
-      const fileUrl = `${LIBRARY_CONFIG.apiRoot}/api/file/${encodeURIComponent(book.id)}`;
+        const local = JSON.parse(localStorage.getItem("businessLibraryStats") || "{}");
+        local.downloads = Number(local.downloads || 0) + 1;
+        localStorage.setItem("businessLibraryStats", JSON.stringify(local));
+      } catch (_) {}
       const anchor = document.createElement("a");
-      anchor.href = fileUrl;
-      anchor.download = safeText(book.file_name || book.title || "book");
-      anchor.rel = "noopener";
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      showToastMessage("بدأ تجهيز الملف للتحميل", "success");
+      anchor.href = fileUrl; anchor.download = safeText(book.file_name || book.title || "book"); anchor.rel = "noopener";
+      document.body.appendChild(anchor); anchor.click(); anchor.remove();
+      showToastMessage("بدأ تحميل الكتاب", "success");
       const stats = await fetchStats();
-      if (stats) {
-        LibraryState.stats.downloads = Number(stats.downloads || LibraryState.stats.downloads);
-        renderStats();
-      }
+      LibraryState.stats.downloads = Number(stats.downloads || LibraryState.stats.downloads); renderStats();
     }
-
 
     /* ------------------------------------------------------------
        46. Pin toggle action
@@ -2885,20 +2874,11 @@
     async function togglePin(bookId) {
       const book = LibraryState.books.find((item) => String(item.id) === String(bookId));
       if (!book) return;
-      try {
-        await apiRequest(`/api/pin/${encodeURIComponent(bookId)}`, { method: "POST" });
-        book.pinned = isPinned(book) ? 0 : 1;
-        renderEverything();
-        if (LibraryState.activeBook && String(LibraryState.activeBook.id) === String(bookId)) {
-          openBookDetails(book);
-        }
-        showToastMessage(isPinned(book) ? "تم تثبيت الكتاب" : "تم إلغاء تثبيت الكتاب", "success");
-      } catch (error) {
-        console.error("Pin action failed", error);
-        showToastMessage("لم نتمكن من تغيير حالة التثبيت", "error");
-      }
+      book.pinned = isPinned(book) ? 0 : 1;
+      renderEverything();
+      if (LibraryState.activeBook && String(LibraryState.activeBook.id) === String(bookId)) openBookDetails(book);
+      showToastMessage(isPinned(book) ? "تم تثبيت الكتاب محليًا في هذا المتصفح" : "تم إلغاء التثبيت المحلي", "success");
     }
-
 
     /* ------------------------------------------------------------
        47. Toast notification helper
