@@ -2037,6 +2037,90 @@
     @keyframes panelRise { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
     @media(max-width:760px){ .hero-frame{min-height:unset}.theme-studio{left:10px;bottom:10px;width:min(310px,calc(100vw - 20px))}.brand-title{font-size:21px!important}.hero-title{font-size:clamp(32px,9vw,48px)!important}.hero-frame::after{font-size:90px}.community-card{gap:14px} }
     @media(prefers-reduced-motion:reduce){.studio-toggle-icon,.brand-mark{animation:none!important}}
+
+/* ==========================================================
+   MADARIK EXTENDED MOTION SYSTEM — premium animation layer
+   ========================================================== */
+:root{--mk-motion-fast:180ms;--mk-motion-mid:420ms;--mk-motion-slow:900ms;--mk-ease:cubic-bezier(.18,.8,.24,1);--mk-pointer-x:50vw;--mk-pointer-y:40vh;--mk-progress:0;--mk-glow:rgba(201,169,97,.22)}
+html{scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:var(--gold,#c9a961) transparent}
+body{isolation:isolate;overflow-x:clip}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(430px circle at var(--mk-pointer-x) var(--mk-pointer-y),rgba(201,169,97,.08),transparent 68%);opacity:.8;transition:opacity .35s ease}
+#madarik-ambient-canvas{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:0;opacity:.38}
+body>*{position:relative;z-index:1}
+/* The decorative atmosphere uses very low contrast so reading remains calm. */
+.site-header,.hero-frame,.stat-card,.book-card,.community-card,.modal-card,.library-panel,.activity-list{transition:transform .42s var(--mk-ease),box-shadow .42s var(--mk-ease),border-color .42s ease,filter .42s ease}
+/* Gentle floating icons, staggered so the page does not move in unison. */
+.icon,.svg-icon,.stat-card svg,.stat-card i,.book-card svg,.book-card i,.feature-icon,.community-card svg,.community-card i{transform-origin:center;will-change:transform,filter}
+.stat-card svg,.stat-card i{animation:mk-icon-float 5.8s ease-in-out infinite}
+.stat-card:nth-child(2) svg,.stat-card:nth-child(2) i{animation-delay:-1.2s}
+.stat-card:nth-child(3) svg,.stat-card:nth-child(3) i{animation-delay:-2.1s}
+.stat-card:nth-child(4) svg,.stat-card:nth-child(4) i{animation-delay:-3.1s}
+@keyframes mk-icon-float{0%,100%{transform:translateY(0) rotate(0);filter:drop-shadow(0 0 transparent)}45%{transform:translateY(-5px) rotate(-3deg);filter:drop-shadow(0 4px 8px var(--mk-glow))}65%{transform:translateY(-2px) rotate(2deg)}}
+.book-card i,.book-card svg{animation:mk-book-icon 6.4s ease-in-out infinite}
+.book-card:nth-child(3n) i,.book-card:nth-child(3n) svg{animation-delay:-1.5s}
+.book-card:nth-child(4n) i,.book-card:nth-child(4n) svg{animation-delay:-2.8s}
+@keyframes mk-book-icon{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.035)}}
+.feature-icon,.community-card .icon{animation:mk-icon-breathe 4.5s ease-in-out infinite}
+@keyframes mk-icon-breathe{0%,100%{filter:drop-shadow(0 0 0 transparent);transform:scale(1)}50%{filter:drop-shadow(0 0 9px var(--mk-glow));transform:scale(1.07)}}
+/* Hover light that tracks pointer on book tiles */
+.book-card{--mk-tilt-x:0deg;--mk-tilt-y:0deg;--mk-light-x:50%;--mk-light-y:0%;transform:perspective(1000px) rotateX(var(--mk-tilt-x)) rotateY(var(--mk-tilt-y));transform-style:preserve-3d;overflow:hidden;isolation:isolate}
+.book-card::before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;background:radial-gradient(360px circle at var(--mk-light-x) var(--mk-light-y),rgba(255,255,255,.16),transparent 65%);transition:opacity .3s ease}
+.book-card:hover::before{opacity:1}
+.book-card:hover{transform:perspective(1000px) translateY(-6px) rotateX(var(--mk-tilt-x)) rotateY(var(--mk-tilt-y));box-shadow:0 24px 54px rgba(20,12,4,.16),0 0 0 1px rgba(201,169,97,.24)}
+.book-card:active{transform:perspective(1000px) scale(.993)}
+/* Animated sheen for buttons and chips */
+.button,.button-primary,.button-quiet,.chip,.filter-chip,.theme-launch,.back-top,.book-action,.download-button{position:relative;overflow:hidden;isolation:isolate}
+.button::after,.button-primary::after,.button-quiet::after,.chip::after,.filter-chip::after,.theme-launch::after,.back-top::after,.book-action::after,.download-button::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 20%,rgba(255,255,255,.28),transparent 75%);transform:translateX(-130%)}
+.button:hover::after,.button-primary:hover::after,.button-quiet:hover::after,.chip:hover::after,.filter-chip:hover::after,.theme-launch:hover::after,.back-top:hover::after,.book-action:hover::after,.download-button:hover::after{animation:mk-sheen .78s ease forwards}
+@keyframes mk-sheen{to{transform:translateX(130%)}}
+.mk-ripple{position:absolute;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.4);pointer-events:none;transform:scale(0);animation:mk-ripple .65s ease-out forwards;z-index:9}
+@keyframes mk-ripple{to{transform:scale(20);opacity:0}}
+/* Scroll entrance — only applied after JS has initialized */
+.mk-reveal{opacity:0;transform:translateY(22px);filter:blur(3px);transition:opacity .7s var(--mk-ease),transform .7s var(--mk-ease),filter .7s ease}
+.mk-reveal.mk-visible{opacity:1;transform:none;filter:none}
+.mk-reveal.mk-delay-1{transition-delay:80ms}.mk-reveal.mk-delay-2{transition-delay:150ms}.mk-reveal.mk-delay-3{transition-delay:220ms}.mk-reveal.mk-delay-4{transition-delay:290ms}.mk-reveal.mk-delay-5{transition-delay:360ms}
+/* Decorative knowledge pathways */
+.mk-pathway-section{margin:28px 0;padding:clamp(20px,4vw,48px);position:relative;overflow:hidden;border:1px solid rgba(201,169,97,.24);border-radius:28px;background:linear-gradient(145deg,rgba(255,255,255,.05),rgba(201,169,97,.05));box-shadow:0 22px 58px rgba(30,20,8,.06)}
+.mk-pathway-section::before{content:"";position:absolute;inset-inline-end:-110px;top:-110px;width:360px;height:360px;border:1px solid rgba(201,169,97,.12);border-radius:50%;box-shadow:0 0 0 32px rgba(201,169,97,.025),0 0 0 64px rgba(201,169,97,.018);animation:mk-orbit 32s linear infinite;pointer-events:none}
+@keyframes mk-orbit{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.mk-pathway-title{max-width:760px;margin-bottom:26px}.mk-pathway-title h2{font-size:clamp(1.4rem,3vw,2.35rem);line-height:1.6;margin:0 0 8px}.mk-pathway-title p{line-height:2;opacity:.8}
+.mk-pathway-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.mk-pathway-card{--mk-path-color:#c9a961;min-height:205px;position:relative;overflow:hidden;padding:20px;border:1px solid rgba(201,169,97,.22);border-radius:20px;background:rgba(255,255,255,.035);transition:transform .4s var(--mk-ease),box-shadow .4s ease,border-color .4s ease}
+.mk-pathway-card:nth-child(2){--mk-path-color:#77977e}.mk-pathway-card:nth-child(3){--mk-path-color:#7396bd}.mk-pathway-card:nth-child(4){--mk-path-color:#a287b4}
+.mk-pathway-card::before{content:"";position:absolute;width:150px;height:150px;bottom:-60px;inset-inline-start:-35px;border-radius:50%;background:var(--mk-path-color);filter:blur(55px);opacity:.15;transition:opacity .4s ease,transform .5s ease}
+.mk-pathway-card:hover{transform:translateY(-7px);box-shadow:0 20px 38px rgba(30,20,8,.1);border-color:rgba(201,169,97,.42)}.mk-pathway-card:hover::before{opacity:.32;transform:scale(1.3)}
+.mk-pathway-icon{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;margin-bottom:15px;color:var(--mk-path-color);background:color-mix(in srgb,var(--mk-path-color) 13%,transparent);border:1px solid color-mix(in srgb,var(--mk-path-color) 28%,transparent);position:relative}
+.mk-pathway-icon i{font-size:1.25rem;animation:mk-icon-float 5s ease-in-out infinite}.mk-pathway-card h3{font-size:1rem;margin-bottom:8px}.mk-pathway-card p{font-size:.88rem;line-height:1.9;opacity:.78}.mk-pathway-card a{display:inline-flex;gap:8px;align-items:center;margin-top:14px;font-size:.85rem;color:var(--mk-path-color);font-weight:800}.mk-pathway-card a i{transition:transform .3s ease}.mk-pathway-card:hover a i{transform:translateX(-4px)}
+/* Download overlay is global because downloads may originate in the details modal */
+.mk-download-overlay{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:20px;background:rgba(12,10,8,.48);backdrop-filter:blur(14px);opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s ease}
+.mk-download-overlay.mk-open{opacity:1;visibility:visible}
+.mk-download-card{width:min(480px,100%);padding:28px 24px;border-radius:26px;background:var(--surface,#f7f1e3);color:var(--text,#2c1810);border:1px solid rgba(201,169,97,.45);box-shadow:0 35px 100px rgba(0,0,0,.28);transform:translateY(20px) scale(.98);transition:transform .4s var(--mk-ease);position:relative;overflow:hidden}
+.mk-download-overlay.mk-open .mk-download-card{transform:translateY(0) scale(1)}
+.mk-download-card::before{content:"";position:absolute;inset-inline-end:-70px;top:-80px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(201,169,97,.22),transparent 70%);pointer-events:none}
+.mk-download-emblem{width:64px;height:64px;border-radius:22px;display:grid;place-items:center;margin:0 auto 16px;color:#9a7b3c;border:1px solid rgba(201,169,97,.4);background:rgba(201,169,97,.1);position:relative}
+.mk-download-emblem i{font-size:1.5rem;animation:mk-download-bounce 1.4s ease-in-out infinite}
+@keyframes mk-download-bounce{0%,100%{transform:translateY(-3px)}50%{transform:translateY(5px)}}
+.mk-download-title{text-align:center;font-size:1.1rem;font-weight:900;margin-bottom:8px}.mk-download-filename{text-align:center;word-break:break-word;line-height:1.8;font-size:.9rem;opacity:.75;margin-bottom:20px}
+.mk-download-progress-wrap{height:12px;border-radius:20px;overflow:hidden;background:rgba(120,90,40,.12);position:relative;border:1px solid rgba(201,169,97,.2)}
+.mk-download-progress{height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#8b7340,#c9a961,#f0dba7);position:relative;transition:width .16s linear}
+.mk-download-progress::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);background-size:200% 100%;animation:mk-progress-shine 1s linear infinite}
+@keyframes mk-progress-shine{from{background-position:200% 0}to{background-position:-200% 0}}
+.mk-download-stats{display:flex;justify-content:space-between;gap:12px;margin-top:12px;font-size:.78rem;font-variant-numeric:tabular-nums;opacity:.78}.mk-download-percent{font-weight:900;font-size:1rem;color:#9a7b3c}
+.mk-download-status{text-align:center;margin-top:14px;min-height:24px;font-size:.86rem;line-height:1.8}.mk-download-close{margin:18px auto 0;display:block;border:1px solid rgba(201,169,97,.4);background:transparent;color:inherit;padding:9px 18px;border-radius:14px;cursor:pointer;opacity:.7}.mk-download-close:hover{opacity:1;background:rgba(201,169,97,.1)}
+.mk-download-overlay.mk-complete .mk-download-emblem{color:#3e9864;border-color:rgba(62,152,100,.4);background:rgba(62,152,100,.1)}.mk-download-overlay.mk-complete .mk-download-emblem i{animation:mk-complete-pop .5s ease}.mk-download-overlay.mk-error .mk-download-emblem{color:#b9564c}
+@keyframes mk-complete-pop{0%{transform:scale(.4) rotate(-30deg)}75%{transform:scale(1.25) rotate(8deg)}100%{transform:scale(1)}}
+/* A subtle dock for common actions */
+.mk-shortcut-dock{position:fixed;z-index:800;inset-inline-start:12px;top:50%;transform:translateY(-50%);display:grid;gap:7px;padding:7px;border:1px solid rgba(201,169,97,.28);border-radius:22px;background:rgba(245,230,200,.55);backdrop-filter:blur(18px);box-shadow:0 14px 40px rgba(20,12,4,.09)}
+.mk-shortcut-dock button{width:42px;height:42px;border:0;border-radius:15px;background:transparent;color:var(--gold,#c9a961);display:grid;place-items:center;cursor:pointer;transition:transform .25s ease,background .25s ease}.mk-shortcut-dock button:hover{transform:scale(1.08);background:rgba(201,169,97,.14)}.mk-shortcut-dock button:active{transform:scale(.94)}
+.mk-shortcut-dock button::after{content:attr(data-label);position:absolute;inset-inline-start:calc(100% + 10px);white-space:nowrap;background:rgba(20,15,10,.9);color:#fff;padding:7px 10px;border-radius:9px;font-size:.72rem;opacity:0;transform:translateX(-4px);pointer-events:none;transition:opacity .2s ease,transform .2s ease}.mk-shortcut-dock button:hover::after{opacity:1;transform:translateX(0)}
+/* Live animation controls */
+.mk-motion-toggle{position:fixed;z-index:850;inset-inline-end:15px;bottom:16px;width:42px;height:42px;border-radius:50%;border:1px solid rgba(201,169,97,.4);background:rgba(245,230,200,.65);color:var(--gold,#c9a961);box-shadow:0 8px 24px rgba(20,12,4,.1);backdrop-filter:blur(12px);cursor:pointer;transition:transform .25s ease,box-shadow .25s ease}.mk-motion-toggle:hover{transform:translateY(-3px) rotate(8deg);box-shadow:0 12px 28px rgba(201,169,97,.2)}
+body.mk-motion-paused #madarik-ambient-canvas{opacity:0!important}body.mk-motion-paused .stat-card i,body.mk-motion-paused .stat-card svg,body.mk-motion-paused .book-card i,body.mk-motion-paused .book-card svg,body.mk-motion-paused .feature-icon,body.mk-motion-paused .mk-pathway-icon i{animation-play-state:paused!important}
+/* Extra visual polish for interaction focus and reduced-motion settings */
+:focus-visible{outline:2px solid rgba(201,169,97,.85)!important;outline-offset:3px!important}
+@media(max-width:1050px){.mk-pathway-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mk-shortcut-dock{inset-inline-start:8px}}
+@media(max-width:720px){.mk-pathway-grid{grid-template-columns:1fr}.mk-pathway-card{min-height:155px}.mk-shortcut-dock{top:auto;bottom:12px;left:50%;inset-inline-start:50%;transform:translateX(-50%);display:flex;border-radius:19px}.mk-shortcut-dock button{width:38px;height:38px}.mk-shortcut-dock button::after{display:none}.#madarik-ambient-canvas{opacity:.2}.mk-motion-toggle{bottom:70px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.mk-reveal{opacity:1;transform:none;filter:none}#madarik-ambient-canvas{display:none}}
 </style>
 </head>
 <body data-theme="blackgold">
@@ -2442,6 +2526,17 @@
     </div>
   </div>
 
+
+
+  <section class="mk-pathway-section mk-reveal" id="madarikPathways" aria-label="مسارات المعرفة">
+    <div class="mk-pathway-title"><h2>مسارات المعرفة</h2><p>أربع بوابات معرفية تساعدك على اختيار اتجاه القراءة، وبناء فهم متدرج في مجالات إدارة الأعمال.</p></div>
+    <div class="mk-pathway-grid">
+      <article class="mk-pathway-card mk-reveal mk-delay-1"><div class="mk-pathway-icon"><i class="fa-solid fa-compass-drafting"></i></div><h3>القيادة والإدارة</h3><p>التخطيط، التنظيم، اتخاذ القرار، وتطوير مهارات القيادة.</p><a href="#library">تصفح المصادر <i class="fa-solid fa-arrow-left"></i></a></article>
+      <article class="mk-pathway-card mk-reveal mk-delay-2"><div class="mk-pathway-icon"><i class="fa-solid fa-chart-line"></i></div><h3>التسويق والأعمال</h3><p>السوق، سلوك العملاء، الاستراتيجية، وبناء القيمة.</p><a href="#library">تصفح المصادر <i class="fa-solid fa-arrow-left"></i></a></article>
+      <article class="mk-pathway-card mk-reveal mk-delay-3"><div class="mk-pathway-icon"><i class="fa-solid fa-calculator"></i></div><h3>المال والمحاسبة</h3><p>المفاهيم المالية، التحليل، والبيانات لدعم القرار.</p><a href="#library">تصفح المصادر <i class="fa-solid fa-arrow-left"></i></a></article>
+      <article class="mk-pathway-card mk-reveal mk-delay-4"><div class="mk-pathway-icon"><i class="fa-solid fa-people-group"></i></div><h3>الموارد البشرية</h3><p>التدريب، التحفيز، الأداء، وتنمية رأس المال البشري.</p><a href="#library">تصفح المصادر <i class="fa-solid fa-arrow-left"></i></a></article>
+    </div>
+  </section>
 
   <!-- Toast messages -->
   <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
@@ -3237,5 +3332,54 @@
        ------------------------------------------------------------ */
     document.addEventListener("DOMContentLoaded", startLibrary);
   </script>
+<script>
+
+/* ==========================================================
+   MADARIK EXTENSION: AMBIENT PARTICLES, REVEAL, DOCK & DOWNLOAD
+   ========================================================== */
+(() => {
+  const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const canvas=document.createElement('canvas');canvas.id='madarik-ambient-canvas';document.body.prepend(canvas);
+  const ctx=canvas.getContext('2d',{alpha:true});let width=0,height=0,dpr=1,particles=[];
+  const pointer={x:innerWidth*.5,y:innerHeight*.45,active:false};
+  const particleTotal=reduceMotion?0:Math.min(56,Math.max(16,Math.floor(innerWidth/24)));
+  function makeParticle(){return{x:Math.random()*width,y:Math.random()*height,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,r:.5+Math.random()*1.5,a:.1+Math.random()*.34,phase:Math.random()*6.28,speed:.004+Math.random()*.006}}
+  function resize(){width=innerWidth;height=innerHeight;dpr=Math.min(devicePixelRatio||1,2);canvas.width=width*dpr;canvas.height=height*dpr;canvas.style.width=width+'px';canvas.style.height=height+'px';ctx.setTransform(dpr,0,0,dpr,0,0);particles=Array.from({length:particleTotal},makeParticle)}
+  function paintParticle(p){p.phase+=p.speed;p.x+=p.vx+Math.sin(p.phase)*.07;p.y+=p.vy+Math.cos(p.phase)*.06;if(p.x<0)p.x=width;if(p.x>width)p.x=0;if(p.y<0)p.y=height;if(p.y>height)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(201,169,97,${p.a*(.7+Math.sin(p.phase)*.3)})`;ctx.fill();if(pointer.active){const dx=pointer.x-p.x,dy=pointer.y-p.y,dist=Math.hypot(dx,dy);if(dist<125){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(pointer.x,pointer.y);ctx.strokeStyle=`rgba(201,169,97,${(1-dist/125)*.08})`;ctx.lineWidth=.5;ctx.stroke()}}}
+  function frame(){if(reduceMotion||document.hidden)return;ctx.clearRect(0,0,width,height);particles.forEach(paintParticle);requestAnimationFrame(frame)}resize();if(!reduceMotion)requestAnimationFrame(frame);window.addEventListener('resize',resize,{passive:true});document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!reduceMotion)requestAnimationFrame(frame)});
+  window.addEventListener('pointermove',e=>{pointer.x=e.clientX;pointer.y=e.clientY;pointer.active=true;document.documentElement.style.setProperty('--mk-pointer-x',pointer.x+'px');document.documentElement.style.setProperty('--mk-pointer-y',pointer.y+'px')},{passive:true});window.addEventListener('pointerleave',()=>pointer.active=false);
+  /* Entrance transitions for content groups. */
+  const reveal=document.querySelectorAll('.section,.section-panel,.feature-card,.community-card,.activity-item,.book-card,.mk-pathway-card');
+  reveal.forEach((el,i)=>{el.classList.add('mk-reveal');el.classList.add('mk-delay-'+(i%6))});
+  if('IntersectionObserver'in window&&!reduceMotion){const io=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('mk-visible');io.unobserve(entry.target)}}),{threshold:.08});document.querySelectorAll('.mk-reveal').forEach(el=>io.observe(el))}else document.querySelectorAll('.mk-reveal').forEach(el=>el.classList.add('mk-visible'));
+  /* Soft pointer tilt on desktop book tiles */
+  document.addEventListener('pointermove',e=>{const card=e.target.closest('.book-card');if(!card||reduceMotion||innerWidth<900)return;const r=card.getBoundingClientRect(),px=Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100)),py=Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100));card.style.setProperty('--mk-tilt-x',((py-50)/50*-2).toFixed(2)+'deg');card.style.setProperty('--mk-tilt-y',((px-50)/50*2.5).toFixed(2)+'deg');card.style.setProperty('--mk-light-x',px+'%');card.style.setProperty('--mk-light-y',py+'%')},{passive:true});document.addEventListener('pointerout',e=>{const card=e.target.closest('.book-card');if(card&&!card.contains(e.relatedTarget)){card.style.setProperty('--mk-tilt-x','0deg');card.style.setProperty('--mk-tilt-y','0deg');card.style.setProperty('--mk-light-x','50%');card.style.setProperty('--mk-light-y','0%')}});
+  /* Button ripple delegated, avoiding listeners for each generated book card. */
+  document.addEventListener('click',e=>{const el=e.target.closest('button,.button,a');if(!el||reduceMotion)return;const r=el.getBoundingClientRect(),wave=document.createElement('span');wave.className='mk-ripple';wave.style.left=(e.clientX-r.left-8)+'px';wave.style.top=(e.clientY-r.top-8)+'px';el.appendChild(wave);wave.addEventListener('animationend',()=>wave.remove(),{once:true});});
+  /* Floating dock with reliable section navigation */
+  const dock=document.createElement('nav');dock.className='mk-shortcut-dock';dock.setAttribute('aria-label','اختصارات المكتبة');dock.innerHTML='<button type="button" data-label="المكتبة" data-scroll="#library"><i class="fa-solid fa-book-open"></i></button><button type="button" data-label="مسارات المعرفة" data-scroll="#madarikPathways"><i class="fa-solid fa-route"></i></button><button type="button" data-label="أعلى الصفحة" data-scroll="top"><i class="fa-solid fa-arrow-up"></i></button>';document.body.appendChild(dock);dock.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const target=b.dataset.scroll;if(target==='top')window.scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'});else document.querySelector(target)?.scrollIntoView({behavior:reduceMotion?'auto':'smooth'})});
+  /* Ambient animation switch */
+  const toggle=document.createElement('button');toggle.className='mk-motion-toggle';toggle.type='button';toggle.title='تقليل أو تشغيل الحركات';toggle.setAttribute('aria-label','إيقاف الحركات');toggle.innerHTML='<i class="fa-solid fa-wand-magic-sparkles"></i>';document.body.appendChild(toggle);let paused=false;toggle.addEventListener('click',()=>{paused=!paused;document.body.classList.toggle('mk-motion-paused',paused);toggle.innerHTML=paused?'<i class="fa-solid fa-play"></i>':'<i class="fa-solid fa-wand-magic-sparkles"></i>';toggle.setAttribute('aria-label',paused?'تشغيل الحركات':'إيقاف الحركات');if(!paused&&!reduceMotion&&!document.hidden)requestAnimationFrame(frame);showToastMessage?.(paused?'تم إيقاف الحركات الزخرفية':'تم تشغيل الحركات الزخرفية','info')});
+  /* Keyboard search: Ctrl/⌘ + K focuses the existing search field. */
+  document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();const search=document.querySelector('#searchInput,#librarySearch,input[type=search]');search?.focus();search?.select?.()}if(e.key==='Escape'){document.querySelector('.mk-download-overlay.mk-open')?.classList.remove('mk-open')}});
+  /* Keep brand typography font selection working even if CSS uses another token. */
+  const fontSaved=localStorage.getItem('madarik_font');if(fontSaved)document.documentElement.style.setProperty('--user-font',fontSaved);
+})();
+
+/* Streamed download progress and safe Madarik filename */
+(() => {
+  const originalDownload=window.downloadBook;
+  function extensionFromName(name,url){let m=String(name||'').match(/\.([a-z0-9]{1,12})$/i);if(m)return '.'+m[1];try{m=new URL(url,location.href).pathname.match(/\.([a-z0-9]{1,12})$/i);return m?'.'+m[1]:''}catch(_){return ''}}
+  function brandedName(book,url){const raw=String(book.file_name||book.filename||book.title||'ملف').trim(),ext=extensionFromName(raw,url);let base=raw.replace(/\.[a-z0-9]{1,12}$/i,'').replace(/^مدارك\s*/,'').replace(/[\\/:*?"<>|]/g,' ').replace(/\s+/g,' ').trim()||'ملف';return 'مدارك '+base+ext}
+  function bytes(value){if(!value)return '0 B';const units=['B','KB','MB','GB'];let n=value,i=0;while(n>=1024&&i<units.length-1){n/=1024;i++}return n.toFixed(i?1:0)+' '+units[i]}
+  const overlay=document.createElement('div');overlay.className='mk-download-overlay';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','حالة تحميل الملف');overlay.innerHTML='<div class="mk-download-card"><div class="mk-download-emblem"><i class="fa-solid fa-cloud-arrow-down"></i></div><div class="mk-download-title">تحميل من مكتبة مدارك</div><div class="mk-download-filename"></div><div class="mk-download-progress-wrap"><div class="mk-download-progress"></div></div><div class="mk-download-stats"><span class="mk-download-size">0 B</span><span class="mk-download-percent">0%</span></div><div class="mk-download-status">تهيئة التحميل…</div><button type="button" class="mk-download-close">إغلاق</button></div>';document.body.appendChild(overlay);
+  const fileEl=overlay.querySelector('.mk-download-filename'),progress=overlay.querySelector('.mk-download-progress'),percent=overlay.querySelector('.mk-download-percent'),sizeEl=overlay.querySelector('.mk-download-size'),status=overlay.querySelector('.mk-download-status'),emblem=overlay.querySelector('.mk-download-emblem i');let running=false;
+  overlay.querySelector('.mk-download-close').addEventListener('click',()=>{if(!running)overlay.classList.remove('mk-open')});overlay.addEventListener('click',e=>{if(e.target===overlay&&!running)overlay.classList.remove('mk-open')});
+  async function enhancedDownload(book){if(!book||running)return;if(!originalDownload){return}const url=book.download_url||book.file_url||book.url||book.download;if(!url){return originalDownload(book)}const filename=brandedName(book,url);running=true;overlay.classList.remove('mk-complete','mk-error');overlay.classList.add('mk-open');fileEl.textContent=filename;progress.style.width='0%';percent.textContent='0%';sizeEl.textContent='0 B';status.textContent='جاري الاتصال بمصدر الملف…';emblem.className='fa-solid fa-cloud-arrow-down';try{const response=await fetch(url);if(!response.ok)throw new Error('تعذر الوصول إلى الملف');const total=Number(response.headers.get('content-length')||0);let loaded=0;const chunks=[];if(response.body&&response.body.getReader){const reader=response.body.getReader();while(true){const part=await reader.read();if(part.done)break;chunks.push(part.value);loaded+=part.value.byteLength;sizeEl.textContent=bytes(loaded);if(total){const pct=Math.min(99,Math.round(loaded/total*100));progress.style.width=pct+'%';percent.textContent=pct+'%';status.textContent='جاري تنزيل المحتوى…'}else{progress.style.width='70%';percent.textContent=bytes(loaded);status.textContent='جاري استلام الملف'}}}else{const blob=await response.blob();chunks.push(blob);loaded=blob.size;sizeEl.textContent=bytes(loaded)}const blob=new Blob(chunks,{type:response.headers.get('content-type')||'application/octet-stream'}),objectURL=URL.createObjectURL(blob),a=document.createElement('a');a.href=objectURL;a.download=filename;a.rel='noopener';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(objectURL),60000);progress.style.width='100%';percent.textContent='100%';status.textContent='اكتمل التحميل — أصبح الملف جاهزًا';overlay.classList.add('mk-complete');emblem.className='fa-solid fa-circle-check';}catch(err){overlay.classList.add('mk-error');status.textContent='لم يسمح المصدر بالتحميل المباشر؛ سيتم فتح الملف الأصلي';progress.style.width='100%';percent.textContent='—';emblem.className='fa-solid fa-triangle-exclamation';const a=document.createElement('a');a.href=url;a.download=filename;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()}finally{running=false;overlay.querySelector('.mk-download-close').textContent='إغلاق';setTimeout(()=>{if(overlay.classList.contains('mk-complete'))overlay.classList.remove('mk-open')},2200)}}
+  /* Replace global handler so card and modal download actions share the same flow. */
+  window.downloadBook=enhancedDownload;
+})();
+
+</script>
 </body>
 </html>
