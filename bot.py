@@ -10,7 +10,6 @@ from fastapi.staticfiles import StaticFiles
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command, CommandStart
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -92,17 +91,17 @@ async def file_proxy(book_id:str):
 async def start(m:Message,state:FSMContext):
  await state.clear()
  name=m.from_user.first_name or 'طالب'
- # Inline buttons are attached to the message; no reply keyboard is shown.
- builder=InlineKeyboardBuilder()
+ # Explicit InlineKeyboardMarkup avoids builder/type conversion issues.
  site_url=os.getenv('SITE_URL','').strip()
+ rows=[]
  if site_url and site_url.startswith(('https://','http://')):
-  builder.row(InlineKeyboardButton(text='📚 فتح المكتبة',url=site_url))
- builder.row(
+  rows.append([InlineKeyboardButton(text='📚 فتح المكتبة',url=site_url)])
+ rows.append([
   InlineKeyboardButton(text='👥 JOIN GROUP',url=GROUP_LINK),
   InlineKeyboardButton(text='🤖 MY BOT',url='https://t.me/ONX44')
- )
- builder.row(InlineKeyboardButton(text='📤 طريقة إضافة كتاب',callback_data='help:upload'))
- kb=builder.as_markup()
+ ])
+ rows.append([InlineKeyboardButton(text='📤 طريقة إضافة كتاب',callback_data='help:upload')])
+ kb=InlineKeyboardMarkup(inline_keyboard=rows)
  await m.answer(
   f'أهلاً بك {html.escape(name)} ✨\n\nمكتبة طلاب إدارة الأعمال — لإضافة كتاب أرسل الملف مباشرة إلى البوت، ثم اكتب عنوانه ووصفه.',
   reply_markup=kb
