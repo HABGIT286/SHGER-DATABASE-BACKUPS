@@ -799,7 +799,18 @@ async def catch_all(message: Message, state: FSMContext):
 async def main():
     await load_db()
     log.info("Madarek library bot started. Persistent GitHub: %s", bool(GH_TOKEN and GH_REPO))
-    # Telegram polling retries are handled by aiogram; on transient errors the outer loop restarts.
+    # Polling and webhook cannot coexist. Clear any old webhook before polling,
+    # while preserving queued updates so users' messages are not discarded.
+    try:
+        webhook_info = await bot.get_webhook_info()
+        if webhook_info.url:
+            log.warning("Old webhook detected; removing it before polling")
+        await bot.delete_webhook(drop_pending_updates=False)
+    except Exception:
+        log.exception("Could not clear webhook before polling; retrying startup in 8 seconds")
+        await asyncio.sleep(8)
+        await bot.delete_webhook(drop_pending_updates=False)
+    # Telegram polling retries are handled by aiogram; outer loop restarts after failures.
     while True:
         try:
             await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types(), drop_pending_updates=False)
@@ -807,6 +818,11 @@ async def main():
             raise
         except Exception:
             log.exception("Polling crashed; restarting after 8 seconds")
+            # Clear webhook again in case an external setup re-enabled it.
+            try:
+                await bot.delete_webhook(drop_pending_updates=False)
+            except Exception:
+                log.exception("Webhook cleanup failed during restart")
             await asyncio.sleep(8)
 
 if __name__ == "__main__":
