@@ -55,7 +55,7 @@
       "name": "⌯ .𝐎𝐍𝐘𝐗ぷ𓆤",
       "username": "ONX44",
       "first_seen": "2026-11-26T07:21:42+00:00",
-      "last_seen": "2026-11-26T12:05:22+00:00",
+      "last_seen": "2026-11-26T12:20:23+00:00",
       "blocked": false,
       "downloads": [],
       "download_count": 0,
@@ -67,15 +67,13 @@
       "username": "MOTRXVIP",
       "first_seen": "2026-11-26T07:25:50+00:00",
       "last_seen": "2026-11-26T08:20:35+00:00",
-      "blocked": true,
+      "blocked": false,
       "downloads": [],
       "download_count": 0,
       "published_source_ids": []
     }
   },
-  "banned": [
-    "910624538"
-  ],
+  "banned": [],
   "paused": false,
   "settings": {
     "welcome_media": {
