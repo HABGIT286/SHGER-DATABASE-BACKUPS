@@ -97,7 +97,10 @@
       "text": "اهلاً بكم اتمنى ان يعجبكم هذا القليل وبهتمتكم سيدوا كثير",
       "file_id": "AgACAgIAAxkBAAP-awgsK80t4QkS6c1D7_MQ7ztWWkgAAi8maxvqhUlIe15nahfb564BAAMCAAN4AAM9BA",
       "created_at": "2026-11-26T12:55:08+00:00",
-      "status": "draft"
+      "status": "published",
+      "published_at": "2026-11-26T12:55:12+00:00",
+      "sent_count": 2,
+      "failed_count": 0
     }
   }
 }
