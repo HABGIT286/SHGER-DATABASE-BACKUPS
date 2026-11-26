@@ -2006,62 +2006,7 @@ body.light-mode .ambient
    <div class="ambient-grid">
    </div>
   </div>
-  <div class="login-screen" id="loginScreen">
-   <div class="login-panel glass-panel">
-    <div aria-hidden="true" class="brand-emblem large-emblem">
-     <svg viewbox="0 0 64 64">
-      <path d="M12 17c9-4 17-2 20 2v29c-5-4-13-5-20-2z">
-      </path>
-      <path d="M52 17c-9-4-17-2-20 2v29c5-4 13-5 20-2z">
-      </path>
-      <path d="M20 25h8M20 31h8M36 25h8M36 31h8">
-      </path>
-     </svg>
-    </div>
-    <p class="eyebrow">
-     MADAREK KNOWLEDGE LIBRARY
-    </p>
-    <h1>
-     مدارك المعرفة
-    </h1>
-    <p class="login-subtitle">
-     بوابة الإدارة والتحكم بالمكتبة الرقمية
-    </p>
-    <form class="login-form" id="loginForm">
-     <label for="adminPassword">
-      كلمة مرور لوحة الإدارة
-     </label>
-     <div class="password-field">
-      <input autocomplete="current-password" id="adminPassword" placeholder="أدخل كلمة المرور" required="" type="password"/>
-      <button aria-label="إظهار كلمة المرور" class="password-toggle" id="togglePassword" type="button">
-       <svg viewbox="0 0 24 24">
-        <path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z">
-        </path>
-        <circle cx="12" cy="12" r="2.7">
-        </circle>
-       </svg>
-      </button>
-     </div>
-     <button class="button-primary login-submit" type="submit">
-      <span>
-       دخول لوحة الإدارة
-      </span>
-      <svg viewbox="0 0 24 24">
-       <path d="M5 12h14M13 6l6 6-6 6">
-       </path>
-      </svg>
-     </button>
-     <p class="login-error" id="loginError">
-     </p>
-    </form>
-    <div class="login-foot">
-     <span class="status-led">
-     </span>
-     جلسة إدارة محمية
-    </div>
-   </div>
-  </div>
-  <div class="app-shell" hidden="" id="appShell">
+  <div class="app-shell" id="appShell">
    <aside class="sidebar glass-panel" id="sidebar">
     <div class="brand-block">
      <div class="brand-emblem">
@@ -2278,7 +2223,7 @@ body.light-mode .ambient
         </path>
        </svg>
       </button>
-      <button class="profile-chip" id="logoutButton">
+      <div class="profile-chip" id="profileChip">
        <span class="profile-avatar">
         م
        </span>
@@ -2294,7 +2239,7 @@ body.light-mode .ambient
         <path d="m9 18 6-6-6-6">
         </path>
        </svg>
-      </button>
+      </div>
      </div>
     </header>
     <section class="page-section active" id="page-overview">
@@ -3059,13 +3004,11 @@ body.light-mode .ambient
 
 
     const API_ROOT = "/api";
-    const SESSION_KEY = "madarek_dashboard_session";
     const $ = (selector) => document.querySelector(selector);
     const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
 
     const state = {
-        token: sessionStorage.getItem(SESSION_KEY) || "",
         data: null,
         activePage: "overview",
         searchQuery: "",
@@ -3135,12 +3078,7 @@ body.light-mode .ambient
 
     async function request(endpoint, options = {}) {
         const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
-        if (state.token) headers.Authorization = `Bearer ${state.token}`;
         const response = await fetch(`${API_ROOT}${endpoint}`, { ...options, headers });
-        if (response.status === 401) {
-            signOut(false, false);
-            throw new Error("انتهت الجلسة أو لم تعد صالحة. سجل الدخول مجددًا.");
-        }
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(payload.detail || payload.message || `HTTP ${response.status}`);
         return payload;
@@ -3156,37 +3094,12 @@ body.light-mode .ambient
         }
     }
 
-    function signOut(showMessage = true, revoke = true) {
-        const oldToken = state.token;
-        if (revoke && oldToken) {
-            fetch(`${API_ROOT}/logout`, { method: "POST", headers: { Authorization: `Bearer ${oldToken}` } }).catch(() => {});
-        }
-        state.token = "";
-        sessionStorage.removeItem(SESSION_KEY);
-        $("#appShell").hidden = true;
-        $("#loginScreen").hidden = false;
-        if (showMessage) toast("تم تسجيل الخروج");
-    }
-
-    async function signIn(password) {
-        const response = await fetch(`${API_ROOT}/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ password })
-        });
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(result.detail || "تعذر تسجيل الدخول.");
-        state.token = result.token;
-        sessionStorage.setItem(SESSION_KEY, result.token);
-    }
-
     async function boot() {
-        if (!state.token) return;
+        showApplication();
         try {
             await refreshData();
-            showApplication();
         } catch (error) {
-            signOut(false);
+            setConnection(false, "تعذر الاتصال بالخادم");
             toast(error.message, "error");
         }
     }
@@ -3200,7 +3113,6 @@ body.light-mode .ambient
     }
 
     function showApplication() {
-        $("#loginScreen").hidden = true;
         $("#appShell").hidden = false;
         applyTheme(state.theme);
         applyFont(state.font);
@@ -3528,17 +3440,6 @@ body.light-mode .ambient
 
 
     function bindEvents() {
-        $("#loginForm").addEventListener("submit", async (event) => {
-            event.preventDefault();
-            const password = $("#adminPassword").value;
-            $("#loginError").textContent = "";
-            try { await signIn(password); await refreshData(); showApplication(); toast("تم تسجيل الدخول"); }
-            catch (error) { $("#loginError").textContent = error.message; }
-        });
-        $("#togglePassword").addEventListener("click", () => {
-            const field = $("#adminPassword"); field.type = field.type === "password" ? "text" : "password";
-        });
-        $("#logoutButton").addEventListener("click", () => signOut());
         $("#refreshButton").addEventListener("click", async () => { try { await refreshData(); toast("تم تحديث البيانات"); } catch (error) { toast(error.message, "error"); } });
         $("#sourceRefresh").addEventListener("click", refreshData);
         $("#sourceSearch").addEventListener("input", renderSources);
@@ -3602,7 +3503,7 @@ body.light-mode .ambient
 
     bindEvents();
     initializeDate();
-    if (state.token) boot();
+    boot();
 })();
 
   </script>
