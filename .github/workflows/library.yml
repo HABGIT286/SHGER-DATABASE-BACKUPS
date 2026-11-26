@@ -1,0 +1,50 @@
+name: Madarek Knowledge Library Bot
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Restart approximately every six hours; GitHub scheduled runs are not guaranteed exact.
+    - cron: '0 */6 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: madarek-library-bot
+  cancel-in-progress: true
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && python -m pip install aiogram==3.22.0 httpx==0.28.1
+
+      - name: Verify Python file syntax
+        run: python -m py_compile bot.py
+
+      - name: Run Telegram bot
+        env:
+          TOKENN: ${{ secrets.TOKENN }}
+          JOIN_CHANEL: ${{ secrets.JOIN_CHANEL }}
+          DEV_TELE: ${{ secrets.DEV_TELE }}
+          ID_TELE: ${{ secrets.ID_TELE }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          PROXY_URL: ${{ secrets.PROXY_URL }}
+          WELCOME_IMAGE: ${{ secrets.WELCOME_IMAGE }}
+          LOG_LEVEL: INFO
+        run: python bot.py
