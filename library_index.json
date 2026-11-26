@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "next": {
+    "file": 1,
+    "photo": 1,
+    "link": 1
+  },
+  "sources": [],
+  "users": {
+    "7753969972": {
+      "id": 7753969972,
+      "name": "⌯ .𝐎𝐍𝐘𝐗ぷ𓆤",
+      "username": "ONX44",
+      "first_seen": "2026-11-26T07:21:42+00:00",
+      "last_seen": "2026-11-26T08:23:18+00:00",
+      "blocked": false
+    },
+    "910624538": {
+      "id": 910624538,
+      "name": "دِ٘اِ٘اِ٘نِ٘ـي٘اِ٘اِ٘ݪ​​​​𔔁",
+      "username": "MOTRXVIP",
+      "first_seen": "2026-11-26T07:25:50+00:00",
+      "last_seen": "2026-11-26T08:20:35+00:00",
+      "blocked": false
+    }
+  },
+  "banned": [],
+  "paused": true,
+  "settings": {}
+}
