@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: madarek-dashboard
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python web_api.py
+    healthCheckPath: /health
+    envVars:
+      - key: GITHUB_REPOSITORY
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: WEB_ADMIN_PASSWORD
+        sync: false
+      - key: GITHUB_REF_NAME
+        value: main
