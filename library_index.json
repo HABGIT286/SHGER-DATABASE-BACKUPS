@@ -25,6 +25,6 @@
     }
   },
   "banned": [],
-  "paused": true,
+  "paused": false,
   "settings": {}
 }
