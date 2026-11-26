@@ -55,8 +55,11 @@
       "name": "⌯ .𝐎𝐍𝐘𝐗ぷ𓆤",
       "username": "ONX44",
       "first_seen": "2026-11-26T07:21:42+00:00",
-      "last_seen": "2026-11-26T10:29:14+00:00",
-      "blocked": false
+      "last_seen": "2026-11-26T12:05:22+00:00",
+      "blocked": false,
+      "downloads": [],
+      "download_count": 0,
+      "published_source_ids": []
     },
     "910624538": {
       "id": 910624538,
@@ -64,12 +67,24 @@
       "username": "MOTRXVIP",
       "first_seen": "2026-11-26T07:25:50+00:00",
       "last_seen": "2026-11-26T08:20:35+00:00",
-      "blocked": true
+      "blocked": true,
+      "downloads": [],
+      "download_count": 0,
+      "published_source_ids": []
     }
   },
   "banned": [
     "910624538"
   ],
   "paused": false,
-  "settings": {}
+  "settings": {
+    "welcome_media": {
+      "type": "video",
+      "value": "BAACAgIAAxkBAAPiawgkAS0OP9xocqyM9lXWuEamgVcAAgmvAALqhUlI2-Y_JZ_tFm89BA",
+      "updated_at": "2026-11-26T12:20:17+00:00"
+    }
+  },
+  "download_events": [],
+  "ban_history": [],
+  "notes": {}
 }
