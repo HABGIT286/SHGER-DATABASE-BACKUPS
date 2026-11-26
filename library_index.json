@@ -80,6 +80,12 @@
       "type": "video",
       "value": "BAACAgIAAxkBAAPiawgkAS0OP9xocqyM9lXWuEamgVcAAgmvAALqhUlI2-Y_JZ_tFm89BA",
       "updated_at": "2026-11-26T12:20:17+00:00"
+    },
+    "pause_media": {
+      "type": "video",
+      "value": "BAACAgIAAxkBAAP0awgrabK4EJ9sdX3uELSkChqOj98AAkSvAALqhUlIu5OT6vESsS49BA",
+      "note": "تعبان مو وكتك هسه 😭",
+      "updated_at": "2026-11-26T12:52:06+00:00"
     }
   },
   "download_events": [],
