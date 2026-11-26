@@ -61,6 +61,26 @@
           "requested_at": "2026-11-26T15:42:52+00:00"
         }
       ]
+    },
+    {
+      "type": "file",
+      "file_id": "BQACAgIAAxkBAAIBR2sIU777ub4XT03U0Nti_P6hkXjbAAJEuwACRZApSJZm2SigXn1PPQQ",
+      "file_unique_id": "AgADRLsAAkWQKUg",
+      "filename": "فن التسويق في المشاريع الصغيرة.pdf",
+      "title": "مادة التسويق مصدر قديم.",
+      "user_id": 910624538,
+      "user_name": "دِ٘اِ٘اِ٘نِ٘ـي٘اِ٘اِ٘ݪ​​​​𔔁",
+      "username": "MOTRXVIP",
+      "created_at": "2026-11-26T15:43:58+00:00",
+      "year": null,
+      "note": "مادة التسويق مصدر قديم.",
+      "channel_message_ids": [
+        26,
+        27
+      ],
+      "status": "published",
+      "source_id": "DOC-0006",
+      "published_at": "2026-11-26T15:44:27+00:00"
     }
   ],
   "users": {
@@ -99,7 +119,9 @@
         }
       ],
       "download_count": 2,
-      "published_source_ids": []
+      "published_source_ids": [
+        "DOC-0006"
+      ]
     },
     "1242589207": {
       "id": 1242589207,
