@@ -5,7 +5,28 @@
     "photo": 1,
     "link": 1
   },
-  "sources": [],
+  "sources": [
+    {
+      "type": "file",
+      "file_id": "BQACAgIAAxkBAAMxawfebjP8A-1pht8VJJZOY8V8m-wAAiiwAAJntjhIL90fLTpo4lc9BA",
+      "file_unique_id": "AgADKLAAAme2OEg",
+      "filename": "ادارة المشاريع المعاصرة.pdf",
+      "title": "مشاريع",
+      "user_id": 7753969972,
+      "user_name": "⌯ .𝐎𝐍𝐘𝐗ぷ𓆤",
+      "username": "ONX44",
+      "created_at": "2026-11-26T10:23:24+00:00",
+      "year": null,
+      "note": "مشاريع",
+      "channel_message_ids": [
+        8,
+        9
+      ],
+      "status": "published",
+      "source_id": "DOC-0005",
+      "published_at": "2026-11-26T10:23:32+00:00"
+    }
+  ],
   "users": {
     "7753969972": {
       "id": 7753969972,
