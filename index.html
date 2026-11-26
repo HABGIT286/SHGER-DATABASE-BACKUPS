@@ -1,3385 +1,1072 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0b0b0b">
-  <meta name="description" content="المكتبة الطلابية لقسم إدارة الأعمال">
-  <title>مكتبة إدارة الأعمال | المكتبة الطلابية</title>
-
-  <!-- ============================================================
-       BUSINESS ADMINISTRATION STUDENT LIBRARY
-       Single-file frontend: HTML + CSS + JavaScript
-       API endpoints are provided by the Telegram bot / FastAPI service.
-       ============================================================ -->
-  <style>
-    /* Premium Arabic display fonts. Hosted by Google Fonts; fallback fonts
-       are kept for offline/blocked-network environments. */
-    @import url('https://fonts.googleapis.com/css2?family=Katibeh&family=Rakkas&family=Amiri:wght@400;700&display=swap');
-
-    /* ------------------------------------------------------------
-       01. Design tokens and theme variables
-       ------------------------------------------------------------ */
-    :root {
-      color-scheme: dark;
-      --page: #080909;
-      --page-soft: #0d0e0e;
-      --surface: #111313;
-      --surface-2: #171918;
-      --surface-3: #1c1e1d;
-      --ink: #f5f0e4;
-      --ink-soft: #c5bca8;
-      --ink-muted: #8e897d;
-      --gold: #c9a75b;
-      --gold-bright: #f0d58a;
-      --gold-dim: #806638;
-      --line: rgba(201, 167, 91, .24);
-      --line-strong: rgba(201, 167, 91, .52);
-      --shadow: 0 24px 70px rgba(0, 0, 0, .42);
-      --shadow-soft: 0 12px 32px rgba(0, 0, 0, .24);
-      --radius-xl: 30px;
-      --radius-lg: 22px;
-      --radius-md: 16px;
-      --radius-sm: 12px;
-      --ease: cubic-bezier(.2, .8, .2, 1);
-      --font-display: "Rakkas", "Amiri", "Noto Naskh Arabic", serif;
-      --font-body: "Katibeh", "Amiri", "Noto Naskh Arabic", "Tahoma", sans-serif;
-      --content-width: 1240px;
-    }
-
-
-    /* ------------------------------------------------------------
-       02. Light champagne theme
-       ------------------------------------------------------------ */
-    [data-theme="champagne"] {
-      color-scheme: light;
-      --page: #e7dfcf;
-      --page-soft: #eee8dc;
-      --surface: #f8f4eb;
-      --surface-2: #f1e9d8;
-      --surface-3: #e8dcc3;
-      --ink: #342518;
-      --ink-soft: #6d5839;
-      --ink-muted: #988361;
-      --gold: #ad8740;
-      --gold-bright: #d2ad63;
-      --gold-dim: #8e6e36;
-      --line: rgba(143, 108, 47, .23);
-      --line-strong: rgba(143, 108, 47, .5);
-      --shadow: 0 24px 60px rgba(72, 52, 20, .12);
-      --shadow-soft: 0 10px 24px rgba(72, 52, 20, .09);
-    }
-
-
-    /* ------------------------------------------------------------
-       03. White / gold theme
-       ------------------------------------------------------------ */
-    [data-theme="ivory"] {
-      color-scheme: light;
-      --page: #f6f5f1;
-      --page-soft: #fffefa;
-      --surface: #ffffff;
-      --surface-2: #f9f7f2;
-      --surface-3: #f0eadf;
-      --ink: #2a241b;
-      --ink-soft: #6d6250;
-      --ink-muted: #9b907e;
-      --gold: #b58b43;
-      --gold-bright: #d9b86e;
-      --gold-dim: #8e6d35;
-      --line: rgba(181, 139, 67, .2);
-      --line-strong: rgba(181, 139, 67, .46);
-      --shadow: 0 24px 60px rgba(55, 42, 22, .09);
-      --shadow-soft: 0 10px 24px rgba(55, 42, 22, .07);
-    }
-
-
-    /* ------------------------------------------------------------
-       04. Reset and global elements
-       ------------------------------------------------------------ */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
-
-
-    html {
-      scroll-behavior: smooth;
-      scroll-padding-top: 100px;
-    }
-
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: var(--page);
-      color: var(--ink);
-      font-family: var(--font-body);
-      font-size: 15px;
-      line-height: 1.85;
-      overflow-x: hidden;
-      transition: background .35s ease, color .35s ease;
-    }
-
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: -1;
-      background:
-        radial-gradient(circle at 85% 12%, rgba(201, 167, 91, .09), transparent 30%),
-        radial-gradient(circle at 5% 65%, rgba(201, 167, 91, .05), transparent 28%);
-    }
-
-
-    button,
-    input,
-    select {
-      font: inherit;
-    }
-
-
-    button {
-      cursor: pointer;
-    }
-
-
-    button:focus-visible,
-    input:focus-visible,
-    a:focus-visible {
-      outline: 2px solid var(--gold-bright);
-      outline-offset: 3px;
-    }
-
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-
-    img {
-      max-width: 100%;
-      display: block;
-    }
-
-
-    ::selection {
-      background: var(--gold);
-      color: #1a140a;
-    }
-
-
-    /* ------------------------------------------------------------
-       05. Shared containers and helpers
-       ------------------------------------------------------------ */
-    .container {
-      width: min(var(--content-width), calc(100% - 42px));
-      margin-inline: auto;
-    }
-
-
-    .section-space {
-      padding-block: 28px;
-    }
-
-
-    .muted {
-      color: var(--ink-muted);
-    }
-
-
-    .gold-text {
-      color: var(--gold-bright);
-    }
-
-
-    .serif {
-      font-family: var(--font-display);
-    }
-
-
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-
-
-    .hidden {
-      display: none !important;
-    }
-
-
-    /* ------------------------------------------------------------
-       06. SVG icon system
-       Icons are inline vector artwork; no emoji-based UI.
-       ------------------------------------------------------------ */
-    .icon {
-      width: 21px;
-      height: 21px;
-      flex: 0 0 auto;
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 1.65;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-
-    .icon-sm {
-      width: 16px;
-      height: 16px;
-    }
-
-
-    .icon-lg {
-      width: 26px;
-      height: 26px;
-    }
-
-
-    .icon-xl {
-      width: 32px;
-      height: 32px;
-    }
-
-
-    /* ------------------------------------------------------------
-       07. Ambient background decoration
-       ------------------------------------------------------------ */
-    .ambient {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      overflow: hidden;
-      pointer-events: none;
-    }
-
-
-    .ambient-orb {
-      position: absolute;
-      width: 420px;
-      height: 420px;
-      border-radius: 50%;
-      filter: blur(90px);
-      opacity: .1;
-      background: var(--gold);
-      animation: orbFloat 18s ease-in-out infinite alternate;
-    }
-
-
-    .ambient-orb:first-child {
-      top: -180px;
-      right: -140px;
-    }
-
-
-    .ambient-orb:last-child {
-      bottom: -240px;
-      left: -160px;
-      animation-delay: -8s;
-    }
-
-
-    .grain {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      opacity: .025;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");
-    }
-
-
-    /* ------------------------------------------------------------
-       08. Header and navigation
-       ------------------------------------------------------------ */
-    .site-header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: color-mix(in srgb, var(--page) 82%, transparent);
-      backdrop-filter: blur(22px);
-      -webkit-backdrop-filter: blur(22px);
-      border-bottom: 1px solid var(--line);
-    }
-
-
-    .header-inner {
-      min-height: 76px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 18px;
-    }
-
-
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 13px;
-      min-width: 0;
-    }
-
-
-    .brand-mark {
-      width: 44px;
-      height: 44px;
-      display: grid;
-      place-items: center;
-      border: 1px solid var(--line-strong);
-      border-radius: 14px;
-      background: linear-gradient(145deg, var(--surface-2), var(--surface));
-      color: var(--gold-bright);
-      box-shadow: inset 0 0 18px rgba(201, 167, 91, .06);
-    }
-
-
-    .brand-copy {
-      min-width: 0;
-    }
-
-
-    .brand-title {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 800;
-      letter-spacing: .02em;
-    }
-
-
-    .brand-subtitle {
-      margin: -2px 0 0;
-      color: var(--ink-muted);
-      font-size: 11px;
-      letter-spacing: .04em;
-    }
-
-
-    .main-nav {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-
-    .nav-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 9px 13px;
-      border-radius: 12px;
-      color: var(--ink-soft);
-      font-size: 13px;
-      transition: color .2s ease, background .2s ease;
-    }
-
-
-    .nav-link:hover,
-    .nav-link.active {
-      color: var(--gold-bright);
-      background: rgba(201, 167, 91, .09);
-    }
-
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-
-    .icon-button {
-      width: 42px;
-      height: 42px;
-      border: 1px solid var(--line);
-      border-radius: 13px;
-      display: grid;
-      place-items: center;
-      color: var(--ink-soft);
-      background: var(--surface);
-      transition: transform .22s var(--ease), border-color .22s ease, color .22s ease;
-    }
-
-
-    .icon-button:hover {
-      transform: translateY(-2px);
-      border-color: var(--gold);
-      color: var(--gold-bright);
-    }
-
-
-    .menu-toggle {
-      display: none;
-    }
-
-
-    /* ------------------------------------------------------------
-       09. Hero banner
-       ------------------------------------------------------------ */
-    .hero {
-      position: relative;
-      padding: 46px 0 25px;
-    }
-
-
-    .hero-frame {
-      position: relative;
-      overflow: hidden;
-      border: 1px solid var(--line-strong);
-      border-radius: var(--radius-xl);
-      padding: clamp(24px, 5vw, 54px);
-      background:
-        linear-gradient(135deg, rgba(201, 167, 91, .1), transparent 38%),
-        var(--surface);
-      box-shadow: var(--shadow);
-    }
-
-
-    .hero-frame::before {
-      content: "";
-      position: absolute;
-      width: 380px;
-      height: 380px;
-      border: 1px solid rgba(201, 167, 91, .12);
-      border-radius: 50%;
-      top: -180px;
-      left: -120px;
-      box-shadow: 0 0 0 38px rgba(201, 167, 91, .025), 0 0 0 78px rgba(201, 167, 91, .02);
-    }
-
-
-    .hero-content {
-      position: relative;
-      z-index: 2;
-      max-width: 850px;
-    }
-
-
-    .hero-kicker {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--gold-bright);
-      font-size: 12px;
-      letter-spacing: .12em;
-      margin-bottom: 14px;
-    }
-
-
-    .hero-kicker::before,
-    .hero-kicker::after {
-      content: "";
-      width: 28px;
-      height: 1px;
-      background: var(--gold);
-      opacity: .7;
-    }
-
-
-    .hero-title {
-      font-family: var(--font-display);
-      font-size: clamp(34px, 6vw, 64px);
-      font-weight: 800;
-      line-height: 1.35;
-      margin: 0;
-      letter-spacing: -.025em;
-    }
-
-
-    .hero-title .accent {
-      color: var(--gold-bright);
-      text-shadow: 0 0 32px rgba(201, 167, 91, .18);
-    }
-
-
-    .hero-description {
-      max-width: 680px;
-      color: var(--ink-soft);
-      margin: 18px 0 24px;
-      font-size: 15px;
-    }
-
-
-    .hero-details {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 9px;
-      margin-top: 22px;
-    }
-
-
-    .detail-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 12px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      color: var(--ink-soft);
-      background: rgba(201, 167, 91, .04);
-      font-size: 12px;
-    }
-
-
-    .detail-chip .icon {
-      color: var(--gold);
-      width: 15px;
-      height: 15px;
-    }
-
-
-    .hero-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 11px;
-      margin-top: 28px;
-    }
-
-
-    /* ------------------------------------------------------------
-       10. Buttons
-       ------------------------------------------------------------ */
-    .button {
-      position: relative;
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
-      min-height: 46px;
-      padding: 11px 19px;
-      border: 1px solid var(--line-strong);
-      border-radius: 14px;
-      background: var(--surface-2);
-      color: var(--ink);
-      font-weight: 700;
-      font-size: 13px;
-      overflow: hidden;
-      transition: transform .22s var(--ease), background .22s ease, color .22s ease, border-color .22s ease, box-shadow .22s ease;
-    }
-
-
-    .button::after {
-      content: "";
-      position: absolute;
-      top: -120%;
-      left: -35%;
-      width: 35%;
-      height: 340%;
-      transform: rotate(25deg);
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .12), transparent);
-      transition: left .65s ease;
-    }
-
-
-    .button:hover::after {
-      left: 130%;
-    }
-
-
-    .button:hover {
-      transform: translateY(-2px);
-      border-color: var(--gold);
-      box-shadow: 0 8px 25px rgba(201, 167, 91, .09);
-    }
-
-
-    .button:active {
-      transform: translateY(0) scale(.98);
-    }
-
-
-    .button-primary {
-      background: linear-gradient(135deg, var(--gold-bright), var(--gold));
-      border-color: var(--gold);
-      color: #211808;
-    }
-
-
-    .button-primary:hover {
-      color: #211808;
-      box-shadow: 0 10px 28px rgba(201, 167, 91, .22);
-    }
-
-
-    .button-quiet {
-      background: transparent;
-      color: var(--ink-soft);
-    }
-
-
-    .button-small {
-      min-height: 36px;
-      padding: 8px 12px;
-      border-radius: 11px;
-      font-size: 12px;
-    }
-
-
-    /* ------------------------------------------------------------
-       11. Statistics cards
-       ------------------------------------------------------------ */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 14px;
-      margin-top: 22px;
-    }
-
-
-    .stat-card {
-      position: relative;
-      overflow: hidden;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-lg);
-      padding: 20px;
-      background: var(--surface);
-      box-shadow: var(--shadow-soft);
-      transition: transform .28s var(--ease), border-color .28s ease;
-    }
-
-
-    .stat-card:hover {
-      transform: translateY(-4px);
-      border-color: var(--line-strong);
-    }
-
-
-    .stat-card::before {
-      content: "";
-      position: absolute;
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      background: var(--gold);
-      opacity: .035;
-      top: -50px;
-      left: -45px;
-    }
-
-
-    .stat-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-
-    .stat-icon {
-      width: 40px;
-      height: 40px;
-      display: grid;
-      place-items: center;
-      border: 1px solid var(--line);
-      border-radius: 13px;
-      color: var(--gold-bright);
-      background: rgba(201, 167, 91, .07);
-    }
-
-
-    .stat-label {
-      color: var(--ink-muted);
-      font-size: 12px;
-      margin: 0;
-    }
-
-
-    .stat-value {
-      display: block;
-      margin-top: 12px;
-      font-size: 29px;
-      font-weight: 800;
-      letter-spacing: .03em;
-      line-height: 1.2;
-      font-variant-numeric: tabular-nums;
-    }
-
-
-    .stat-note {
-      color: var(--ink-muted);
-      font-size: 11px;
-      margin-top: 7px;
-    }
-
-
-    /* ------------------------------------------------------------
-       12. Section headings and ornamental dividers
-       ------------------------------------------------------------ */
-    .section-heading {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-
-
-    .section-heading-main {
-      min-width: 0;
-    }
-
-
-    .section-eyebrow {
-      display: block;
-      color: var(--gold);
-      font-size: 11px;
-      letter-spacing: .13em;
-      margin-bottom: 4px;
-    }
-
-
-    .section-title {
-      margin: 0;
-      font-family: var(--font-display);
-      font-size: clamp(24px, 3vw, 34px);
-      line-height: 1.45;
-      font-weight: 800;
-    }
-
-
-    .section-description {
-      margin: 6px 0 0;
-      color: var(--ink-muted);
-      font-size: 13px;
-    }
-
-
-    .ornament {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--gold);
-      opacity: .65;
-      margin-block: 18px;
-    }
-
-
-    .ornament::before,
-    .ornament::after {
-      content: "";
-      height: 1px;
-      flex: 1;
-      background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    }
-
-
-    /* ------------------------------------------------------------
-       13. Book controls / toolbar
-       ------------------------------------------------------------ */
-    .library-panel {
-      border: 1px solid var(--line);
-      border-radius: var(--radius-xl);
-      background: var(--surface);
-      padding: clamp(16px, 3vw, 28px);
-      box-shadow: var(--shadow-soft);
-    }
-
-
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      margin-bottom: 20px;
-    }
-
-
-    .search-box {
-      position: relative;
-      flex: 1 1 300px;
-      max-width: 540px;
-    }
-
-
-    .search-box .icon {
-      position: absolute;
-      right: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--ink-muted);
-      pointer-events: none;
-    }
-
-
-    .search-input {
-      width: 100%;
-      min-height: 48px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: var(--surface-2);
-      color: var(--ink);
-      padding: 10px 48px 10px 14px;
-      transition: border-color .2s ease, box-shadow .2s ease;
-    }
-
-
-    .search-input::placeholder {
-      color: var(--ink-muted);
-    }
-
-
-    .search-input:focus {
-      outline: none;
-      border-color: var(--gold);
-      box-shadow: 0 0 0 3px rgba(201, 167, 91, .1);
-    }
-
-
-    .toolbar-right {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 9px;
-    }
-
-
-    .sort-select {
-      min-height: 43px;
-      padding: 9px 12px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: var(--surface-2);
-      color: var(--ink-soft);
-    }
-
-
-    .filter-tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-      padding: 5px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: var(--surface-2);
-      margin-bottom: 22px;
-    }
-
-
-    .filter-tab {
-      border: 1px solid transparent;
-      border-radius: 10px;
-      padding: 8px 15px;
-      color: var(--ink-muted);
-      background: transparent;
-      font-size: 12px;
-      font-weight: 700;
-      transition: background .2s ease, color .2s ease, border-color .2s ease;
-    }
-
-
-    .filter-tab:hover {
-      color: var(--ink);
-    }
-
-
-    .filter-tab.active {
-      background: rgba(201, 167, 91, .12);
-      color: var(--gold-bright);
-      border-color: var(--line);
-    }
-
-
-    .results-line {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      color: var(--ink-muted);
-      font-size: 12px;
-      margin-bottom: 14px;
-    }
-
-
-    /* ------------------------------------------------------------
-       14. Books grid and book cards
-       ------------------------------------------------------------ */
-    .books-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-
-    .book-card {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-      min-height: 235px;
-      border: 1px solid var(--line);
-      border-radius: 19px;
-      background: linear-gradient(155deg, var(--surface-2), var(--surface));
-      padding: 18px;
-      overflow: hidden;
-      transition: transform .28s var(--ease), border-color .28s ease, box-shadow .28s ease;
-      animation: cardReveal .45s var(--ease) both;
-    }
-
-
-    .book-card:hover {
-      transform: translateY(-5px);
-      border-color: var(--line-strong);
-      box-shadow: 0 15px 36px rgba(0, 0, 0, .14);
-    }
-
-
-    .book-card::after {
-      content: "";
-      position: absolute;
-      width: 160px;
-      height: 160px;
-      border: 1px solid rgba(201, 167, 91, .08);
-      border-radius: 50%;
-      left: -85px;
-      bottom: -95px;
-      pointer-events: none;
-    }
-
-
-    .book-card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-    }
-
-
-    .book-type-icon {
-      width: 44px;
-      height: 44px;
-      display: grid;
-      place-items: center;
-      color: var(--gold-bright);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: rgba(201, 167, 91, .08);
-    }
-
-
-    .book-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-      justify-content: flex-end;
-    }
-
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 4px 8px;
-      color: var(--ink-muted);
-      font-size: 10px;
-      line-height: 1.5;
-      background: rgba(201, 167, 91, .04);
-    }
-
-
-    .badge-pinned {
-      color: var(--gold-bright);
-      border-color: var(--line-strong);
-      background: rgba(201, 167, 91, .1);
-    }
-
-
-    .book-title {
-      margin: 15px 0 5px;
-      font-size: 17px;
-      line-height: 1.6;
-      font-weight: 800;
-      overflow-wrap: anywhere;
-    }
-
-
-    .book-description {
-      color: var(--ink-soft);
-      font-size: 12px;
-      line-height: 1.8;
-      margin: 0 0 14px;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      min-height: 65px;
-      overflow-wrap: anywhere;
-    }
-
-
-    .book-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 9px 14px;
-      color: var(--ink-muted);
-      font-size: 11px;
-      margin-top: auto;
-      padding-top: 12px;
-      border-top: 1px solid var(--line);
-    }
-
-
-    .meta-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-
-    .meta-item .icon {
-      width: 14px;
-      height: 14px;
-      color: var(--gold);
-    }
-
-
-    .book-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 14px;
-    }
-
-
-    .book-actions .button {
-      flex: 1;
-    }
-
-
-    .pin-button {
-      width: 42px;
-      min-width: 42px;
-      padding: 0;
-      flex: 0 0 42px !important;
-    }
-
-
-    .pin-button.is-pinned {
-      color: var(--gold-bright);
-      background: rgba(201, 167, 91, .12);
-      border-color: var(--gold);
-    }
-
-
-    /* ------------------------------------------------------------
-       15. Empty state
-       ------------------------------------------------------------ */
-    .empty-state {
-      text-align: center;
-      padding: 50px 18px;
-      border: 1px dashed var(--line-strong);
-      border-radius: 20px;
-      background: var(--surface-2);
-    }
-
-
-    .empty-icon {
-      width: 68px;
-      height: 68px;
-      display: grid;
-      place-items: center;
-      margin: 0 auto 16px;
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      color: var(--gold);
-      background: rgba(201, 167, 91, .07);
-    }
-
-
-    .empty-state h3 {
-      margin: 0 0 6px;
-      font-family: var(--font-display);
-      font-size: 22px;
-    }
-
-
-    .empty-state p {
-      margin: 0;
-      color: var(--ink-muted);
-      font-size: 13px;
-    }
-
-
-    /* ------------------------------------------------------------
-       16. Latest additions strip
-       ------------------------------------------------------------ */
-    .latest-strip {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-
-    .latest-item {
-      display: flex;
-      align-items: center;
-      gap: 13px;
-      padding: 14px;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      background: var(--surface);
-      min-width: 0;
-      transition: border-color .2s ease, transform .2s ease;
-    }
-
-
-    .latest-item:hover {
-      transform: translateY(-2px);
-      border-color: var(--line-strong);
-    }
-
-
-    .latest-cover {
-      width: 48px;
-      height: 56px;
-      display: grid;
-      place-items: center;
-      flex: 0 0 48px;
-      color: var(--gold-bright);
-      border: 1px solid var(--line);
-      border-radius: 11px;
-      background: linear-gradient(135deg, var(--surface-3), var(--surface-2));
-    }
-
-
-    .latest-info {
-      min-width: 0;
-    }
-
-
-    .latest-info strong {
-      display: block;
-      font-size: 13px;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-
-
-    .latest-info span {
-      color: var(--ink-muted);
-      font-size: 11px;
-    }
-
-
-    /* ------------------------------------------------------------
-       17. Activity log
-       ------------------------------------------------------------ */
-    .activity-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      overflow: hidden;
-      background: var(--surface);
-    }
-
-
-    .activity-row {
-      display: grid;
-      grid-template-columns: 42px minmax(0, 1fr) auto;
-      gap: 12px;
-      align-items: center;
-      padding: 13px 16px;
-      border-bottom: 1px solid var(--line);
-    }
-
-
-    .activity-row:last-child {
-      border-bottom: 0;
-    }
-
-
-    .activity-icon {
-      width: 38px;
-      height: 38px;
-      display: grid;
-      place-items: center;
-      color: var(--gold);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: var(--surface-2);
-    }
-
-
-    .activity-copy {
-      min-width: 0;
-    }
-
-
-    .activity-copy strong {
-      display: block;
-      font-size: 12px;
-      overflow-wrap: anywhere;
-    }
-
-
-    .activity-copy small {
-      display: block;
-      color: var(--ink-muted);
-      font-size: 11px;
-    }
-
-
-    .activity-date {
-      color: var(--ink-muted);
-      font-size: 10px;
-      white-space: nowrap;
-    }
-
-
-    /* ------------------------------------------------------------
-       18. Community / Telegram section
-       ------------------------------------------------------------ */
-    .community-card {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      padding: 28px;
-      border: 1px solid var(--line-strong);
-      border-radius: var(--radius-xl);
-      background:
-        radial-gradient(circle at 8% 50%, rgba(201, 167, 91, .11), transparent 28%),
-        var(--surface);
-      overflow: hidden;
-    }
-
-
-    .community-copy {
-      position: relative;
-      z-index: 1;
-    }
-
-
-    .community-copy h2 {
-      margin: 0;
-      font-family: var(--font-display);
-      font-size: 25px;
-    }
-
-
-    .community-copy p {
-      color: var(--ink-soft);
-      margin: 8px 0 0;
-      font-size: 13px;
-    }
-
-
-    .community-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      flex: 0 0 auto;
-    }
-
-
-    /* ------------------------------------------------------------
-       19. Footer
-       ------------------------------------------------------------ */
-    .site-footer {
-      margin-top: 38px;
-      border-top: 1px solid var(--line);
-      padding: 26px 0 34px;
-      color: var(--ink-muted);
-      font-size: 12px;
-    }
-
-
-    .footer-inner {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-
-
-    .footer-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-
-    .footer-mark {
-      width: 30px;
-      height: 30px;
-      display: grid;
-      place-items: center;
-      border: 1px solid var(--line);
-      border-radius: 9px;
-      color: var(--gold);
-    }
-
-
-    .footer-links {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-
-    .footer-links a:hover {
-      color: var(--gold-bright);
-    }
-
-
-    /* ------------------------------------------------------------
-       20. Modal / book detail view
-       ------------------------------------------------------------ */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 500;
-      display: grid;
-      place-items: center;
-      padding: 20px;
-      background: rgba(0, 0, 0, .62);
-      backdrop-filter: blur(8px);
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity .25s ease, visibility .25s ease;
-    }
-
-
-    .modal-backdrop.open {
-      opacity: 1;
-      visibility: visible;
-    }
-
-
-    .modal-card {
-      width: min(540px, 100%);
-      max-height: min(85vh, 760px);
-      overflow-y: auto;
-      border: 1px solid var(--line-strong);
-      border-radius: 24px;
-      background: var(--surface);
-      box-shadow: 0 30px 100px rgba(0, 0, 0, .5);
-      transform: translateY(18px) scale(.98);
-      transition: transform .28s var(--ease);
-    }
-
-
-    .modal-backdrop.open .modal-card {
-      transform: translateY(0) scale(1);
-    }
-
-
-    .modal-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 15px;
-      padding: 22px;
-      border-bottom: 1px solid var(--line);
-    }
-
-
-    .modal-title {
-      margin: 0;
-      font-family: var(--font-display);
-      font-size: 22px;
-      line-height: 1.6;
-      overflow-wrap: anywhere;
-    }
-
-
-    .modal-body {
-      padding: 22px;
-    }
-
-
-    .modal-description {
-      white-space: pre-wrap;
-      color: var(--ink-soft);
-      overflow-wrap: anywhere;
-    }
-
-
-    .modal-meta-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 20px;
-    }
-
-
-    .modal-meta-box {
-      border: 1px solid var(--line);
-      border-radius: 13px;
-      padding: 12px;
-      background: var(--surface-2);
-    }
-
-
-    .modal-meta-box span {
-      display: block;
-      color: var(--ink-muted);
-      font-size: 11px;
-    }
-
-
-    .modal-meta-box strong {
-      display: block;
-      margin-top: 3px;
-      font-size: 13px;
-      overflow-wrap: anywhere;
-    }
-
-
-    .modal-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 22px;
-    }
-
-
-    /* ------------------------------------------------------------
-       21. Toast notifications
-       ------------------------------------------------------------ */
-    .toast-stack {
-      position: fixed;
-      z-index: 900;
-      bottom: 24px;
-      right: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 9px;
-      width: min(360px, calc(100% - 32px));
-      pointer-events: none;
-    }
-
-
-    .toast {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 13px 15px;
-      border: 1px solid var(--line-strong);
-      border-radius: 14px;
-      color: var(--ink);
-      background: var(--surface);
-      box-shadow: var(--shadow);
-      animation: toastIn .3s var(--ease) both;
-      font-size: 12px;
-    }
-
-
-    .toast .icon {
-      color: var(--gold-bright);
-    }
-
-
-    .toast.toast-out {
-      animation: toastOut .25s ease both;
-    }
-
-
-    /* ------------------------------------------------------------
-       22. Loading skeletons
-       ------------------------------------------------------------ */
-    .skeleton {
-      position: relative;
-      overflow: hidden;
-      background: var(--surface-2);
-      border-radius: 10px;
-    }
-
-
-    .skeleton::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      transform: translateX(-100%);
-      background: linear-gradient(90deg, transparent, rgba(201, 167, 91, .08), transparent);
-      animation: skeletonShimmer 1.4s infinite;
-    }
-
-
-    .skeleton-card {
-      min-height: 230px;
-      border: 1px solid var(--line);
-      border-radius: 19px;
-      padding: 18px;
-      background: var(--surface);
-    }
-
-
-    .skeleton-line {
-      height: 13px;
-      margin-top: 13px;
-    }
-
-
-    .skeleton-line.short {
-      width: 45%;
-    }
-
-
-    .skeleton-line.long {
-      width: 92%;
-    }
-
-
-    /* ------------------------------------------------------------
-       23. Scroll reveal
-       ------------------------------------------------------------ */
-    .reveal {
-      opacity: 0;
-      transform: translateY(16px);
-      transition: opacity .65s ease, transform .65s var(--ease);
-    }
-
-
-    .reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-
-    /* ------------------------------------------------------------
-       24. Animations
-       ------------------------------------------------------------ */
-    @keyframes orbFloat {
-      from {
-        transform: translate3d(0, 0, 0) scale(1);
-      }
-      to {
-        transform: translate3d(35px, 28px, 0) scale(1.1);
-      }
-    }
-
-
-    @keyframes cardReveal {
-      from {
-        opacity: 0;
-        transform: translateY(12px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-
-    @keyframes toastIn {
-      from {
-        opacity: 0;
-        transform: translateY(12px) scale(.98);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
-
-    @keyframes toastOut {
-      from {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      to {
-        opacity: 0;
-        transform: translateY(8px);
-      }
-    }
-
-
-    @keyframes skeletonShimmer {
-      to {
-        transform: translateX(100%);
-      }
-    }
-
-
-    @keyframes pulseGold {
-      0%, 100% {
-        box-shadow: 0 0 0 0 rgba(201, 167, 91, .12);
-      }
-      50% {
-        box-shadow: 0 0 0 6px rgba(201, 167, 91, 0);
-      }
-    }
-
-
-    /* ------------------------------------------------------------
-       25. Responsive layout: medium screens
-       ------------------------------------------------------------ */
-    @media (max-width: 1000px) {
-      .main-nav {
-        gap: 2px;
-      }
-      .nav-link {
-        padding: 8px 10px;
-      }
-      .stats-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .books-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .latest-strip {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-
-    /* ------------------------------------------------------------
-       26. Responsive layout: mobile navigation
-       ------------------------------------------------------------ */
-    @media (max-width: 760px) {
-      .header-inner {
-        min-height: 68px;
-      }
-      .main-nav {
-        position: absolute;
-        top: calc(100% + 1px);
-        right: 0;
-        left: 0;
-        display: none;
-        flex-direction: column;
-        align-items: stretch;
-        padding: 12px 21px 16px;
-        border-bottom: 1px solid var(--line);
-        background: var(--page);
-        box-shadow: var(--shadow-soft);
-      }
-      .main-nav.open {
-        display: flex;
-      }
-      .nav-link {
-        justify-content: flex-start;
-        padding: 12px 14px;
-      }
-      .menu-toggle {
-        display: grid;
-      }
-      .brand-title {
-        font-size: 14px;
-      }
-      .brand-subtitle {
-        font-size: 10px;
-      }
-      .hero {
-        padding-top: 26px;
-      }
-      .hero-frame {
-        border-radius: 24px;
-      }
-      .hero-title {
-        font-size: clamp(31px, 8vw, 46px);
-      }
-      .hero-description {
-        font-size: 13px;
-      }
-      .section-heading {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 10px;
-      }
-      .community-card {
-        align-items: flex-start;
-        flex-direction: column;
-      }
-      .community-actions {
-        width: 100%;
-      }
-      .community-actions .button {
-        flex: 1;
-      }
-    }
-
-
-    /* ------------------------------------------------------------
-       27. Responsive layout: narrow mobile
-       ------------------------------------------------------------ */
-    @media (max-width: 520px) {
-      .container {
-        width: calc(100% - 26px);
-      }
-      .brand-mark {
-        width: 39px;
-        height: 39px;
-        border-radius: 12px;
-      }
-      .header-actions {
-        gap: 6px;
-      }
-      .icon-button {
-        width: 38px;
-        height: 38px;
-        border-radius: 12px;
-      }
-      .hero-frame {
-        padding: 23px 19px;
-      }
-      .hero-title {
-        font-size: 32px;
-      }
-      .hero-actions .button {
-        width: 100%;
-      }
-      .hero-details {
-        gap: 7px;
-      }
-      .detail-chip {
-        font-size: 10px;
-        padding: 6px 9px;
-      }
-      .stats-grid {
-        gap: 9px;
-      }
-      .stat-card {
-        padding: 14px;
-        border-radius: 16px;
-      }
-      .stat-value {
-        font-size: 24px;
-      }
-      .stat-icon {
-        width: 35px;
-        height: 35px;
-      }
-      .library-panel {
-        padding: 12px;
-        border-radius: 20px;
-      }
-      .toolbar {
-        align-items: stretch;
-      }
-      .search-box {
-        flex-basis: 100%;
-      }
-      .toolbar-right {
-        width: 100%;
-      }
-      .sort-select {
-        flex: 1;
-      }
-      .filter-tabs {
-        overflow-x: auto;
-        flex-wrap: nowrap;
-      }
-      .filter-tab {
-        flex: 0 0 auto;
-      }
-      .books-grid {
-        grid-template-columns: 1fr;
-      }
-      .book-card {
-        min-height: 210px;
-      }
-      .latest-strip {
-        grid-template-columns: 1fr;
-      }
-      .activity-row {
-        grid-template-columns: 36px minmax(0, 1fr);
-        gap: 9px;
-        padding: 12px;
-      }
-      .activity-date {
-        grid-column: 2;
-      }
-      .activity-icon {
-        width: 34px;
-        height: 34px;
-      }
-      .community-card {
-        padding: 20px;
-      }
-      .community-actions {
-        flex-direction: column;
-      }
-      .footer-inner {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .footer-links {
-        flex-wrap: wrap;
-      }
-      .toast-stack {
-        right: 13px;
-        bottom: 13px;
-      }
-    }
-
-
-    /* ------------------------------------------------------------
-       28. Accessibility: reduce motion and contrast
-       ------------------------------------------------------------ */
-    @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
-        scroll-behavior: auto !important;
-        animation-duration: .01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: .01ms !important;
-      }
-    }
-
-
-    /* ------------------------------------------------------------
-       29. Fine visual adjustments
-       ------------------------------------------------------------ */
-    .gold-rule {
-      height: 1px;
-      width: 100%;
-      background: linear-gradient(90deg, transparent, var(--gold), transparent);
-      opacity: .45;
-    }
-
-
-    .status-dot {
-      width: 7px;
-      height: 7px;
-      display: inline-block;
-      border-radius: 50%;
-      background: var(--gold);
-      box-shadow: 0 0 10px rgba(201, 167, 91, .4);
-    }
-
-
-    .live-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      color: var(--ink-muted);
-      font-size: 11px;
-    }
-
-
-    .live-label .status-dot {
-      animation: pulseGold 2.4s ease infinite;
-    }
-
-
-    .count-up {
-      font-variant-numeric: tabular-nums;
-    }
-
-
-    .mobile-bottom-space {
-      height: 20px;
-    }
-  
-    /* ============================================================
-       PREMIUM POLISH — refined Arabic typography, glass and desktop frame
-       ============================================================ */
-    @import url('https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap');
-    :root {
-      --font-display: "Aref Ruqaa", "Amiri", serif;
-      --font-body: "Amiri", "Noto Naskh Arabic", serif;
-      --glass-edge: rgba(225, 205, 154, .22);
-      --glass-highlight: rgba(255,255,255,.085);
-      --silver: #c9cdd2;
-      --silver-soft: #e8ebee;
-    }
-    /* Desktop canvas is intentionally preserved on phones; the user can pan/zoom. */
-    body { min-width: 1100px; }
-    .container { width: min(1240px, calc(100% - 64px)); }
-    .site-header, .hero-frame, .stat-card, .book-card, .community-card,
-    .activity-item, .modal-card, .filter-tab, .button, .icon-button {
-      backdrop-filter: blur(18px) saturate(145%);
-      -webkit-backdrop-filter: blur(18px) saturate(145%);
-    }
-    .site-header {
-      background: color-mix(in srgb, var(--page) 78%, transparent);
-      border-bottom-color: var(--glass-edge);
-      box-shadow: 0 12px 40px rgba(0,0,0,.14);
-    }
-    .hero-frame {
-      background:
-        radial-gradient(ellipse at 90% 12%, rgba(222,195,132,.16), transparent 44%),
-        linear-gradient(145deg, var(--glass-highlight), transparent 42%),
-        color-mix(in srgb, var(--surface) 78%, transparent);
-      border-color: rgba(213,185,120,.42);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 28px 90px rgba(0,0,0,.32);
-    }
-    .hero-title {
-      font-family: "Aref Ruqaa", "Amiri", serif !important;
-      font-weight: 700;
-      letter-spacing: 0;
-      text-shadow: 0 3px 20px rgba(0,0,0,.22), 0 0 35px rgba(211,178,106,.12);
-    }
-    .hero-title .accent { color: var(--silver-soft); }
-    .brand-title, .section-title, .book-title, .modal-title,
-    .stat-value, .detail-chip, .nav-link, .button, .hero-description,
-    .hero-kicker, .filter-tab, .activity-item, .community-card,
-    .empty-state, .toast, .search-input, .sort-select {
-      font-family: var(--font-body);
-    }
-    .book-card, .stat-card, .community-card, .activity-item, .modal-card {
-      border: 1px solid var(--glass-edge);
-      background: linear-gradient(145deg, rgba(255,255,255,.075), rgba(255,255,255,.018)), var(--surface);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.09), var(--shadow-soft);
-    }
-    .book-card:hover, .stat-card:hover, .community-card:hover {
-      border-color: rgba(224,194,128,.58);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 22px 55px rgba(0,0,0,.24), 0 0 26px rgba(201,167,91,.08);
-      transform: translateY(-5px);
-    }
-    .icon, .icon-button svg, .button svg { stroke-width: 1.55; }
-    .detail-chip { border-color: rgba(220,194,132,.24); background: rgba(255,255,255,.045); }
-    .button-primary { box-shadow: 0 8px 24px rgba(194,157,83,.18), inset 0 1px 0 rgba(255,255,255,.2); }
-    .button:active, .icon-button:active, .filter-tab:active { transform: scale(.965); }
-    [data-theme="champagne"] .hero-title .accent,
-    [data-theme="ivory"] .hero-title .accent { color: var(--gold-bright); }
-    [data-theme="champagne"] .book-card,
-    [data-theme="champagne"] .stat-card,
-    [data-theme="champagne"] .community-card,
-    [data-theme="ivory"] .book-card,
-    [data-theme="ivory"] .stat-card,
-    [data-theme="ivory"] .community-card {
-      background: linear-gradient(145deg, rgba(255,255,255,.65), rgba(255,255,255,.12)), var(--surface);
-      border-color: rgba(167,132,67,.25);
-    }
-    /* Prevent text selection, long-press selection and the default blue highlight. */
-    html, body, body * {
-      -webkit-user-select: none !important;
-      user-select: none !important;
-      -webkit-touch-callout: none !important;
-      -webkit-tap-highlight-color: transparent !important;
-    }
-    input, textarea, select, [contenteditable="true"] {
-      -webkit-user-select: text !important;
-      user-select: text !important;
-      -webkit-touch-callout: default !important;
-    }
-    ::selection { background: transparent !important; color: inherit !important; }
-    ::-moz-selection { background: transparent !important; color: inherit !important; }
-    @media (max-width: 760px) {
-      /* Keep desktop-like proportions on mobile rather than collapsing into a mobile UI. */
-      body { min-width: 1100px; }
-      .container { width: min(1240px, calc(100% - 64px)); }
-      .site-header .container { width: min(1240px, calc(100% - 64px)); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
-    }
-
-  
-    /* MADARIK EDITION — bespoke editorial interface */
-    @import url('https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap');
-    :root { --font-display:"Aref Ruqaa","Amiri",serif; --font-body:"Amiri","Noto Naskh Arabic",serif; --glass-blur:22px; }
-    body { min-width:0 !important; background-image:radial-gradient(ellipse at 50% -20%,color-mix(in srgb,var(--gold) 16%,transparent),transparent 55%); }
-    .container { width:min(1240px,calc(100% - 34px)) !important; }
-    .site-header { border-bottom-color:color-mix(in srgb,var(--gold) 32%,transparent); }
-    .brand-mark { border-radius:16px; box-shadow:0 0 28px color-mix(in srgb,var(--gold) 15%,transparent),inset 0 1px 0 rgba(255,255,255,.2); animation:brandBreath 5s ease-in-out infinite; }
-    .brand-title { font-family:var(--font-display)!important; font-size:24px!important; letter-spacing:0!important; }
-    .brand-subtitle { font-size:12px!important; }
-    .hero { padding-top:clamp(24px,5vw,54px); }
-    .hero-frame { min-height:390px; border-radius:34px!important; isolation:isolate; }
-    .hero-frame::after { content:"مَـدَارِك"; position:absolute; left:4%; bottom:-7%; font-family:var(--font-display); font-size:clamp(70px,15vw,190px); line-height:1; color:var(--gold); opacity:.035; pointer-events:none; white-space:nowrap; }
-    .hero-title { font-family:var(--font-display)!important; font-weight:700!important; font-size:clamp(38px,6vw,72px)!important; line-height:1.6!important; }
-    .hero-description { font-size:clamp(15px,1.3vw,18px); max-width:710px; line-height:2.1; }
-    .section-title,.community-copy h2,.modal-title,.empty-state h3 { font-family:var(--font-display)!important; font-weight:700!important; }
-    .section-heading { padding-bottom:15px; border-bottom:1px solid var(--line); }
-    .section-eyebrow { display:flex; align-items:center; gap:9px; letter-spacing:.08em; }
-    .section-index { display:inline-grid; place-items:center; min-width:30px; height:30px; border:1px solid var(--line-strong); border-radius:9px; font-family:serif; font-size:13px; letter-spacing:0; color:var(--gold-bright); background:color-mix(in srgb,var(--gold) 9%,var(--surface)); }
-    .stat-card,.book-card,.latest-item,.library-panel,.community-card,.activity-list,.modal-card { backdrop-filter:blur(var(--glass-blur)) saturate(155%); -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(155%); }
-    .stat-card { border-radius:23px; position:relative; overflow:hidden; }
-    .stat-card::after { content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; background:linear-gradient(120deg,rgba(255,255,255,.06),transparent 30%,transparent 65%,rgba(255,255,255,.02)); }
-    .stat-value { font-family:var(--font-display); font-size:clamp(26px,3vw,36px)!important; }
-    .books-grid { gap:18px!important; }
-    .book-card { border-radius:24px!important; min-height:260px!important; padding:22px!important; background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.012)),var(--surface)!important; position:relative; isolation:isolate; }
-    .book-card::before { content:attr(data-card-number); position:absolute; top:12px; left:14px; font-family:var(--font-display); font-size:25px; color:var(--gold); opacity:.12; z-index:-1; }
-    .book-card:hover { transform:translateY(-7px) scale(1.012)!important; }
-    .book-title { font-family:var(--font-body)!important; font-size:19px!important; font-weight:800!important; line-height:1.8!important; }
-    .book-description { font-size:14px!important; line-height:2!important; }
-    .book-type-icon { border-radius:16px!important; box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 22px rgba(0,0,0,.12); }
-    .button { border-radius:14px!important; }
-    #refreshButton svg { transition:transform .65s cubic-bezier(.2,.8,.2,1); }
-    #refreshButton:hover svg { transform:rotate(90deg); }
-    #refreshButton.is-loading svg { animation:refreshSpin .9s linear infinite; }
-    #refreshButton.is-loading { pointer-events:none; }
-    .theme-studio { position:fixed; z-index:250; left:18px; bottom:18px; width:min(330px,calc(100vw - 30px)); font-family:var(--font-body); }
-    .studio-toggle { width:100%; display:flex; align-items:center; gap:11px; padding:13px 16px; color:var(--ink); background:color-mix(in srgb,var(--surface) 76%,transparent); border:1px solid var(--line-strong); border-radius:18px; box-shadow:0 18px 50px rgba(0,0,0,.24); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); transition:transform .25s,border-color .25s; }
-    .studio-toggle:hover { transform:translateY(-3px); border-color:var(--gold); }
-    .studio-toggle-icon { color:var(--gold-bright); font-size:19px; animation:starFloat 3s ease-in-out infinite; }
-    .studio-chevron { margin-right:auto; transition:transform .25s; color:var(--gold); }
-    .theme-studio.open .studio-chevron { transform:rotate(180deg); }
-    .studio-panel { margin-bottom:9px; padding:17px; border:1px solid var(--line-strong); border-radius:22px; background:color-mix(in srgb,var(--surface) 88%,transparent); box-shadow:0 24px 70px rgba(0,0,0,.35); backdrop-filter:blur(28px); -webkit-backdrop-filter:blur(28px); animation:panelRise .25s ease both; }
-    .studio-title { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; gap:8px; }
-    .studio-title span { font-family:var(--font-display); font-size:18px; color:var(--gold-bright); }
-    .studio-title small { color:var(--ink-muted); font-size:11px; }
-    .theme-swatches { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-    .theme-choice { border:1px solid var(--line); background:var(--surface-2); border-radius:13px; padding:10px 6px; display:flex; flex-direction:column; align-items:center; gap:7px; color:var(--ink-soft); font-size:12px; transition:transform .2s,border-color .2s; }
-    .theme-choice:hover,.theme-choice.selected { transform:translateY(-2px); border-color:var(--gold); color:var(--gold-bright); }
-    .swatch { width:30px; height:30px; border-radius:50%; border:2px solid rgba(255,255,255,.18); box-shadow:0 4px 14px rgba(0,0,0,.2); }
-    .swatch-dark { background:linear-gradient(135deg,#111,#d0ad65); }.swatch-champagne { background:linear-gradient(135deg,#e9dfce,#b99047); }.swatch-ivory { background:linear-gradient(135deg,#fff,#d6b16c); }.swatch-emerald { background:linear-gradient(135deg,#071d18,#4bb98c); }.swatch-midnight { background:linear-gradient(135deg,#081326,#7294d7); }
-    .font-color-row { display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding:10px 12px; border:1px solid var(--line); border-radius:12px; color:var(--ink-soft); font-size:12px; }
-    .font-color-row input { width:38px; height:28px; border:0; background:transparent; cursor:pointer; }
-    .studio-reset { margin-top:10px; width:100%; border:1px solid var(--line); border-radius:11px; padding:9px; background:transparent; color:var(--ink-muted); font-size:12px; }
-    [data-theme="emerald"] { color-scheme:dark; --page:#071410; --page-soft:#0b1d17; --surface:#0c1d17; --surface-2:#10271e; --surface-3:#18372a; --ink:#e6f3eb; --ink-soft:#b2d1bd; --ink-muted:#769888; --gold:#4eae7e; --gold-bright:#8be0b0; --gold-dim:#337e59; --line:rgba(99,204,148,.22); --line-strong:rgba(99,204,148,.5); }
-    [data-theme="midnight"] { color-scheme:dark; --page:#080e1b; --page-soft:#0d1728; --surface:#101c2f; --surface-2:#15243a; --surface-3:#1d3150; --ink:#e9effb; --ink-soft:#b8c7df; --ink-muted:#7e94b7; --gold:#6e93d3; --gold-bright:#a8c7f4; --gold-dim:#496caa; --line:rgba(118,157,218,.24); --line-strong:rgba(118,157,218,.55); }
-    @keyframes refreshSpin { to { transform:rotate(360deg); } }
-    @keyframes brandBreath { 0%,100%{box-shadow:0 0 16px color-mix(in srgb,var(--gold) 8%,transparent)} 50%{box-shadow:0 0 28px color-mix(in srgb,var(--gold) 22%,transparent)} }
-    @keyframes starFloat { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-3px) rotate(12deg)} }
-    @keyframes panelRise { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-    @media(max-width:760px){ .hero-frame{min-height:unset}.theme-studio{left:10px;bottom:10px;width:min(310px,calc(100vw - 20px))}.brand-title{font-size:21px!important}.hero-title{font-size:clamp(32px,9vw,48px)!important}.hero-frame::after{font-size:90px}.community-card{gap:14px} }
-    @media(prefers-reduced-motion:reduce){.studio-toggle-icon,.brand-mark{animation:none!important}}
-
-/* ==========================================================
-   MADARIK EXTENDED MOTION SYSTEM — premium animation layer
-   ========================================================== */
-:root{--mk-motion-fast:180ms;--mk-motion-mid:420ms;--mk-motion-slow:900ms;--mk-ease:cubic-bezier(.18,.8,.24,1);--mk-pointer-x:50vw;--mk-pointer-y:40vh;--mk-progress:0;--mk-glow:rgba(201,169,97,.22)}
-html{scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:var(--gold,#c9a961) transparent}
-body{isolation:isolate;overflow-x:clip}
-body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(430px circle at var(--mk-pointer-x) var(--mk-pointer-y),rgba(201,169,97,.08),transparent 68%);opacity:.8;transition:opacity .35s ease}
-#madarik-ambient-canvas{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:0;opacity:.38}
-body>*{position:relative;z-index:1}
-/* The decorative atmosphere uses very low contrast so reading remains calm. */
-.site-header,.hero-frame,.stat-card,.book-card,.community-card,.modal-card,.library-panel,.activity-list{transition:transform .42s var(--mk-ease),box-shadow .42s var(--mk-ease),border-color .42s ease,filter .42s ease}
-/* Gentle floating icons, staggered so the page does not move in unison. */
-.icon,.svg-icon,.stat-card svg,.stat-card i,.book-card svg,.book-card i,.feature-icon,.community-card svg,.community-card i{transform-origin:center;will-change:transform,filter}
-.stat-card svg,.stat-card i{animation:mk-icon-float 5.8s ease-in-out infinite}
-.stat-card:nth-child(2) svg,.stat-card:nth-child(2) i{animation-delay:-1.2s}
-.stat-card:nth-child(3) svg,.stat-card:nth-child(3) i{animation-delay:-2.1s}
-.stat-card:nth-child(4) svg,.stat-card:nth-child(4) i{animation-delay:-3.1s}
-@keyframes mk-icon-float{0%,100%{transform:translateY(0) rotate(0);filter:drop-shadow(0 0 transparent)}45%{transform:translateY(-5px) rotate(-3deg);filter:drop-shadow(0 4px 8px var(--mk-glow))}65%{transform:translateY(-2px) rotate(2deg)}}
-.book-card i,.book-card svg{animation:mk-book-icon 6.4s ease-in-out infinite}
-.book-card:nth-child(3n) i,.book-card:nth-child(3n) svg{animation-delay:-1.5s}
-.book-card:nth-child(4n) i,.book-card:nth-child(4n) svg{animation-delay:-2.8s}
-@keyframes mk-book-icon{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.035)}}
-.feature-icon,.community-card .icon{animation:mk-icon-breathe 4.5s ease-in-out infinite}
-@keyframes mk-icon-breathe{0%,100%{filter:drop-shadow(0 0 0 transparent);transform:scale(1)}50%{filter:drop-shadow(0 0 9px var(--mk-glow));transform:scale(1.07)}}
-/* Hover light that tracks pointer on book tiles */
-.book-card{--mk-tilt-x:0deg;--mk-tilt-y:0deg;--mk-light-x:50%;--mk-light-y:0%;transform:perspective(1000px) rotateX(var(--mk-tilt-x)) rotateY(var(--mk-tilt-y));transform-style:preserve-3d;overflow:hidden;isolation:isolate}
-.book-card::before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;background:radial-gradient(360px circle at var(--mk-light-x) var(--mk-light-y),rgba(255,255,255,.16),transparent 65%);transition:opacity .3s ease}
-.book-card:hover::before{opacity:1}
-.book-card:hover{transform:perspective(1000px) translateY(-6px) rotateX(var(--mk-tilt-x)) rotateY(var(--mk-tilt-y));box-shadow:0 24px 54px rgba(20,12,4,.16),0 0 0 1px rgba(201,169,97,.24)}
-.book-card:active{transform:perspective(1000px) scale(.993)}
-/* Animated sheen for buttons and chips */
-.button,.button-primary,.button-quiet,.chip,.filter-chip,.theme-launch,.back-top,.book-action,.download-button{position:relative;overflow:hidden;isolation:isolate}
-.button::after,.button-primary::after,.button-quiet::after,.chip::after,.filter-chip::after,.theme-launch::after,.back-top::after,.book-action::after,.download-button::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 20%,rgba(255,255,255,.28),transparent 75%);transform:translateX(-130%)}
-.button:hover::after,.button-primary:hover::after,.button-quiet:hover::after,.chip:hover::after,.filter-chip:hover::after,.theme-launch:hover::after,.back-top:hover::after,.book-action:hover::after,.download-button:hover::after{animation:mk-sheen .78s ease forwards}
-@keyframes mk-sheen{to{transform:translateX(130%)}}
-.mk-ripple{position:absolute;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.4);pointer-events:none;transform:scale(0);animation:mk-ripple .65s ease-out forwards;z-index:9}
-@keyframes mk-ripple{to{transform:scale(20);opacity:0}}
-/* Scroll entrance — only applied after JS has initialized */
-.mk-reveal{opacity:0;transform:translateY(22px);filter:blur(3px);transition:opacity .7s var(--mk-ease),transform .7s var(--mk-ease),filter .7s ease}
-.mk-reveal.mk-visible{opacity:1;transform:none;filter:none}
-.mk-reveal.mk-delay-1{transition-delay:80ms}.mk-reveal.mk-delay-2{transition-delay:150ms}.mk-reveal.mk-delay-3{transition-delay:220ms}.mk-reveal.mk-delay-4{transition-delay:290ms}.mk-reveal.mk-delay-5{transition-delay:360ms}
-/* Decorative knowledge pathways */
-.mk-pathway-section{margin:28px 0;padding:clamp(20px,4vw,48px);position:relative;overflow:hidden;border:1px solid rgba(201,169,97,.24);border-radius:28px;background:linear-gradient(145deg,rgba(255,255,255,.05),rgba(201,169,97,.05));box-shadow:0 22px 58px rgba(30,20,8,.06)}
-.mk-pathway-section::before{content:"";position:absolute;inset-inline-end:-110px;top:-110px;width:360px;height:360px;border:1px solid rgba(201,169,97,.12);border-radius:50%;box-shadow:0 0 0 32px rgba(201,169,97,.025),0 0 0 64px rgba(201,169,97,.018);animation:mk-orbit 32s linear infinite;pointer-events:none}
-@keyframes mk-orbit{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-.mk-pathway-title{max-width:760px;margin-bottom:26px}.mk-pathway-title h2{font-size:clamp(1.4rem,3vw,2.35rem);line-height:1.6;margin:0 0 8px}.mk-pathway-title p{line-height:2;opacity:.8}
-.mk-pathway-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
-.mk-pathway-card{--mk-path-color:#c9a961;min-height:205px;position:relative;overflow:hidden;padding:20px;border:1px solid rgba(201,169,97,.22);border-radius:20px;background:rgba(255,255,255,.035);transition:transform .4s var(--mk-ease),box-shadow .4s ease,border-color .4s ease}
-.mk-pathway-card:nth-child(2){--mk-path-color:#77977e}.mk-pathway-card:nth-child(3){--mk-path-color:#7396bd}.mk-pathway-card:nth-child(4){--mk-path-color:#a287b4}
-.mk-pathway-card::before{content:"";position:absolute;width:150px;height:150px;bottom:-60px;inset-inline-start:-35px;border-radius:50%;background:var(--mk-path-color);filter:blur(55px);opacity:.15;transition:opacity .4s ease,transform .5s ease}
-.mk-pathway-card:hover{transform:translateY(-7px);box-shadow:0 20px 38px rgba(30,20,8,.1);border-color:rgba(201,169,97,.42)}.mk-pathway-card:hover::before{opacity:.32;transform:scale(1.3)}
-.mk-pathway-icon{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;margin-bottom:15px;color:var(--mk-path-color);background:color-mix(in srgb,var(--mk-path-color) 13%,transparent);border:1px solid color-mix(in srgb,var(--mk-path-color) 28%,transparent);position:relative}
-.mk-pathway-icon i{font-size:1.25rem;animation:mk-icon-float 5s ease-in-out infinite}.mk-pathway-card h3{font-size:1rem;margin-bottom:8px}.mk-pathway-card p{font-size:.88rem;line-height:1.9;opacity:.78}.mk-pathway-card a{display:inline-flex;gap:8px;align-items:center;margin-top:14px;font-size:.85rem;color:var(--mk-path-color);font-weight:800}.mk-pathway-card a i{transition:transform .3s ease}.mk-pathway-card:hover a i{transform:translateX(-4px)}
-/* Download overlay is global because downloads may originate in the details modal */
-.mk-download-overlay{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:20px;background:rgba(12,10,8,.48);backdrop-filter:blur(14px);opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s ease}
-.mk-download-overlay.mk-open{opacity:1;visibility:visible}
-.mk-download-card{width:min(480px,100%);padding:28px 24px;border-radius:26px;background:var(--surface,#f7f1e3);color:var(--text,#2c1810);border:1px solid rgba(201,169,97,.45);box-shadow:0 35px 100px rgba(0,0,0,.28);transform:translateY(20px) scale(.98);transition:transform .4s var(--mk-ease);position:relative;overflow:hidden}
-.mk-download-overlay.mk-open .mk-download-card{transform:translateY(0) scale(1)}
-.mk-download-card::before{content:"";position:absolute;inset-inline-end:-70px;top:-80px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(201,169,97,.22),transparent 70%);pointer-events:none}
-.mk-download-emblem{width:64px;height:64px;border-radius:22px;display:grid;place-items:center;margin:0 auto 16px;color:#9a7b3c;border:1px solid rgba(201,169,97,.4);background:rgba(201,169,97,.1);position:relative}
-.mk-download-emblem i{font-size:1.5rem;animation:mk-download-bounce 1.4s ease-in-out infinite}
-@keyframes mk-download-bounce{0%,100%{transform:translateY(-3px)}50%{transform:translateY(5px)}}
-.mk-download-title{text-align:center;font-size:1.1rem;font-weight:900;margin-bottom:8px}.mk-download-filename{text-align:center;word-break:break-word;line-height:1.8;font-size:.9rem;opacity:.75;margin-bottom:20px}
-.mk-download-progress-wrap{height:12px;border-radius:20px;overflow:hidden;background:rgba(120,90,40,.12);position:relative;border:1px solid rgba(201,169,97,.2)}
-.mk-download-progress{height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#8b7340,#c9a961,#f0dba7);position:relative;transition:width .16s linear}
-.mk-download-progress::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);background-size:200% 100%;animation:mk-progress-shine 1s linear infinite}
-@keyframes mk-progress-shine{from{background-position:200% 0}to{background-position:-200% 0}}
-.mk-download-stats{display:flex;justify-content:space-between;gap:12px;margin-top:12px;font-size:.78rem;font-variant-numeric:tabular-nums;opacity:.78}.mk-download-percent{font-weight:900;font-size:1rem;color:#9a7b3c}
-.mk-download-status{text-align:center;margin-top:14px;min-height:24px;font-size:.86rem;line-height:1.8}.mk-download-close{margin:18px auto 0;display:block;border:1px solid rgba(201,169,97,.4);background:transparent;color:inherit;padding:9px 18px;border-radius:14px;cursor:pointer;opacity:.7}.mk-download-close:hover{opacity:1;background:rgba(201,169,97,.1)}
-.mk-download-overlay.mk-complete .mk-download-emblem{color:#3e9864;border-color:rgba(62,152,100,.4);background:rgba(62,152,100,.1)}.mk-download-overlay.mk-complete .mk-download-emblem i{animation:mk-complete-pop .5s ease}.mk-download-overlay.mk-error .mk-download-emblem{color:#b9564c}
-@keyframes mk-complete-pop{0%{transform:scale(.4) rotate(-30deg)}75%{transform:scale(1.25) rotate(8deg)}100%{transform:scale(1)}}
-/* A subtle dock for common actions */
-.mk-shortcut-dock{position:fixed;z-index:800;inset-inline-start:12px;top:50%;transform:translateY(-50%);display:grid;gap:7px;padding:7px;border:1px solid rgba(201,169,97,.28);border-radius:22px;background:rgba(245,230,200,.55);backdrop-filter:blur(18px);box-shadow:0 14px 40px rgba(20,12,4,.09)}
-.mk-shortcut-dock button{width:42px;height:42px;border:0;border-radius:15px;background:transparent;color:var(--gold,#c9a961);display:grid;place-items:center;cursor:pointer;transition:transform .25s ease,background .25s ease}.mk-shortcut-dock button:hover{transform:scale(1.08);background:rgba(201,169,97,.14)}.mk-shortcut-dock button:active{transform:scale(.94)}
-.mk-shortcut-dock button::after{content:attr(data-label);position:absolute;inset-inline-start:calc(100% + 10px);white-space:nowrap;background:rgba(20,15,10,.9);color:#fff;padding:7px 10px;border-radius:9px;font-size:.72rem;opacity:0;transform:translateX(-4px);pointer-events:none;transition:opacity .2s ease,transform .2s ease}.mk-shortcut-dock button:hover::after{opacity:1;transform:translateX(0)}
-/* Live animation controls */
-.mk-motion-toggle{position:fixed;z-index:850;inset-inline-end:15px;bottom:16px;width:42px;height:42px;border-radius:50%;border:1px solid rgba(201,169,97,.4);background:rgba(245,230,200,.65);color:var(--gold,#c9a961);box-shadow:0 8px 24px rgba(20,12,4,.1);backdrop-filter:blur(12px);cursor:pointer;transition:transform .25s ease,box-shadow .25s ease}.mk-motion-toggle:hover{transform:translateY(-3px) rotate(8deg);box-shadow:0 12px 28px rgba(201,169,97,.2)}
-body.mk-motion-paused #madarik-ambient-canvas{opacity:0!important}body.mk-motion-paused .stat-card i,body.mk-motion-paused .stat-card svg,body.mk-motion-paused .book-card i,body.mk-motion-paused .book-card svg,body.mk-motion-paused .feature-icon,body.mk-motion-paused .mk-pathway-icon i{animation-play-state:paused!important}
-/* Extra visual polish for interaction focus and reduced-motion settings */
-:focus-visible{outline:2px solid rgba(201,169,97,.85)!important;outline-offset:3px!important}
-@media(max-width:1050px){.mk-pathway-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mk-shortcut-dock{inset-inline-start:8px}}
-@media(max-width:720px){.mk-pathway-grid{grid-template-columns:1fr}.mk-pathway-card{min-height:155px}.mk-shortcut-dock{top:auto;bottom:12px;left:50%;inset-inline-start:50%;transform:translateX(-50%);display:flex;border-radius:19px}.mk-shortcut-dock button{width:38px;height:38px}.mk-shortcut-dock button::after{display:none}.#madarik-ambient-canvas{opacity:.2}.mk-motion-toggle{bottom:70px}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.mk-reveal{opacity:1;transform:none;filter:none}#madarik-ambient-canvas{display:none}}
-</style>
-</head>
-<body data-theme="blackgold">
-  <!-- Decorative atmosphere layer -->
-  <div class="ambient" aria-hidden="true">
-    <span class="ambient-orb"></span>
-    <span class="ambient-orb"></span>
+<html dir="rtl" lang="ar">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+  <meta content="#090a15" name="theme-color"/>
+  <meta content="لوحة إدارة مدارك المعرفة الرقمية" name="description"/>
+  <title>
+   مدارك المعرفة | لوحة الإدارة
+  </title>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&amp;family=Cairo:wght@300;400;500;600;700;800&amp;family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+  <link href="style.css" rel="stylesheet"/>
+ </head>
+ <body>
+  <div aria-hidden="true" class="ambient">
+   <div class="ambient-orb orb-a">
+   </div>
+   <div class="ambient-orb orb-b">
+   </div>
+   <div class="ambient-orb orb-c">
+   </div>
+   <div class="ambient-grid">
+   </div>
   </div>
-  <div class="grain" aria-hidden="true"></div>
-
-  <!-- Inline icon definitions for consistent stroke artwork -->
-  <svg class="sr-only" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <symbol id="i-book" viewBox="0 0 24 24">
-      <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 1 4 17.5z"/>
-      <path d="M4 5.5v12M8 7h8M8 11h8M8 15h5"/>
-    </symbol>
-    <symbol id="i-search" viewBox="0 0 24 24">
-      <circle cx="10.8" cy="10.8" r="6.8"/>
-      <path d="m16 16 4.5 4.5"/>
-    </symbol>
-    <symbol id="i-download" viewBox="0 0 24 24">
-      <path d="M12 3v11M7.5 9.5 12 14l4.5-4.5M4 17v3h16v-3"/>
-    </symbol>
-    <symbol id="i-pin" viewBox="0 0 24 24">
-      <path d="m15 4 5 5-4 1-3 3-1 4-5-5 4-1 3-3zM8 16l-4 4"/>
-    </symbol>
-    <symbol id="i-calendar" viewBox="0 0 24 24">
-      <rect x="3" y="5" width="18" height="16" rx="2"/>
-      <path d="M7 3v4M17 3v4M3 10h18"/>
-    </symbol>
-    <symbol id="i-file" viewBox="0 0 24 24">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-      <path d="M14 2v6h6M8 13h8M8 17h6"/>
-    </symbol>
-    <symbol id="i-chart" viewBox="0 0 24 24">
-      <path d="M3 3v18h18M7 15l4-5 4 3 5-7"/>
-    </symbol>
-    <symbol id="i-eye" viewBox="0 0 24 24">
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
-      <circle cx="12" cy="12" r="3"/>
-    </symbol>
-    <symbol id="i-menu" viewBox="0 0 24 24">
-      <path d="M4 6h16M4 12h16M4 18h16"/>
-    </symbol>
-    <symbol id="i-close" viewBox="0 0 24 24">
-      <path d="m6 6 12 12M18 6 6 18"/>
-    </symbol>
-    <symbol id="i-moon" viewBox="0 0 24 24">
-      <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.8 8.8 0 1 0 11 11z"/>
-    </symbol>
-    <symbol id="i-sun" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="4"/>
-      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
-    </symbol>
-    <symbol id="i-arrow" viewBox="0 0 24 24">
-      <path d="M5 12h14M13 6l6 6-6 6"/>
-    </symbol>
-    <symbol id="i-star" viewBox="0 0 24 24">
-      <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 3 1.1-6.3L3 9.6l6.2-.9z"/>
-    </symbol>
-    <symbol id="i-users" viewBox="0 0 24 24">
-      <path d="M16 20v-1.5a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V20M9 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM18 8a3 3 0 1 0 0-6M22 20v-1.5a4 4 0 0 0-3-3.9"/>
-    </symbol>
-    <symbol id="i-telegram" viewBox="0 0 24 24">
-      <path d="m21 3-3.2 18-6.1-4.6-3.4 3.3-.6-5.8L21 3zM7.7 11.2 18.1 5.1"/>
-    </symbol>
-    <symbol id="i-clock" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="9"/>
-      <path d="M12 7v5l3.5 2"/>
-    </symbol>
-    <symbol id="i-info" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="9"/>
-      <path d="M12 11v5M12 8h.01"/>
-    </symbol>
-    <symbol id="i-refresh" viewBox="0 0 24 24">
-      <path d="M20 7v5h-5M4 17v-5h5"/>
-      <path d="M6.5 9A6 6 0 0 1 17 6.5L20 9M4 15l3 2.5A6 6 0 0 0 17.5 15"/>
-    </symbol>
-    <symbol id="i-link" viewBox="0 0 24 24">
-      <path d="M10 13a5 5 0 0 0 7h1a5 5 0 0 0 3-1.1l2-2a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7-7L5 6a5 5 0 0 0 7 7l1-1"/>
-    </symbol>
-  </svg>
-
-
-  <!-- ------------------------------------------------------------
-       Site header / navigation
-       ------------------------------------------------------------ -->
-  <header class="site-header">
-    <div class="container header-inner">
-      <a class="brand" href="#home" aria-label="العودة إلى الرئيسية">
-        <span class="brand-mark">
-          <svg class="icon icon-lg"><use href="#i-book"></use></svg>
+  <div class="login-screen" id="loginScreen">
+   <div class="login-panel glass-panel">
+    <div aria-hidden="true" class="brand-emblem large-emblem">
+     <svg viewbox="0 0 64 64">
+      <path d="M12 17c9-4 17-2 20 2v29c-5-4-13-5-20-2z">
+      </path>
+      <path d="M52 17c-9-4-17-2-20 2v29c5-4 13-5 20-2z">
+      </path>
+      <path d="M20 25h8M20 31h8M36 25h8M36 31h8">
+      </path>
+     </svg>
+    </div>
+    <p class="eyebrow">
+     MADAREK KNOWLEDGE LIBRARY
+    </p>
+    <h1>
+     مدارك المعرفة
+    </h1>
+    <p class="login-subtitle">
+     بوابة الإدارة والتحكم بالمكتبة الرقمية
+    </p>
+    <form class="login-form" id="loginForm">
+     <label for="adminPassword">
+      كلمة مرور لوحة الإدارة
+     </label>
+     <div class="password-field">
+      <input autocomplete="current-password" id="adminPassword" placeholder="أدخل كلمة المرور" required="" type="password"/>
+      <button aria-label="إظهار كلمة المرور" class="password-toggle" id="togglePassword" type="button">
+       <svg viewbox="0 0 24 24">
+        <path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z">
+        </path>
+        <circle cx="12" cy="12" r="2.7">
+        </circle>
+       </svg>
+      </button>
+     </div>
+     <button class="button-primary login-submit" type="submit">
+      <span>
+       دخول لوحة الإدارة
+      </span>
+      <svg viewbox="0 0 24 24">
+       <path d="M5 12h14M13 6l6 6-6 6">
+       </path>
+      </svg>
+     </button>
+     <p class="login-error" id="loginError">
+     </p>
+    </form>
+    <div class="login-foot">
+     <span class="status-led">
+     </span>
+     جلسة إدارة محمية
+    </div>
+   </div>
+  </div>
+  <div class="app-shell" hidden="" id="appShell">
+   <aside class="sidebar glass-panel" id="sidebar">
+    <div class="brand-block">
+     <div class="brand-emblem">
+      <svg viewbox="0 0 64 64">
+       <path d="M12 17c9-4 17-2 20 2v29c-5-4-13-5-20-2z">
+       </path>
+       <path d="M52 17c-9-4-17-2-20 2v29c5-4 13-5 20-2z">
+       </path>
+       <path d="M20 25h8M20 31h8M36 25h8M36 31h8">
+       </path>
+      </svg>
+     </div>
+     <div class="brand-copy">
+      <strong>
+       مدارك المعرفة
+      </strong>
+      <span>
+       KNOWLEDGE LIBRARY
+      </span>
+     </div>
+    </div>
+    <div class="sidebar-label">
+     مساحة المكتبة
+    </div>
+    <nav aria-label="التنقل الرئيسي" class="main-navigation" id="mainNavigation">
+     <button class="nav-item active" data-page="overview">
+      <span class="nav-icon">
+       <svg viewbox="0 0 24 24">
+        <rect height="8" rx="2" width="8" x="3" y="3">
+        </rect>
+        <rect height="5" rx="2" width="8" x="13" y="3">
+        </rect>
+        <rect height="11" rx="2" width="8" x="13" y="10">
+        </rect>
+        <rect height="8" rx="2" width="8" x="3" y="13">
+        </rect>
+       </svg>
+      </span>
+      <span>
+       الرئيسية
+      </span>
+      <span class="nav-indicator">
+      </span>
+     </button>
+     <button class="nav-item" data-page="sources">
+      <span class="nav-icon">
+       <svg viewbox="0 0 24 24">
+        <path d="M5 3h10l4 4v14H5z">
+        </path>
+        <path d="M15 3v5h4M8 12h8M8 16h8">
+        </path>
+       </svg>
+      </span>
+      <span>
+       المكتبة والمصادر
+      </span>
+      <span class="nav-indicator">
+      </span>
+     </button>
+     <button class="nav-item" data-page="users">
+      <span class="nav-icon">
+       <svg viewbox="0 0 24 24">
+        <circle cx="9" cy="8" r="3.5">
+        </circle>
+        <path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5z">
+        </path>
+        <path d="M16 5.3a3.4 3.4 0 0 1 0 6.2M18 14.8c2.2.7 3.5 2.4 3.5 5.2">
+        </path>
+       </svg>
+      </span>
+      <span>
+       المستخدمون
+      </span>
+      <span class="nav-indicator">
+      </span>
+     </button>
+     <button class="nav-item" data-page="activity">
+      <span class="nav-icon">
+       <svg viewbox="0 0 24 24">
+        <path d="M3 12h4l2-7 4 14 2-7h4">
+        </path>
+        <path d="M3 20h18">
+        </path>
+       </svg>
+      </span>
+      <span>
+       سجل النشاط
+      </span>
+      <span class="nav-indicator">
+      </span>
+     </button>
+     <button class="nav-item" data-page="notes">
+      <span class="nav-icon">
+       <svg viewbox="0 0 24 24">
+        <path d="M5 3h14v18H5z">
+        </path>
+        <path d="M8 8h8M8 12h8M8 16h5">
+        </path>
+       </svg>
+      </span>
+      <span>
+       الملاحظات
+      </span>
+      <span class="nav-indicator">
+      </span>
+     </button>
+     <button class="nav-item" data-page="search">
+      <span class="nav-icon">
+       <svg viewbox="0 0 24 24">
+        <circle cx="10.8" cy="10.8" r="7">
+        </circle>
+        <path d="m16 16 5 5">
+        </path>
+       </svg>
+      </span>
+      <span>
+       البحث الشامل
+      </span>
+      <span class="nav-indicator">
+      </span>
+     </button>
+    </nav>
+    <div class="sidebar-label secondary-label">
+     التخصيص
+    </div>
+    <nav class="main-navigation">
+     <button class="nav-item" data-page="appearance">
+      <span class="nav-icon">
+       <svg viewbox="0 0 24 24">
+        <path d="M12 3a9 9 0 1 0 9 9c0-1.2-.8-2-2-2h-2a2 2 0 0 1-2-2 2 2 0 0 1 1-1.7A4.2 4.2 0 0 0 12 3Z">
+        </path>
+        <circle cx="7.5" cy="10" r="1">
+        </circle>
+        <circle cx="9.5" cy="6.5" r="1">
+        </circle>
+        <circle cx="15.5" cy="6.5" r="1">
+        </circle>
+       </svg>
+      </span>
+      <span>
+       الثيمات والمظهر
+      </span>
+      <span class="nav-indicator">
+      </span>
+     </button>
+     <button class="nav-item" data-page="settings">
+      <span class="nav-icon">
+       <svg viewbox="0 0 24 24">
+        <circle cx="12" cy="12" r="3">
+        </circle>
+        <path d="m19.4 15 .8 1.5-1.7 1.7-1.5-.8-1.3.5-.4 1.6h-2.4l-.4-1.6-1.3-.5-1.5.8-1.7-1.7.8-1.5-.5-1.3-1.6-.4V9.4l1.6-.4.5-1.3-.8-1.5 1.7-1.7 1.5.8 1.3-.5.4-1.6h2.4l.4 1.6 1.3.5 1.5-.8 1.7 1.7-.8 1.5.5 1.3 1.6.4v2.4l-1.6.4-.5 1.3Z">
+        </path>
+       </svg>
+      </span>
+      <span>
+       إعدادات النظام
+      </span>
+      <span class="nav-indicator">
+      </span>
+     </button>
+    </nav>
+    <div class="sidebar-spacer">
+    </div>
+    <div class="sidebar-status-card">
+     <div class="status-led">
+     </div>
+     <div>
+      <strong>
+       حالة النظام
+      </strong>
+      <small id="connectionStatus">
+       بانتظار الاتصال
+      </small>
+     </div>
+     <span class="status-pulse">
+     </span>
+    </div>
+    <div class="sidebar-footer">
+     <span>
+      MADE WITH CARE
+     </span>
+     <span class="footer-version">
+      MKL &middot; 01
+     </span>
+    </div>
+   </aside>
+   <main class="main-area">
+    <header class="top-header glass-panel">
+     <div class="header-title">
+      <p class="header-overline">
+       مساحة الإدارة الرقمية
+      </p>
+      <h1 id="pageTitle">
+       نظرة عامة
+      </h1>
+      <p class="header-date" id="dateDisplay">
+       &mdash;
+      </p>
+     </div>
+     <div class="header-actions">
+      <button class="icon-button" id="refreshButton" title="تحديث البيانات">
+       <svg viewbox="0 0 24 24">
+        <path d="M20 7v5h-5M4 17v-5h5">
+        </path>
+        <path d="M5.5 9a7 7 0 0 1 12-2L20 7M4 17l2.5 2a7 7 0 0 0 12-2">
+        </path>
+       </svg>
+      </button>
+      <button class="icon-button" id="quickSearchButton" title="بحث">
+       <svg viewbox="0 0 24 24">
+        <circle cx="10.8" cy="10.8" r="7">
+        </circle>
+        <path d="m16 16 5 5">
+        </path>
+       </svg>
+      </button>
+      <button class="profile-chip" id="logoutButton">
+       <span class="profile-avatar">
+        م
+       </span>
+       <span>
+        <strong>
+         مدير المكتبة
+        </strong>
+        <small>
+         خروج آمن
+        </small>
+       </span>
+       <svg class="profile-arrow" viewbox="0 0 24 24">
+        <path d="m9 18 6-6-6-6">
+        </path>
+       </svg>
+      </button>
+     </div>
+    </header>
+    <section class="page-section active" id="page-overview">
+     <div class="welcome-banner">
+      <div class="welcome-text">
+       <span class="banner-kicker">
+        مرحباً بك في لوحة مدارك
+       </span>
+       <h2>
+        كل تفاصيل مكتبتك،
+        <br/>
+        <em>
+         في مساحة واحدة.
+        </em>
+       </h2>
+       <p>
+        تابع نشاط المكتبة، راجع المصادر، واكتشف أحدث التفاعلات.
+       </p>
+      </div>
+      <div aria-hidden="true" class="banner-art">
+       <div class="art-orbit orbit-one">
+       </div>
+       <div class="art-orbit orbit-two">
+       </div>
+       <div class="art-core">
+        <svg viewbox="0 0 100 100">
+         <path d="M17 25c13-7 24-4 33 2v52c-8-6-20-8-33-3z">
+         </path>
+         <path d="M83 25c-13-7-24-4-33 2v52c8-6 20-8 33-3z">
+         </path>
+         <path d="M26 38h17M26 47h17M57 38h17M57 47h17">
+         </path>
+        </svg>
+       </div>
+       <div class="art-glint glint-a">
+       </div>
+       <div class="art-glint glint-b">
+       </div>
+      </div>
+     </div>
+     <div class="metrics-grid">
+      <article class="metric-card">
+       <div class="metric-head">
+        <span class="metric-icon icon-violet">
+         <svg viewbox="0 0 24 24">
+          <path d="M5 3h10l4 4v14H5z">
+          </path>
+          <path d="M15 3v5h4M8 12h8M8 16h8">
+          </path>
+         </svg>
         </span>
-        <span class="brand-copy">
-          <h1 class="brand-title">مَدارِك</h1>
-          <p class="brand-subtitle">مكتبة إدارة الأعمال · المعرفة تصنع القرار</p>
+        <span class="metric-caption">
+         إجمالي المصادر
         </span>
-      </a>
-
-      <nav class="main-nav" id="mainNav" aria-label="التنقل الرئيسي">
-        <a class="nav-link active" href="#home">الرئيسية</a>
-        <a class="nav-link" href="#library">الكتب</a>
-        <a class="nav-link" href="#latest">أحدث الإضافات</a>
-        <a class="nav-link" href="#activity">السجل</a>
-      </nav>
-
-      <div class="header-actions">
-        <button class="icon-button" id="themeButton" type="button" aria-label="تبديل الألوان" title="تبديل الثيم">
-          <svg class="icon"><use href="#i-sun"></use></svg>
-        </button>
-        <button class="icon-button menu-toggle" id="menuToggle" type="button" aria-label="فتح القائمة" aria-expanded="false">
-          <svg class="icon"><use href="#i-menu"></use></svg>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Theme and typography studio -->
-  <aside class="theme-studio" id="themeStudio" aria-label="استوديو الثيمات">
-    <button class="studio-toggle" id="studioToggle" type="button" aria-expanded="false" aria-controls="studioPanel">
-      <span class="studio-toggle-icon">✦</span><span>تخصيص المظهر</span><span class="studio-chevron">⌄</span>
-    </button>
-    <div class="studio-panel" id="studioPanel" hidden>
-      <div class="studio-title"><span>استوديو المظهر</span><small>اختر أجواء مكتبتك</small></div>
-      <div class="theme-swatches" role="group" aria-label="الثيمات">
-        <button class="theme-choice" data-theme-choice="blackgold" type="button"><i class="swatch swatch-dark"></i><span>ليلي فاخر</span></button>
-        <button class="theme-choice" data-theme-choice="champagne" type="button"><i class="swatch swatch-champagne"></i><span>شامبين</span></button>
-        <button class="theme-choice" data-theme-choice="ivory" type="button"><i class="swatch swatch-ivory"></i><span>عاجي</span></button>
-        <button class="theme-choice" data-theme-choice="emerald" type="button"><i class="swatch swatch-emerald"></i><span>زمردي</span></button>
-        <button class="theme-choice" data-theme-choice="midnight" type="button"><i class="swatch swatch-midnight"></i><span>كحلي</span></button>
-      </div>
-      <label class="font-color-row" for="fontColorPicker"><span>لون الكتابة</span><input id="fontColorPicker" type="color" value="#f3e9d5" aria-label="اختيار لون الخط"></label>
-      <button class="studio-reset" id="studioReset" type="button">إعادة المظهر الافتراضي</button>
-    </div>
-  </aside>
-
-
-  <!-- ------------------------------------------------------------
-       Main page content
-       ------------------------------------------------------------ -->
-  <main id="home">
-    <div class="container">
-      <!-- Hero / academic identity -->
-      <section class="hero reveal" aria-labelledby="heroTitle">
-        <div class="hero-frame">
-          <div class="hero-content">
-            <span class="hero-kicker">المكتبة الطلابية الرقمية</span>
-            <h2 class="hero-title" id="heroTitle">
-              مَـدَارِكُ المَعْرِفَةِ
-              <br>
-              <span class="accent">مَكْتَبَةُ إِدَارَةِ الأَعْمَالِ</span>
-            </h2>
-            <p class="hero-description">
-              مساحة معرفية تجمع مراجع وملفات الدراسة، وتسهّل الوصول إلى الكتب
-              والملخصات والمواد التعليمية التي يحتاجها طلبة قسم إدارة الأعمال.
-            </p>
-            <div class="hero-details" aria-label="معلومات القسم">
-              <span class="detail-chip"><svg class="icon"><use href="#i-book"></use></svg> كلية الإدارة والاقتصاد</span>
-              <span class="detail-chip"><svg class="icon"><use href="#i-users"></use></svg> قسم إدارة الأعمال</span>
-              <span class="detail-chip"><svg class="icon"><use href="#i-calendar"></use></svg> المرحلة الثالثة</span>
-              <span class="detail-chip"><svg class="icon"><use href="#i-clock"></use></svg> الدراسة المسائية</span>
-              <span class="detail-chip">القاعة B</span>
-            </div>
-            <div class="hero-actions">
-              <a class="button button-primary" href="#library">
-                <svg class="icon"><use href="#i-book"></use></svg>
-                تصفح الكتب
-              </a>
-              <a class="button button-quiet" href="https://t.me/+mZe3EZzQBCYxOTUy" target="_blank" rel="noopener">
-                <svg class="icon"><use href="#i-telegram"></use></svg>
-                الانضمام إلى المجموعة
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-      <!-- Statistics overview -->
-      <section class="stats-grid reveal" aria-label="إحصائيات المكتبة">
-        <article class="stat-card">
-          <div class="stat-top">
-            <p class="stat-label">إجمالي الكتب</p>
-            <span class="stat-icon"><svg class="icon"><use href="#i-book"></use></svg></span>
-          </div>
-          <strong class="stat-value count-up" id="statBooks">0</strong>
-          <p class="stat-note">الملفات المتاحة في المكتبة</p>
-        </article>
-        <article class="stat-card">
-          <div class="stat-top">
-            <p class="stat-label">زيارات المكتبة</p>
-            <span class="stat-icon"><svg class="icon"><use href="#i-eye"></use></svg></span>
-          </div>
-          <strong class="stat-value count-up" id="statVisits">0</strong>
-          <p class="stat-note">عدد الزيارات المسجلة</p>
-        </article>
-        <article class="stat-card">
-          <div class="stat-top">
-            <p class="stat-label">عمليات التحميل</p>
-            <span class="stat-icon"><svg class="icon"><use href="#i-download"></use></svg></span>
-          </div>
-          <strong class="stat-value count-up" id="statDownloads">0</strong>
-          <p class="stat-note">عدد مرات تنزيل الملفات</p>
-        </article>
-        <article class="stat-card">
-          <div class="stat-top">
-            <p class="stat-label">كتب مثبتة</p>
-            <span class="stat-icon"><svg class="icon"><use href="#i-pin"></use></svg></span>
-          </div>
-          <strong class="stat-value count-up" id="statPinned">0</strong>
-          <p class="stat-note">المراجع المختارة في أعلى القائمة</p>
-        </article>
-      </section>
-
-
-      <!-- Latest uploads preview -->
-      <section class="section-space reveal" id="latest">
-        <div class="section-heading">
-          <div class="section-heading-main">
-            <span class="section-eyebrow"><span class="section-index">01</span> · LATEST UPLOADS</span>
-            <h2 class="section-title">أحدث الكتب المضافة</h2>
-            <p class="section-description">آخر المواد التي تمت إضافتها إلى المكتبة.</p>
-          </div>
-          <a class="button button-quiet button-small" href="#library">
-            عرض المكتبة
-            <svg class="icon icon-sm"><use href="#i-arrow"></use></svg>
-          </a>
-        </div>
-        <div class="latest-strip" id="latestStrip">
-          <div class="latest-item">
-            <span class="latest-cover skeleton"></span>
-            <div class="latest-info">
-              <strong class="skeleton skeleton-line long"></strong>
-              <span class="skeleton skeleton-line short"></span>
-            </div>
-          </div>
-          <div class="latest-item">
-            <span class="latest-cover skeleton"></span>
-            <div class="latest-info">
-              <strong class="skeleton skeleton-line long"></strong>
-              <span class="skeleton skeleton-line short"></span>
-            </div>
-          </div>
-          <div class="latest-item">
-            <span class="latest-cover skeleton"></span>
-            <div class="latest-info">
-              <strong class="skeleton skeleton-line long"></strong>
-              <span class="skeleton skeleton-line short"></span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-      <!-- Main library -->
-      <section class="section-space reveal" id="library">
-        <div class="section-heading">
-          <div class="section-heading-main">
-            <span class="section-eyebrow">THE COLLECTION</span>
-            <h2 class="section-title">رفوف المكتبة</h2>
-            <p class="section-description">ابحث عن كتاب، رتّب القائمة، أو افتح الكتب المثبتة.</p>
-          </div>
-          <span class="live-label"><span class="status-dot"></span> تحديث مباشر عند إعادة التحميل</span>
-        </div>
-
-        <div class="library-panel">
-          <div class="toolbar">
-            <label class="search-box" for="searchInput">
-              <svg class="icon"><use href="#i-search"></use></svg>
-              <input class="search-input" id="searchInput" type="search" placeholder="ابحث باسم الكتاب أو وصفه..." autocomplete="off">
-            </label>
-            <div class="toolbar-right">
-              <select class="sort-select" id="sortSelect" aria-label="ترتيب الكتب">
-                <option value="newest">الأحدث أولاً</option>
-                <option value="oldest">الأقدم أولاً</option>
-                <option value="title">حسب العنوان</option>
-                <option value="size">حسب الحجم</option>
-              </select>
-              <button class="button button-quiet button-small" id="refreshButton" type="button" title="إعادة تحميل الكتب">
-                <svg class="icon icon-sm"><use href="#i-refresh"></use></svg>
-                تحديث
-              </button>
-            </div>
-          </div>
-
-          <div class="filter-tabs" role="tablist" aria-label="تصفية الكتب">
-            <button class="filter-tab active" type="button" data-filter="all" role="tab" aria-selected="true">كل الكتب</button>
-            <button class="filter-tab" type="button" data-filter="recent" role="tab" aria-selected="false">حديثاً</button>
-            <button class="filter-tab" type="button" data-filter="pinned" role="tab" aria-selected="false">المثبتة</button>
-          </div>
-
-          <div class="results-line">
-            <span id="resultCount">جارٍ تحميل الكتب...</span>
-            <span id="loadStatus"> </span>
-          </div>
-
-          <div class="books-grid" id="booksGrid" aria-live="polite"></div>
-
-          <div class="empty-state hidden" id="emptyState">
-            <span class="empty-icon"><svg class="icon icon-xl"><use href="#i-book"></use></svg></span>
-            <h3 id="emptyTitle">لا توجد كتب هنا بعد</h3>
-            <p id="emptyDescription">عندما تتم إضافة ملفات جديدة ستظهر في هذه القائمة.</p>
-          </div>
-        </div>
-      </section>
-
-
-      <!-- Activity / upload timeline -->
-      <section class="section-space reveal" id="activity">
-        <div class="section-heading">
-          <div class="section-heading-main">
-            <span class="section-eyebrow">LIBRARY ACTIVITY</span>
-            <h2 class="section-title">سجل الإضافات</h2>
-            <p class="section-description">ترتيب زمني للمواد التي وصلت إلى المكتبة.</p>
-          </div>
-        </div>
-        <div class="activity-list" id="activityList">
-          <div class="activity-row">
-            <span class="activity-icon"><svg class="icon"><use href="#i-clock"></use></svg></span>
-            <div class="activity-copy">
-              <strong>سيظهر سجل الكتب هنا</strong>
-              <small>يتم ترتيب السجل بحسب وقت الإضافة.</small>
-            </div>
-            <span class="activity-date">—</span>
-          </div>
-        </div>
-      </section>
-
-
-      <!-- Student community links -->
-      <section class="section-space reveal" aria-label="روابط تلجرام">
-        <div class="community-card">
-          <div class="community-copy">
-            <span class="section-eyebrow">STUDENT COMMUNITY</span>
-            <h2>ابقَ قريباً من مجتمعك الدراسي</h2>
-            <p>تابع المجموعة، وتواصل مع بوت المكتبة، وشارك الملفات والمراجع.</p>
-          </div>
-          <div class="community-actions">
-            <a class="button button-primary" href="https://t.me/+mZe3EZzQBCYxOTUy" target="_blank" rel="noopener">
-              <svg class="icon"><use href="#i-users"></use></svg>
-              JOIN GROUP
-            </a>
-            <a class="button button-quiet" href="https://t.me/ONX44" target="_blank" rel="noopener">
-              <svg class="icon"><use href="#i-telegram"></use></svg>
-              MY BOT
-            </a>
-          </div>
-        </div>
-      </section>
-    </div>
-  </main>
-
-
-  <!-- Footer -->
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <div class="footer-brand">
-        <span class="footer-mark"><svg class="icon icon-sm"><use href="#i-book"></use></svg></span>
-        <span>المكتبة الطلابية — قسم إدارة الأعمال</span>
-      </div>
-      <div class="footer-links">
-        <a href="#home">الرئيسية</a>
-        <a href="#library">الكتب</a>
-        <a href="https://t.me/+mZe3EZzQBCYxOTUy" target="_blank" rel="noopener">المجموعة</a>
-        <span>2025 — 2026</span>
-      </div>
-    </div>
-  </footer>
-  <div class="mobile-bottom-space" aria-hidden="true"></div>
-
-
-  <!-- Book details modal -->
-  <div class="modal-backdrop" id="bookModal" role="dialog" aria-modal="true" aria-labelledby="modalBookTitle">
-    <div class="modal-card">
-      <div class="modal-header">
+       </div>
+       <div class="metric-value" id="sourceCount">
+        &mdash;
+       </div>
+       <div class="metric-foot">
+        مصدر داخل الفهرس
+        <span class="metric-tag">
+         LIBRARY
+        </span>
+       </div>
+      </article>
+      <article class="metric-card">
+       <div class="metric-head">
+        <span class="metric-icon icon-blue">
+         <svg viewbox="0 0 24 24">
+          <circle cx="9" cy="8" r="3.5">
+          </circle>
+          <path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5M16 5.3a3.4 3.4 0 0 1 0 6.2M18 14.8c2.2.7 3.5 2.4 3.5 5.2">
+          </path>
+         </svg>
+        </span>
+        <span class="metric-caption">
+         إجمالي المستخدمين
+        </span>
+       </div>
+       <div class="metric-value" id="userCount">
+        &mdash;
+       </div>
+       <div class="metric-foot">
+        حساب مسجل في النظام
+        <span class="metric-tag">
+         USERS
+        </span>
+       </div>
+      </article>
+      <article class="metric-card">
+       <div class="metric-head">
+        <span class="metric-icon icon-green">
+         <svg viewbox="0 0 24 24">
+          <path d="M3 12h4l2-7 4 14 2-7h4">
+          </path>
+         </svg>
+        </span>
+        <span class="metric-caption">
+         عمليات الطلب
+        </span>
+       </div>
+       <div class="metric-value" id="requestCount">
+        &mdash;
+       </div>
+       <div class="metric-foot">
+        سجل طلبات المصادر
+        <span class="metric-tag">
+         REQUESTS
+        </span>
+       </div>
+      </article>
+      <article class="metric-card">
+       <div class="metric-head">
+        <span class="metric-icon icon-gold">
+         <svg viewbox="0 0 24 24">
+          <path d="M5 3h14v18H5z">
+          </path>
+          <path d="M8 8h8M8 12h8M8 16h5">
+          </path>
+         </svg>
+        </span>
+        <span class="metric-caption">
+         الملاحظات الإدارية
+        </span>
+       </div>
+       <div class="metric-value" id="noteCount">
+        &mdash;
+       </div>
+       <div class="metric-foot">
+        ملاحظات محفوظة
+        <span class="metric-tag">
+         NOTES
+        </span>
+       </div>
+      </article>
+     </div>
+     <div class="content-grid two-columns">
+      <article class="content-card">
+       <div class="section-heading">
         <div>
-          <span class="section-eyebrow">BOOK DETAILS</span>
-          <h2 class="modal-title" id="modalBookTitle">عنوان الكتاب</h2>
+         <span class="section-eyebrow">
+          LATEST RECORDS
+         </span>
+         <h3>
+          آخر المصادر المضافة
+         </h3>
         </div>
-        <button class="icon-button" id="modalClose" type="button" aria-label="إغلاق">
-          <svg class="icon"><use href="#i-close"></use></svg>
+        <button class="text-action" data-open-page="sources">
+         عرض المكتبة
+         <span>
+          &larr;
+         </span>
         </button>
-      </div>
-      <div class="modal-body">
-        <p class="modal-description" id="modalDescription"></p>
-        <div class="modal-meta-grid">
-          <div class="modal-meta-box"><span>حجم الملف</span><strong id="modalSize">—</strong></div>
-          <div class="modal-meta-box"><span>تاريخ الإضافة</span><strong id="modalDate">—</strong></div>
-          <div class="modal-meta-box"><span>نوع الملف</span><strong id="modalType">—</strong></div>
-          <div class="modal-meta-box"><span>الحالة</span><strong id="modalPinned">غير مثبت</strong></div>
+       </div>
+       <div class="record-list" id="recentSources">
+        <div class="loading-row">
+         جارِ تحميل البيانات...
         </div>
-        <div class="modal-actions">
-          <button class="button button-primary" id="modalDownload" type="button">
-            <svg class="icon"><use href="#i-download"></use></svg>
-            تحميل الكتاب
-          </button>
-          <button class="button button-quiet" id="modalPin" type="button">
-            <svg class="icon"><use href="#i-pin"></use></svg>
-            تثبيت الكتاب
-          </button>
+       </div>
+      </article>
+      <article class="content-card">
+       <div class="section-heading">
+        <div>
+         <span class="section-eyebrow">
+          MEMBERS
+         </span>
+         <h3>
+          أحدث المستخدمين
+         </h3>
         </div>
+        <button class="text-action" data-open-page="users">
+         عرض المستخدمين
+         <span>
+          &larr;
+         </span>
+        </button>
+       </div>
+       <div class="member-list" id="recentUsers">
+        <div class="loading-row">
+         جارِ تحميل البيانات...
+        </div>
+       </div>
+      </article>
+     </div>
+     <article class="content-card activity-preview">
+      <div class="section-heading">
+       <div>
+        <span class="section-eyebrow">
+         SYSTEM ACTIVITY
+        </span>
+        <h3>
+         ملخص حركة المكتبة
+        </h3>
+       </div>
+       <span class="live-label">
+        <span class="status-led">
+        </span>
+        مباشر عند التحديث
+       </span>
       </div>
-    </div>
+      <div class="activity-bars" id="activityBars">
+       <div class="activity-placeholder">
+        ستظهر تفاصيل النشاط هنا بعد الاتصال بقاعدة البيانات.
+       </div>
+      </div>
+     </article>
+    </section>
+    <section class="page-section" id="page-sources">
+     <div class="page-intro">
+      <div>
+       <span class="section-eyebrow">
+        LIBRARY ARCHIVE
+       </span>
+       <h2>
+        المكتبة والمصادر
+       </h2>
+       <p>
+        إدارة فهرس المصادر المنشورة داخل البوت.
+       </p>
+      </div>
+      <button class="button-secondary" id="exportSourcesButton">
+       تصدير الفهرس
+       <svg viewbox="0 0 24 24">
+        <path d="M12 3v12M7 10l5 5 5-5M4 21h16">
+        </path>
+       </svg>
+      </button>
+     </div>
+     <div class="toolbar">
+      <div class="search-input">
+       <svg viewbox="0 0 24 24">
+        <circle cx="10.8" cy="10.8" r="7">
+        </circle>
+        <path d="m16 16 5 5">
+        </path>
+       </svg>
+       <input id="sourceSearch" placeholder="بحث بالعنوان أو المؤلف أو الرمز..."/>
+      </div>
+      <select id="sourceFilter">
+       <option value="all">
+        كل الأنواع
+       </option>
+       <option value="file">
+        ملفات
+       </option>
+       <option value="photo">
+        صور
+       </option>
+       <option value="link">
+        روابط
+       </option>
+      </select>
+      <button class="button-secondary" id="sourceRefresh">
+       تحديث القائمة
+      </button>
+     </div>
+     <div class="data-table-wrap">
+      <table>
+       <thead>
+        <tr>
+         <th>
+          الرمز
+         </th>
+         <th>
+          العنوان
+         </th>
+         <th>
+          النوع
+         </th>
+         <th>
+          المساهم
+         </th>
+         <th>
+          التاريخ
+         </th>
+         <th>
+          خيارات
+         </th>
+        </tr>
+       </thead>
+       <tbody id="sourcesTable">
+        <tr>
+         <td class="empty-cell" colspan="6">
+          جارِ التحميل...
+         </td>
+        </tr>
+       </tbody>
+      </table>
+     </div>
+     <div class="table-footer" id="sourceTableFooter">
+     </div>
+    </section>
+    <section class="page-section" id="page-users">
+     <div class="page-intro">
+      <div>
+       <span class="section-eyebrow">
+        COMMUNITY MEMBERS
+       </span>
+       <h2>
+        إدارة المستخدمين
+       </h2>
+       <p>
+        ملفات المستخدمين وسجل نشاطهم المرتبط بالمكتبة.
+       </p>
+      </div>
+      <button class="button-secondary" id="exportUsersButton">
+       تصدير المستخدمين
+       <svg viewbox="0 0 24 24">
+        <path d="M12 3v12M7 10l5 5 5-5M4 21h16">
+        </path>
+       </svg>
+      </button>
+     </div>
+     <div class="toolbar">
+      <div class="search-input">
+       <svg viewbox="0 0 24 24">
+        <circle cx="10.8" cy="10.8" r="7">
+        </circle>
+        <path d="m16 16 5 5">
+        </path>
+       </svg>
+       <input id="userSearch" placeholder="الاسم أو المعرف أو username..."/>
+      </div>
+      <select id="userFilter">
+       <option value="all">
+        كل المستخدمين
+       </option>
+       <option value="active">
+        غير محظور
+       </option>
+       <option value="blocked">
+        محظور
+       </option>
+      </select>
+     </div>
+     <div class="data-table-wrap">
+      <table>
+       <thead>
+        <tr>
+         <th>
+          المستخدم
+         </th>
+         <th>
+          Telegram ID
+         </th>
+         <th>
+          Username
+         </th>
+         <th>
+          آخر ظهور
+         </th>
+         <th>
+          المصادر
+         </th>
+         <th>
+          الطلبات
+         </th>
+         <th>
+          الحالة
+         </th>
+         <th>
+          التحكم
+         </th>
+        </tr>
+       </thead>
+       <tbody id="usersTable">
+        <tr>
+         <td class="empty-cell" colspan="8">
+          جارِ التحميل...
+         </td>
+        </tr>
+       </tbody>
+      </table>
+     </div>
+     <div class="table-footer" id="usersTableFooter">
+     </div>
+    </section>
+    <section class="page-section" id="page-activity">
+     <div class="page-intro">
+      <div>
+       <span class="section-eyebrow">
+        EVENTS &amp; HISTORY
+       </span>
+       <h2>
+        سجل النشاط
+       </h2>
+       <p>
+        تاريخ الطلبات وعمليات الوصول المسجلة في الفهرس.
+       </p>
+      </div>
+     </div>
+     <div class="toolbar">
+      <div class="search-input">
+       <svg viewbox="0 0 24 24">
+        <circle cx="10.8" cy="10.8" r="7">
+        </circle>
+        <path d="m16 16 5 5">
+        </path>
+       </svg>
+       <input id="activitySearch" placeholder="بحث في سجل النشاط..."/>
+      </div>
+     </div>
+     <div class="data-table-wrap">
+      <table>
+       <thead>
+        <tr>
+         <th>
+          المستخدم
+         </th>
+         <th>
+          المصدر
+         </th>
+         <th>
+          الوقت
+         </th>
+         <th>
+          الرمز
+         </th>
+        </tr>
+       </thead>
+       <tbody id="activityTable">
+        <tr>
+         <td class="empty-cell" colspan="4">
+          جارِ التحميل...
+         </td>
+        </tr>
+       </tbody>
+      </table>
+     </div>
+    </section>
+    <section class="page-section" id="page-notes">
+     <div class="page-intro">
+      <div>
+       <span class="section-eyebrow">
+        ADMIN NOTEBOOK
+       </span>
+       <h2>
+        دفتر الملاحظات
+       </h2>
+       <p>
+        ملاحظات إدارية محفوظة في قاعدة البيانات المشتركة.
+       </p>
+      </div>
+      <button class="button-primary" id="addNoteButton">
+       إضافة ملاحظة
+       <svg viewbox="0 0 24 24">
+        <path d="M12 5v14M5 12h14">
+        </path>
+       </svg>
+      </button>
+     </div>
+     <div class="notes-grid" id="notesGrid">
+      <div class="loading-row">
+       جارِ التحميل...
+      </div>
+     </div>
+    </section>
+    <section class="page-section" id="page-search">
+     <div class="page-intro">
+      <div>
+       <span class="section-eyebrow">
+        GLOBAL SEARCH
+       </span>
+       <h2>
+        البحث الشامل
+       </h2>
+       <p>
+        ابحث في المصادر والمستخدمين والملاحظات في مكان واحد.
+       </p>
+      </div>
+     </div>
+     <div class="search-large">
+      <svg viewbox="0 0 24 24">
+       <circle cx="10.8" cy="10.8" r="7">
+       </circle>
+       <path d="m16 16 5 5">
+       </path>
+      </svg>
+      <input autocomplete="off" id="globalSearch" placeholder="اكتب ما تبحث عنه..."/>
+     </div>
+     <div class="search-result-list" id="globalResults">
+      <div class="search-empty-state">
+       ابدأ بكتابة كلمة أو رقم معرف.
+      </div>
+     </div>
+    </section>
+    <section class="page-section" id="page-appearance">
+     <div class="page-intro">
+      <div>
+       <span class="section-eyebrow">
+        VISUAL EXPERIENCE
+       </span>
+       <h2>
+        الثيمات والمظهر
+       </h2>
+       <p>
+        اختر ألوان واجهة تناسب ذوقك. يتم حفظ اختيار الثيم محليًا في هذا المتصفح.
+       </p>
+      </div>
+     </div>
+     <article class="content-card">
+      <div class="section-heading">
+       <div>
+        <span class="section-eyebrow">
+         COLOR PRESETS
+        </span>
+        <h3>
+         ألوان النظام
+        </h3>
+       </div>
+      </div>
+      <div class="theme-grid" id="themeGrid">
+      </div>
+     </article>
+     <article class="content-card settings-card">
+      <div class="setting-row">
+       <div>
+        <h3>
+         تأثير الخلفية
+        </h3>
+        <p>
+         الدوائر الضوئية وحركة الخلفية.
+        </p>
+       </div>
+       <button aria-label="تفعيل الخلفية" class="switch on" id="effectsSwitch">
+        <span>
+        </span>
+       </button>
+      </div>
+      <div class="setting-row">
+       <div>
+        <h3>
+         الخط العربي
+        </h3>
+        <p>
+         تبديل بين الخطوط المتاحة.
+        </p>
+       </div>
+       <select id="fontSelect">
+        <option value="cairo">
+         Cairo &mdash; عصري
+        </option>
+        <option value="amiri">
+         Amiri &mdash; كلاسيكي
+        </option>
+        <option value="plex">
+         IBM Plex Arabic &mdash; تقني
+        </option>
+       </select>
+      </div>
+      <div class="setting-row">
+       <div>
+        <h3>
+         سطوع الواجهة
+        </h3>
+        <p>
+         التبديل بين النمط الداكن والفاتح.
+        </p>
+       </div>
+       <button class="switch" id="lightModeSwitch">
+        <span>
+        </span>
+       </button>
+      </div>
+     </article>
+    </section>
+    <section class="page-section" id="page-settings">
+     <div class="page-intro">
+      <div>
+       <span class="section-eyebrow">
+        LIBRARY CONFIGURATION
+       </span>
+       <h2>
+        إعدادات النظام
+       </h2>
+       <p>
+        التحكم في الاسم والرسائل والإعدادات المتاحة.
+       </p>
+      </div>
+     </div>
+     <article class="content-card settings-card">
+      <div class="setting-row">
+       <div>
+        <h3>
+         اسم المكتبة
+        </h3>
+        <p id="libraryNamePreview">
+         الاسم الظاهر في بوت مدارك المعرفة.
+        </p>
+       </div>
+       <button class="button-secondary" id="editLibraryName">
+        تعديل الاسم
+       </button>
+      </div>
+      <div class="setting-row">
+       <div>
+        <h3>
+         رسالة الترحيب
+        </h3>
+        <p id="welcomePreview">
+         النص الذي يظهر للمستخدم عند بدء البوت.
+        </p>
+       </div>
+       <button class="button-secondary" id="editWelcome">
+        تعديل الرسالة
+       </button>
+      </div>
+      <div class="setting-row">
+       <div>
+        <h3>
+         رسالة الإيقاف
+        </h3>
+        <p id="pausePreview">
+         رسالة الاعتذار أثناء توقف البوت.
+        </p>
+       </div>
+       <button class="button-secondary" id="editPauseMessage">
+        تعديل الرسالة
+       </button>
+      </div>
+      <div class="setting-row">
+       <div>
+        <h3>
+         حالة تشغيل البوت
+        </h3>
+        <p id="botPauseStatus">
+         يتم تحميل حالة البوت...
+        </p>
+       </div>
+       <button class="button-secondary" id="botPauseToggle">
+        &mdash;
+       </button>
+      </div>
+      <div class="setting-row">
+       <div>
+        <h3>
+         حالة الربط
+        </h3>
+        <p>
+         اتصال الواجهة بالخادم وقاعدة الفهرس.
+        </p>
+       </div>
+       <span class="connection-badge" id="apiBadge">
+        جارِ الفحص
+       </span>
+      </div>
+     </article>
+     <article class="content-card">
+      <div class="section-heading">
+       <div>
+        <span class="section-eyebrow">
+         SECURITY
+        </span>
+        <h3>
+         ملاحظات الأمان
+        </h3>
+       </div>
+      </div>
+      <ul class="security-list">
+       <li>
+        لا يتم وضع توكن Telegram في ملفات الواجهة.
+       </li>
+       <li>
+        عمليات تعديل الفهرس تتطلب جلسة إدارة مصادق عليها.
+       </li>
+       <li>
+        منع النسخ في الواجهة مجرد إعاقة بسيطة ولا يعد حماية كاملة.
+       </li>
+      </ul>
+     </article>
+    </section>
+   </main>
   </div>
-
-
-
-  <section class="mk-pathway-section mk-reveal" id="madarikPathways" aria-label="مسارات المعرفة">
-    <div class="mk-pathway-title"><h2>مسارات المعرفة</h2><p>أربع بوابات معرفية تساعدك على اختيار اتجاه القراءة، وبناء فهم متدرج في مجالات إدارة الأعمال.</p></div>
-    <div class="mk-pathway-grid">
-      <article class="mk-pathway-card mk-reveal mk-delay-1"><div class="mk-pathway-icon"><i class="fa-solid fa-compass-drafting"></i></div><h3>القيادة والإدارة</h3><p>التخطيط، التنظيم، اتخاذ القرار، وتطوير مهارات القيادة.</p><a href="#library">تصفح المصادر <i class="fa-solid fa-arrow-left"></i></a></article>
-      <article class="mk-pathway-card mk-reveal mk-delay-2"><div class="mk-pathway-icon"><i class="fa-solid fa-chart-line"></i></div><h3>التسويق والأعمال</h3><p>السوق، سلوك العملاء، الاستراتيجية، وبناء القيمة.</p><a href="#library">تصفح المصادر <i class="fa-solid fa-arrow-left"></i></a></article>
-      <article class="mk-pathway-card mk-reveal mk-delay-3"><div class="mk-pathway-icon"><i class="fa-solid fa-calculator"></i></div><h3>المال والمحاسبة</h3><p>المفاهيم المالية، التحليل، والبيانات لدعم القرار.</p><a href="#library">تصفح المصادر <i class="fa-solid fa-arrow-left"></i></a></article>
-      <article class="mk-pathway-card mk-reveal mk-delay-4"><div class="mk-pathway-icon"><i class="fa-solid fa-people-group"></i></div><h3>الموارد البشرية</h3><p>التدريب، التحفيز، الأداء، وتنمية رأس المال البشري.</p><a href="#library">تصفح المصادر <i class="fa-solid fa-arrow-left"></i></a></article>
+  <div class="mobile-navigation" id="mobileNavigation">
+   <button class="active" data-page="overview">
+    <svg viewbox="0 0 24 24">
+     <rect height="8" rx="2" width="8" x="3" y="3">
+     </rect>
+     <rect height="5" rx="2" width="8" x="13" y="3">
+     </rect>
+     <rect height="11" rx="2" width="8" x="13" y="10">
+     </rect>
+     <rect height="8" rx="2" width="8" x="3" y="13">
+     </rect>
+    </svg>
+    <span>
+     الرئيسية
+    </span>
+   </button>
+   <button data-page="sources">
+    <svg viewbox="0 0 24 24">
+     <path d="M5 3h10l4 4v14H5z">
+     </path>
+     <path d="M15 3v5h4M8 12h8M8 16h8">
+     </path>
+    </svg>
+    <span>
+     المكتبة
+    </span>
+   </button>
+   <button data-page="users">
+    <svg viewbox="0 0 24 24">
+     <circle cx="9" cy="8" r="3.5">
+     </circle>
+     <path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5">
+     </path>
+    </svg>
+    <span>
+     المستخدمون
+    </span>
+   </button>
+   <button data-page="notes">
+    <svg viewbox="0 0 24 24">
+     <path d="M5 3h14v18H5z">
+     </path>
+     <path d="M8 8h8M8 12h8M8 16h5">
+     </path>
+    </svg>
+    <span>
+     ملاحظات
+    </span>
+   </button>
+   <button data-page="search">
+    <svg viewbox="0 0 24 24">
+     <circle cx="10.8" cy="10.8" r="7">
+     </circle>
+     <path d="m16 16 5 5">
+     </path>
+    </svg>
+    <span>
+     بحث
+    </span>
+   </button>
+  </div>
+  <div class="modal-layer" id="modalLayer">
+   <div class="modal-panel glass-panel">
+    <header class="modal-header">
+     <h2 id="modalTitle">
+      &mdash;
+     </h2>
+     <button aria-label="إغلاق" class="icon-button" id="modalClose">
+      <svg viewbox="0 0 24 24">
+       <path d="m6 6 12 12M18 6 6 18">
+       </path>
+      </svg>
+     </button>
+    </header>
+    <div class="modal-body" id="modalBody">
     </div>
-  </section>
-
-  <!-- Toast messages -->
-  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
-
-
-  <!-- ------------------------------------------------------------
-       JavaScript: application state and API layer
-       ------------------------------------------------------------ -->
-  <script>
-    "use strict";
-
-    /* ------------------------------------------------------------
-       30. Configuration
-       ------------------------------------------------------------ */
-    const LIBRARY_CONFIG = Object.freeze({
-      apiRoot: "",
-      catalogUrl: "./books.json",
-      groupUrl: "https://t.me/+mZe3EZzQBCYxOTUy",
-      botUrl: "https://t.me/ONX44",
-      recentWindowDays: 1,
-      refreshIntervalMs: 0
-    });
-
-
-    /* ------------------------------------------------------------
-       31. State container
-       ------------------------------------------------------------ */
-    const LibraryState = {
-      books: [],
-      stats: {
-        books: 0,
-        visits: 0,
-        downloads: 0
-      },
-      filter: "all",
-      search: "",
-      sort: "newest",
-      activeBook: null,
-      loading: false,
-      failed: false
-    };
-
-
-    /* ------------------------------------------------------------
-       32. DOM references
-       ------------------------------------------------------------ */
-    const DOM = {
-      booksGrid: document.getElementById("booksGrid"),
-      resultCount: document.getElementById("resultCount"),
-      emptyState: document.getElementById("emptyState"),
-      emptyTitle: document.getElementById("emptyTitle"),
-      emptyDescription: document.getElementById("emptyDescription"),
-      searchInput: document.getElementById("searchInput"),
-      sortSelect: document.getElementById("sortSelect"),
-      filterTabs: document.querySelectorAll(".filter-tab"),
-      latestStrip: document.getElementById("latestStrip"),
-      activityList: document.getElementById("activityList"),
-      statBooks: document.getElementById("statBooks"),
-      statVisits: document.getElementById("statVisits"),
-      statDownloads: document.getElementById("statDownloads"),
-      statPinned: document.getElementById("statPinned"),
-      loadStatus: document.getElementById("loadStatus"),
-      refreshButton: document.getElementById("refreshButton"),
-      themeButton: document.getElementById("themeButton"),
-      menuToggle: document.getElementById("menuToggle"),
-      mainNav: document.getElementById("mainNav"),
-      modal: document.getElementById("bookModal"),
-      modalClose: document.getElementById("modalClose"),
-      modalBookTitle: document.getElementById("modalBookTitle"),
-      modalDescription: document.getElementById("modalDescription"),
-      modalSize: document.getElementById("modalSize"),
-      modalDate: document.getElementById("modalDate"),
-      modalType: document.getElementById("modalType"),
-      modalPinned: document.getElementById("modalPinned"),
-      modalDownload: document.getElementById("modalDownload"),
-      modalPin: document.getElementById("modalPin"),
-      toastStack: document.getElementById("toastStack")
-    };
-
-
-    /* ------------------------------------------------------------
-       33. Small formatting helpers
-       ------------------------------------------------------------ */
-    function safeText(value, fallback = "") {
-      if (value === null || value === undefined) return fallback;
-      return String(value);
-    }
-
-
-    function escapeHTML(value) {
-      return safeText(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-
-    function formatNumber(value) {
-      const numeric = Number(value || 0);
-      return new Intl.NumberFormat("ar-IQ").format(numeric);
-    }
-
-
-    function formatFileSize(bytes) {
-      const size = Number(bytes || 0);
-      if (!size || size < 0) return "غير محدد";
-      if (size < 1024) return `${size} بايت`;
-      if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
-      if (size < 1024 * 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(2)} MB`;
-      return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-    }
-
-
-    function formatDate(value, includeTime = false) {
-      if (!value) return "تاريخ غير محدد";
-      const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return safeText(value, "تاريخ غير محدد");
-      const options = includeTime
-        ? { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }
-        : { year: "numeric", month: "short", day: "numeric" };
-      return new Intl.DateTimeFormat("ar-IQ", options).format(date);
-    }
-
-
-    function fileExtension(book) {
-      const fileName = safeText(book.file_name || book.title || "");
-      const match = fileName.match(/\.([a-z0-9]{1,8})$/i);
-      return match ? match[1].toUpperCase() : "FILE";
-    }
-
-
-    function bookDate(book) {
-      const parsed = new Date(book.created_at || 0).getTime();
-      return Number.isNaN(parsed) ? 0 : parsed;
-    }
-
-
-    function isRecent(book) {
-      const created = bookDate(book);
-      if (!created) return false;
-      const cutoff = Date.now() - LIBRARY_CONFIG.recentWindowDays * 24 * 60 * 60 * 1000;
-      return created >= cutoff;
-    }
-
-
-    function isPinned(book) {
-      return Boolean(Number(book.pinned || 0));
-    }
-
-
-    /* ------------------------------------------------------------
-       34. API request wrapper
-       ------------------------------------------------------------ */
-    async function apiRequest(path, options = {}) {
-      const requestOptions = {
-        method: options.method || "GET",
-        headers: {
-          "Accept": "application/json",
-          ...(options.headers || {})
-        },
-        cache: options.cache || "no-store"
-      };
-      if (options.body) {
-        requestOptions.headers["Content-Type"] = "application/json";
-        requestOptions.body = JSON.stringify(options.body);
-      }
-      const response = await fetch(`${LIBRARY_CONFIG.apiRoot}${path}`, requestOptions);
-      if (!response.ok) {
-        const error = new Error(`API error ${response.status}`);
-        error.status = response.status;
-        throw error;
-      }
-      return response.status === 204 ? null : response.json();
-    }
-
-
-    /* ------------------------------------------------------------
-       35. API: fetch books and statistics
-       ------------------------------------------------------------ */
-    async function fetchBooks() {
-      const response = await fetch(LIBRARY_CONFIG.catalogUrl + "?v=" + Date.now(), { cache: "no-store" });
-      if (!response.ok) throw new Error("Catalog fetch failed: " + response.status);
-      const payload = await response.json();
-      return Array.isArray(payload.books) ? payload.books : [];
-    }
-
-    async function fetchStats() {
-      const local = JSON.parse(localStorage.getItem("businessLibraryStats") || "{}" );
-      return { books: LibraryState.books.length, visits: Number(local.visits || 0), downloads: Number(local.downloads || 0) };
-    }
-
-    async function recordVisit() {
-      try {
-        const local = JSON.parse(localStorage.getItem("businessLibraryStats") || "{}");
-        local.visits = Number(local.visits || 0) + 1;
-        localStorage.setItem("businessLibraryStats", JSON.stringify(local));
-      } catch (_) {}
-    }
-
-    /* ------------------------------------------------------------
-       36. Load / refresh sequence
-       ------------------------------------------------------------ */
-    async function loadLibrary({ showToast = false } = {}) {
-      LibraryState.loading = true;
-      DOM.loadStatus.textContent = "جارٍ التحديث";
-      DOM.refreshButton.disabled = true;
-      DOM.refreshButton.classList.add("is-loading");
-      DOM.refreshButton.style.opacity = ".65";
-      try {
-        const [books, stats] = await Promise.all([fetchBooks(), fetchStats()]);
-        LibraryState.books = books;
-        LibraryState.stats.books = books.length;
-        LibraryState.stats.visits = Number(stats?.visits ?? 0);
-        LibraryState.stats.downloads = Number(stats?.downloads ?? 0);
-        LibraryState.failed = false;
-        renderEverything();
-        DOM.loadStatus.textContent = "تم التحديث";
-        if (showToast) showToastMessage("تم تحديث قائمة الكتب", "success");
-      } catch (error) {
-        LibraryState.failed = true;
-        console.error("Library loading error", error);
-        renderEverything();
-        DOM.loadStatus.textContent = "تعذر الاتصال";
-        if (showToast) showToastMessage("تعذر الوصول إلى المكتبة. تحقق من اتصال الخادم.", "error");
-      } finally {
-        LibraryState.loading = false;
-        DOM.refreshButton.disabled = false;
-        DOM.refreshButton.classList.remove("is-loading");
-        DOM.refreshButton.style.opacity = "1";
-      }
-    }
-
-
-    /* ------------------------------------------------------------
-       37. Derived book list: filtering and sorting
-       ------------------------------------------------------------ */
-    function getFilteredBooks() {
-      let books = [...LibraryState.books];
-      if (LibraryState.filter === "pinned") {
-        books = books.filter(isPinned);
-      } else if (LibraryState.filter === "recent") {
-        books = books.filter(isRecent);
-      }
-      const searchTerm = LibraryState.search.trim().toLocaleLowerCase("ar");
-      if (searchTerm) {
-        books = books.filter((book) => {
-          const title = safeText(book.title || book.file_name).toLocaleLowerCase("ar");
-          const description = safeText(book.description).toLocaleLowerCase("ar");
-          const fileName = safeText(book.file_name).toLocaleLowerCase("ar");
-          return title.includes(searchTerm) || description.includes(searchTerm) || fileName.includes(searchTerm);
-        });
-      }
-      switch (LibraryState.sort) {
-        case "oldest":
-          books.sort((a, b) => bookDate(a) - bookDate(b));
-          break;
-        case "title":
-          books.sort((a, b) => safeText(a.title || a.file_name).localeCompare(safeText(b.title || b.file_name), "ar"));
-          break;
-        case "size":
-          books.sort((a, b) => Number(b.file_size || 0) - Number(a.file_size || 0));
-          break;
-        case "newest":
-        default:
-          books.sort((a, b) => bookDate(b) - bookDate(a));
-          break;
-      }
-      return books;
-    }
-
-
-    /* ------------------------------------------------------------
-       38. Book card template
-       ------------------------------------------------------------ */
-    function createBookCard(book, index) {
-      const id = safeText(book.id);
-      const title = safeText(book.title || book.file_name, "كتاب دون عنوان");
-      const description = safeText(book.description, "لا توجد ملاحظة مرفقة بهذا الكتاب.");
-      const pinned = isPinned(book);
-      const date = formatDate(book.created_at);
-      const size = formatFileSize(book.file_size);
-      const extension = fileExtension(book);
-      const card = document.createElement("article");
-      card.className = "book-card";
-      card.style.animationDelay = `${Math.min(index * 45, 320)}ms`;
-      card.dataset.bookId = id;
-      card.dataset.cardNumber = String(index + 1).padStart(2, "0");
-      card.innerHTML = `
-        <div class="book-card-top">
-          <span class="book-type-icon" aria-hidden="true">
-            <svg class="icon icon-lg"><use href="#i-file"></use></svg>
-          </span>
-          <div class="book-badges">
-            <span class="badge">${escapeHTML(extension)}</span>
-            ${pinned ? '<span class="badge badge-pinned"><svg class="icon icon-sm"><use href="#i-star"></use></svg> مثبت</span>' : ""}
-            ${isRecent(book) ? '<span class="badge">جديد</span>' : ""}
-          </div>
-        </div>
-        <h3 class="book-title">${escapeHTML(title)}</h3>
-        <p class="book-description">${escapeHTML(description)}</p>
-        <div class="book-meta">
-          <span class="meta-item"><svg class="icon"><use href="#i-calendar"></use></svg>${escapeHTML(date)}</span>
-          <span class="meta-item"><svg class="icon"><use href="#i-file"></use></svg>${escapeHTML(size)}</span>
-        </div>
-        <div class="book-actions">
-          <button class="button button-primary button-small book-open" type="button" data-action="open" data-id="${escapeHTML(id)}">
-            <svg class="icon icon-sm"><use href="#i-info"></use></svg> التفاصيل
-          </button>
-          <button class="button button-quiet button-small pin-button ${pinned ? "is-pinned" : ""}" type="button" data-action="pin" data-id="${escapeHTML(id)}" aria-label="${pinned ? "إلغاء تثبيت" : "تثبيت"} الكتاب" title="${pinned ? "إلغاء تثبيت الكتاب" : "تثبيت الكتاب"}">
-            <svg class="icon icon-sm"><use href="#i-pin"></use></svg>
-          </button>
-        </div>`;
-      return card;
-    }
-
-
-    /* ------------------------------------------------------------
-       39. Render book list
-       ------------------------------------------------------------ */
-    function renderBooks() {
-      const books = getFilteredBooks();
-      DOM.booksGrid.innerHTML = "";
-      DOM.resultCount.textContent = `عرض ${formatNumber(books.length)} من ${formatNumber(LibraryState.books.length)} كتاب`;
-      if (!books.length) {
-        DOM.booksGrid.classList.add("hidden");
-        DOM.emptyState.classList.remove("hidden");
-        if (LibraryState.failed) {
-          DOM.emptyTitle.textContent = "تعذر تحميل المكتبة";
-          DOM.emptyDescription.textContent = "تأكد من تشغيل الخادم ثم أعد المحاولة.";
-        } else if (LibraryState.search) {
-          DOM.emptyTitle.textContent = "لم نعثر على نتيجة";
-          DOM.emptyDescription.textContent = "جرّب البحث بعنوان مختلف أو امسح عبارة البحث.";
-        } else if (LibraryState.filter === "pinned") {
-          DOM.emptyTitle.textContent = "لا توجد كتب مثبتة";
-          DOM.emptyDescription.textContent = "يمكنك تثبيت أي كتاب من زر الدبوس في بطاقة الكتاب.";
-        } else if (LibraryState.filter === "recent") {
-          DOM.emptyTitle.textContent = "لا توجد إضافات حديثة";
-          DOM.emptyDescription.textContent = "لا توجد كتب أضيفت خلال آخر 24 ساعة.";
-        } else {
-          DOM.emptyTitle.textContent = "المكتبة فارغة حالياً";
-          DOM.emptyDescription.textContent = "عندما يرفع المشرف كتاباً عبر البوت سيظهر هنا تلقائياً عند التحديث.";
-        }
-        return;
-      }
-      DOM.emptyState.classList.add("hidden");
-      DOM.booksGrid.classList.remove("hidden");
-      const fragment = document.createDocumentFragment();
-      books.forEach((book, index) => fragment.appendChild(createBookCard(book, index)));
-      DOM.booksGrid.appendChild(fragment);
-    }
-
-
-    /* ------------------------------------------------------------
-       40. Render newest books strip
-       ------------------------------------------------------------ */
-    function renderLatest() {
-      const latest = [...LibraryState.books]
-        .sort((a, b) => bookDate(b) - bookDate(a))
-        .slice(0, 3);
-      DOM.latestStrip.innerHTML = "";
-      if (!latest.length) {
-        DOM.latestStrip.innerHTML = `
-          <div class="latest-item">
-            <span class="latest-cover"><svg class="icon"><use href="#i-book"></use></svg></span>
-            <div class="latest-info"><strong>لا توجد إضافات حتى الآن</strong><span>سيظهر أحدث كتاب هنا</span></div>
-          </div>`;
-        return;
-      }
-      latest.forEach((book) => {
-        const item = document.createElement("a");
-        item.href = "#library";
-        item.className = "latest-item";
-        item.dataset.bookId = safeText(book.id);
-        item.innerHTML = `
-          <span class="latest-cover"><svg class="icon"><use href="#i-book"></use></svg></span>
-          <span class="latest-info">
-            <strong>${escapeHTML(book.title || book.file_name || "كتاب")}</strong>
-            <span>${escapeHTML(formatDate(book.created_at))}</span>
-          </span>`;
-        item.addEventListener("click", () => {
-          const found = LibraryState.books.find((candidate) => String(candidate.id) === String(book.id));
-          if (found) openBookDetails(found);
-        });
-        DOM.latestStrip.appendChild(item);
-      });
-    }
-
-
-    /* ------------------------------------------------------------
-       41. Render activity timeline
-       ------------------------------------------------------------ */
-    function renderActivity() {
-      const recent = [...LibraryState.books]
-        .sort((a, b) => bookDate(b) - bookDate(a))
-        .slice(0, 8);
-      DOM.activityList.innerHTML = "";
-      if (!recent.length) {
-        DOM.activityList.innerHTML = `
-          <div class="activity-row">
-            <span class="activity-icon"><svg class="icon"><use href="#i-clock"></use></svg></span>
-            <div class="activity-copy"><strong>لم تتم إضافة كتب بعد</strong><small>سيظهر سجل الإضافات بعد رفع أول كتاب.</small></div>
-            <span class="activity-date">—</span>
-          </div>`;
-        return;
-      }
-      recent.forEach((book) => {
-        const row = document.createElement("div");
-        row.className = "activity-row";
-        row.innerHTML = `
-          <span class="activity-icon"><svg class="icon"><use href="#i-file"></use></svg></span>
-          <div class="activity-copy">
-            <strong>${escapeHTML(book.title || book.file_name || "كتاب جديد")}</strong>
-            <small>تمت إضافة ملف ${escapeHTML(fileExtension(book))} إلى المكتبة</small>
-          </div>
-          <span class="activity-date">${escapeHTML(formatDate(book.created_at, true))}</span>`;
-        DOM.activityList.appendChild(row);
-      });
-    }
-
-
-    /* ------------------------------------------------------------
-       42. Statistic rendering and number transitions
-       ------------------------------------------------------------ */
-    function animateNumber(element, targetValue) {
-      if (!element) return;
-      const target = Math.max(0, Number(targetValue || 0));
-      const start = Number(element.dataset.current || 0);
-      const duration = 650;
-      const started = performance.now();
-      const easeOut = (progress) => 1 - Math.pow(1 - progress, 3);
-      function step(now) {
-        const progress = Math.min((now - started) / duration, 1);
-        const current = Math.round(start + (target - start) * easeOut(progress));
-        element.textContent = formatNumber(current);
-        if (progress < 1) requestAnimationFrame(step);
-        else element.dataset.current = String(target);
-      }
-      requestAnimationFrame(step);
-    }
-
-
-    function renderStats() {
-      const pinnedCount = LibraryState.books.filter(isPinned).length;
-      animateNumber(DOM.statBooks, LibraryState.stats.books || LibraryState.books.length);
-      animateNumber(DOM.statVisits, LibraryState.stats.visits);
-      animateNumber(DOM.statDownloads, LibraryState.stats.downloads);
-      animateNumber(DOM.statPinned, pinnedCount);
-    }
-
-
-    /* ------------------------------------------------------------
-       43. Full render pass
-       ------------------------------------------------------------ */
-    function renderEverything() {
-      renderBooks();
-      renderLatest();
-      renderActivity();
-      renderStats();
-    }
-
-
-    /* ------------------------------------------------------------
-       44. Book details modal
-       ------------------------------------------------------------ */
-    function openBookDetails(book) {
-      LibraryState.activeBook = book;
-      DOM.modalBookTitle.textContent = safeText(book.title || book.file_name, "كتاب دون عنوان");
-      DOM.modalDescription.textContent = safeText(book.description, "لا توجد ملاحظة مرفقة لهذا الكتاب.");
-      DOM.modalSize.textContent = formatFileSize(book.file_size);
-      DOM.modalDate.textContent = formatDate(book.created_at, true);
-      DOM.modalType.textContent = safeText(book.mime_type, fileExtension(book));
-      DOM.modalPinned.textContent = isPinned(book) ? "مثبت في المكتبة" : "غير مثبت";
-      DOM.modalPin.innerHTML = isPinned(book)
-        ? '<svg class="icon"><use href="#i-pin"></use></svg> إلغاء التثبيت'
-        : '<svg class="icon"><use href="#i-pin"></use></svg> تثبيت الكتاب';
-      DOM.modal.classList.add("open");
-      document.body.style.overflow = "hidden";
-    }
-
-
-    function closeBookDetails() {
-      DOM.modal.classList.remove("open");
-      document.body.style.overflow = "";
-      LibraryState.activeBook = null;
-    }
-
-
-    /* ------------------------------------------------------------
-       45. Download action
-       ------------------------------------------------------------ */
-    async function downloadBook(book) {
-      if (!book || !book.id) return;
-      const fileUrl = book.download_url || book.file_url;
-      if (!fileUrl) { showToastMessage("رابط تحميل الكتاب غير متوفر", "error"); return; }
-      try {
-        const local = JSON.parse(localStorage.getItem("businessLibraryStats") || "{}");
-        local.downloads = Number(local.downloads || 0) + 1;
-        localStorage.setItem("businessLibraryStats", JSON.stringify(local));
-      } catch (_) {}
-      const anchor = document.createElement("a");
-      anchor.href = fileUrl; anchor.download = safeText(book.file_name || book.title || "book"); anchor.rel = "noopener";
-      document.body.appendChild(anchor); anchor.click(); anchor.remove();
-      showToastMessage(`بدأ تحميل: ${safeText(book.file_name || book.title || "ملف الكتاب")}`, "success");
-      const stats = await fetchStats();
-      LibraryState.stats.downloads = Number(stats.downloads || LibraryState.stats.downloads); renderStats();
-    }
-
-    /* ------------------------------------------------------------
-       46. Pin toggle action
-       ------------------------------------------------------------ */
-    async function togglePin(bookId) {
-      const book = LibraryState.books.find((item) => String(item.id) === String(bookId));
-      if (!book) return;
-      book.pinned = isPinned(book) ? 0 : 1;
-      renderEverything();
-      if (LibraryState.activeBook && String(LibraryState.activeBook.id) === String(bookId)) openBookDetails(book);
-      showToastMessage(isPinned(book) ? "تم تثبيت الكتاب محليًا في هذا المتصفح" : "تم إلغاء التثبيت المحلي", "success");
-    }
-
-    /* ------------------------------------------------------------
-       47. Toast notification helper
-       ------------------------------------------------------------ */
-    function showToastMessage(message, variant = "info") {
-      const toast = document.createElement("div");
-      toast.className = "toast";
-      const iconName = variant === "error" ? "i-info" : "i-star";
-      toast.innerHTML = `<svg class="icon"><use href="#${iconName}"></use></svg><span>${escapeHTML(message)}</span>`;
-      DOM.toastStack.appendChild(toast);
-      window.setTimeout(() => {
-        toast.classList.add("toast-out");
-        window.setTimeout(() => toast.remove(), 260);
-      }, 3200);
-    }
-
-
-    /* ------------------------------------------------------------
-       48. Search event
-       ------------------------------------------------------------ */
-    function handleSearchInput(event) {
-      LibraryState.search = event.target.value || "";
-      renderBooks();
-    }
-
-
-    /* ------------------------------------------------------------
-       49. Filter selection event
-       ------------------------------------------------------------ */
-    function handleFilterChange(filterValue) {
-      LibraryState.filter = filterValue;
-      DOM.filterTabs.forEach((button) => {
-        const active = button.dataset.filter === filterValue;
-        button.classList.toggle("active", active);
-        button.setAttribute("aria-selected", active ? "true" : "false");
-      });
-      renderBooks();
-    }
-
-
-    /* ------------------------------------------------------------
-       50. Sorting event
-       ------------------------------------------------------------ */
-    function handleSortChange(event) {
-      LibraryState.sort = event.target.value;
-      renderBooks();
-    }
-
-
-    /* ------------------------------------------------------------
-       51. Delegated book-card actions
-       ------------------------------------------------------------ */
-    function handleBookGridClick(event) {
-      const button = event.target.closest("button[data-action]");
-      if (!button) return;
-      const action = button.dataset.action;
-      const bookId = button.dataset.id;
-      const book = LibraryState.books.find((item) => String(item.id) === String(bookId));
-      if (!book) return;
-      if (action === "open") {
-        openBookDetails(book);
-      } else if (action === "pin") {
-        togglePin(bookId);
-      }
-    }
-
-
-    /* ------------------------------------------------------------
-       52. Theme cycle
-       ------------------------------------------------------------ */
-    const THEME_SEQUENCE = ["blackgold", "champagne", "ivory", "emerald", "midnight"];
-    const THEME_LABELS = {
-      blackgold: "الأسود والذهبي",
-      champagne: "الشامبين والذهبي",
-      ivory: "الأبيض والذهبي",
-      emerald: "الزمردي",
-      midnight: "الكحلي"
-    };
-
-    function applyTheme(themeName, persist = true) {
-      const selected = THEME_SEQUENCE.includes(themeName) ? themeName : "blackgold";
-      document.body.dataset.theme = selected;
-      document.querySelectorAll(".theme-choice").forEach(btn => btn.classList.toggle("selected", btn.dataset.themeChoice === selected));
-      DOM.themeButton.innerHTML = selected === "blackgold"
-        ? '<svg class="icon"><use href="#i-sun"></use></svg>'
-        : selected === "champagne" || selected === "emerald" || selected === "midnight"
-          ? '<svg class="icon"><use href="#i-moon"></use></svg>'
-          : '<svg class="icon"><use href="#i-sun"></use></svg>';
-      DOM.themeButton.title = `الثيم الحالي: ${THEME_LABELS[selected]} — اضغط للتغيير`;
-      if (persist) {
-        try {
-          localStorage.setItem("businessLibraryTheme", selected);
-        } catch (error) {
-          console.warn("Theme preference could not be saved", error);
-        }
-      }
-    }
-
-
-    function cycleTheme() {
-      const current = document.body.dataset.theme || "blackgold";
-      const currentIndex = THEME_SEQUENCE.indexOf(current);
-      const next = THEME_SEQUENCE[(currentIndex + 1) % THEME_SEQUENCE.length];
-      applyTheme(next);
-      showToastMessage(`تم تغيير الثيم إلى ${THEME_LABELS[next]}`);
-    }
-
-
-    function restoreTheme() {
-      try {
-        const saved = localStorage.getItem("businessLibraryTheme");
-        if (saved) applyTheme(saved, false);
-      } catch (error) {
-        applyTheme("blackgold", false);
-      }
-    }
-
-
-    /* ------------------------------------------------------------
-       53. Mobile menu controls
-       ------------------------------------------------------------ */
-    function toggleMobileMenu(forceState) {
-      const open = typeof forceState === "boolean"
-        ? forceState
-        : !DOM.mainNav.classList.contains("open");
-      DOM.mainNav.classList.toggle("open", open);
-      DOM.menuToggle.setAttribute("aria-expanded", open ? "true" : "false");
-      DOM.menuToggle.innerHTML = open
-        ? '<svg class="icon"><use href="#i-close"></use></svg>'
-        : '<svg class="icon"><use href="#i-menu"></use></svg>';
-    }
-
-
-    /* ------------------------------------------------------------
-       54. Scroll reveal observer
-       ------------------------------------------------------------ */
-    function initializeReveal() {
-      const revealElements = document.querySelectorAll(".reveal");
-      if (!("IntersectionObserver" in window)) {
-        revealElements.forEach((element) => element.classList.add("visible"));
-        return;
-      }
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("visible");
-            observer.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.08, rootMargin: "0px 0px -40px 0px" });
-      revealElements.forEach((element) => observer.observe(element));
-    }
-
-
-    /* ------------------------------------------------------------
-       55. Event listeners
-       ------------------------------------------------------------ */
-    DOM.searchInput.addEventListener("input", handleSearchInput);
-    DOM.sortSelect.addEventListener("change", handleSortChange);
-    DOM.filterTabs.forEach((button) => {
-      button.addEventListener("click", () => handleFilterChange(button.dataset.filter));
-    });
-    DOM.booksGrid.addEventListener("click", handleBookGridClick);
-    DOM.refreshButton.addEventListener("click", () => loadLibrary({ showToast: true }));
-    DOM.themeButton.addEventListener("click", cycleTheme);
-    DOM.menuToggle.addEventListener("click", () => toggleMobileMenu());
-    DOM.mainNav.querySelectorAll("a").forEach((link) => {
-      link.addEventListener("click", () => toggleMobileMenu(false));
-    });
-    DOM.modalClose.addEventListener("click", closeBookDetails);
-    DOM.modal.addEventListener("click", (event) => {
-      if (event.target === DOM.modal) closeBookDetails();
-    });
-    DOM.modalDownload.addEventListener("click", () => {
-      if (LibraryState.activeBook) downloadBook(LibraryState.activeBook);
-    });
-    DOM.modalPin.addEventListener("click", () => {
-      if (LibraryState.activeBook) togglePin(LibraryState.activeBook.id);
-    });
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") {
-        closeBookDetails();
-        toggleMobileMenu(false);
-      }
-    });
-
-
-    /* ------------------------------------------------------------
-       56. Active navigation highlight on scroll
-       ------------------------------------------------------------ */
-    function initializeActiveNavigation() {
-      const sections = ["home", "library", "latest", "activity"]
-        .map((id) => document.getElementById(id))
-        .filter(Boolean);
-      const links = [...DOM.mainNav.querySelectorAll(".nav-link")];
-      if (!("IntersectionObserver" in window)) return;
-      const observer = new IntersectionObserver((entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (!visible) return;
-        links.forEach((link) => {
-          link.classList.toggle("active", link.getAttribute("href") === `#${visible.target.id}`);
-        });
-      }, { rootMargin: "-25% 0px -60% 0px", threshold: [0, .1, .3, .6] });
-      sections.forEach((section) => observer.observe(section));
-    }
-
-
-    /* ------------------------------------------------------------
-       Theme studio: explicit theme selection and persistent font tint
-       ------------------------------------------------------------ */
-    const themeStudio = document.getElementById("themeStudio");
-    const studioToggle = document.getElementById("studioToggle");
-    const studioPanel = document.getElementById("studioPanel");
-    const fontColorPicker = document.getElementById("fontColorPicker");
-    const studioThemeNames = { blackgold:"blackgold", champagne:"champagne", ivory:"ivory", emerald:"emerald", midnight:"midnight" };
-    function applyStudioTheme(theme) {
-      if (!Object.keys(studioThemeNames).includes(theme)) return;
-      document.body.dataset.theme = theme;
-      try { localStorage.setItem("businessLibraryTheme", theme); } catch (_) {}
-      document.querySelectorAll(".theme-choice").forEach(btn => btn.classList.toggle("selected", btn.dataset.themeChoice === theme));
-      DOM.themeButton.title = "المظهر الحالي: " + theme;
-    }
-    studioToggle.addEventListener("click", () => {
-      const opening = studioPanel.hidden;
-      studioPanel.hidden = !opening;
-      themeStudio.classList.toggle("open", opening);
-      studioToggle.setAttribute("aria-expanded", String(opening));
-    });
-    document.querySelectorAll(".theme-choice").forEach(btn => btn.addEventListener("click", () => applyStudioTheme(btn.dataset.themeChoice)));
-    fontColorPicker.addEventListener("input", () => {
-      document.documentElement.style.setProperty("--ink", fontColorPicker.value);
-      try { localStorage.setItem("businessLibraryFontColor", fontColorPicker.value); } catch (_) {}
-    });
-    document.getElementById("studioReset").addEventListener("click", () => {
-      applyStudioTheme("blackgold"); document.documentElement.style.removeProperty("--ink"); fontColorPicker.value="#f3e9d5";
-      try { localStorage.removeItem("businessLibraryFontColor"); } catch (_) {}
-      showToastMessage("عاد المظهر إلى إعداداته الأساسية");
-    });
-    try {
-      const savedTint=localStorage.getItem("businessLibraryFontColor"); if(savedTint){fontColorPicker.value=savedTint;document.documentElement.style.setProperty("--ink",savedTint);}
-    } catch (_) {}
-
-    /* ------------------------------------------------------------
-       57. Startup routine
-       ------------------------------------------------------------ */
-    async function startLibrary() {
-      restoreTheme();
-      initializeReveal();
-      initializeActiveNavigation();
-      await recordVisit();
-      await loadLibrary();
-    }
-
-
-
-    // Interaction guard: disable browser context menu, copy and long-press text actions.
-    document.addEventListener("contextmenu", (event) => event.preventDefault());
-    document.addEventListener("copy", (event) => { event.preventDefault(); });
-    document.addEventListener("cut", (event) => { event.preventDefault(); });
-    document.addEventListener("dragstart", (event) => { event.preventDefault(); });
-    document.addEventListener("selectstart", (event) => {
-      if (!event.target.closest("input, textarea, select, [contenteditable='true']")) event.preventDefault();
-    });
-    document.addEventListener("touchstart", (event) => {
-      if (event.target.closest("input, textarea, select, [contenteditable='true']")) return;
-      // Avoid accidental text selection after a long press; allow normal scrolling.
-    }, { passive: true });
-
-    /* ------------------------------------------------------------
-       58. Boot application
-       ------------------------------------------------------------ */
-    document.addEventListener("DOMContentLoaded", startLibrary);
+   </div>
+  </div>
+  <div class="toast-message" id="toastMessage">
+  </div>
+  <script src="app.js">
   </script>
-<script>
-
-/* ==========================================================
-   MADARIK EXTENSION: AMBIENT PARTICLES, REVEAL, DOCK & DOWNLOAD
-   ========================================================== */
-(() => {
-  const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const canvas=document.createElement('canvas');canvas.id='madarik-ambient-canvas';document.body.prepend(canvas);
-  const ctx=canvas.getContext('2d',{alpha:true});let width=0,height=0,dpr=1,particles=[];
-  const pointer={x:innerWidth*.5,y:innerHeight*.45,active:false};
-  const particleTotal=reduceMotion?0:Math.min(56,Math.max(16,Math.floor(innerWidth/24)));
-  function makeParticle(){return{x:Math.random()*width,y:Math.random()*height,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,r:.5+Math.random()*1.5,a:.1+Math.random()*.34,phase:Math.random()*6.28,speed:.004+Math.random()*.006}}
-  function resize(){width=innerWidth;height=innerHeight;dpr=Math.min(devicePixelRatio||1,2);canvas.width=width*dpr;canvas.height=height*dpr;canvas.style.width=width+'px';canvas.style.height=height+'px';ctx.setTransform(dpr,0,0,dpr,0,0);particles=Array.from({length:particleTotal},makeParticle)}
-  function paintParticle(p){p.phase+=p.speed;p.x+=p.vx+Math.sin(p.phase)*.07;p.y+=p.vy+Math.cos(p.phase)*.06;if(p.x<0)p.x=width;if(p.x>width)p.x=0;if(p.y<0)p.y=height;if(p.y>height)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(201,169,97,${p.a*(.7+Math.sin(p.phase)*.3)})`;ctx.fill();if(pointer.active){const dx=pointer.x-p.x,dy=pointer.y-p.y,dist=Math.hypot(dx,dy);if(dist<125){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(pointer.x,pointer.y);ctx.strokeStyle=`rgba(201,169,97,${(1-dist/125)*.08})`;ctx.lineWidth=.5;ctx.stroke()}}}
-  function frame(){if(reduceMotion||document.hidden)return;ctx.clearRect(0,0,width,height);particles.forEach(paintParticle);requestAnimationFrame(frame)}resize();if(!reduceMotion)requestAnimationFrame(frame);window.addEventListener('resize',resize,{passive:true});document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!reduceMotion)requestAnimationFrame(frame)});
-  window.addEventListener('pointermove',e=>{pointer.x=e.clientX;pointer.y=e.clientY;pointer.active=true;document.documentElement.style.setProperty('--mk-pointer-x',pointer.x+'px');document.documentElement.style.setProperty('--mk-pointer-y',pointer.y+'px')},{passive:true});window.addEventListener('pointerleave',()=>pointer.active=false);
-  /* Entrance transitions for content groups. */
-  const reveal=document.querySelectorAll('.section,.section-panel,.feature-card,.community-card,.activity-item,.book-card,.mk-pathway-card');
-  reveal.forEach((el,i)=>{el.classList.add('mk-reveal');el.classList.add('mk-delay-'+(i%6))});
-  if('IntersectionObserver'in window&&!reduceMotion){const io=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('mk-visible');io.unobserve(entry.target)}}),{threshold:.08});document.querySelectorAll('.mk-reveal').forEach(el=>io.observe(el))}else document.querySelectorAll('.mk-reveal').forEach(el=>el.classList.add('mk-visible'));
-  /* Soft pointer tilt on desktop book tiles */
-  document.addEventListener('pointermove',e=>{const card=e.target.closest('.book-card');if(!card||reduceMotion||innerWidth<900)return;const r=card.getBoundingClientRect(),px=Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100)),py=Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100));card.style.setProperty('--mk-tilt-x',((py-50)/50*-2).toFixed(2)+'deg');card.style.setProperty('--mk-tilt-y',((px-50)/50*2.5).toFixed(2)+'deg');card.style.setProperty('--mk-light-x',px+'%');card.style.setProperty('--mk-light-y',py+'%')},{passive:true});document.addEventListener('pointerout',e=>{const card=e.target.closest('.book-card');if(card&&!card.contains(e.relatedTarget)){card.style.setProperty('--mk-tilt-x','0deg');card.style.setProperty('--mk-tilt-y','0deg');card.style.setProperty('--mk-light-x','50%');card.style.setProperty('--mk-light-y','0%')}});
-  /* Button ripple delegated, avoiding listeners for each generated book card. */
-  document.addEventListener('click',e=>{const el=e.target.closest('button,.button,a');if(!el||reduceMotion)return;const r=el.getBoundingClientRect(),wave=document.createElement('span');wave.className='mk-ripple';wave.style.left=(e.clientX-r.left-8)+'px';wave.style.top=(e.clientY-r.top-8)+'px';el.appendChild(wave);wave.addEventListener('animationend',()=>wave.remove(),{once:true});});
-  /* Floating dock with reliable section navigation */
-  const dock=document.createElement('nav');dock.className='mk-shortcut-dock';dock.setAttribute('aria-label','اختصارات المكتبة');dock.innerHTML='<button type="button" data-label="المكتبة" data-scroll="#library"><i class="fa-solid fa-book-open"></i></button><button type="button" data-label="مسارات المعرفة" data-scroll="#madarikPathways"><i class="fa-solid fa-route"></i></button><button type="button" data-label="أعلى الصفحة" data-scroll="top"><i class="fa-solid fa-arrow-up"></i></button>';document.body.appendChild(dock);dock.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const target=b.dataset.scroll;if(target==='top')window.scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'});else document.querySelector(target)?.scrollIntoView({behavior:reduceMotion?'auto':'smooth'})});
-  /* Ambient animation switch */
-  const toggle=document.createElement('button');toggle.className='mk-motion-toggle';toggle.type='button';toggle.title='تقليل أو تشغيل الحركات';toggle.setAttribute('aria-label','إيقاف الحركات');toggle.innerHTML='<i class="fa-solid fa-wand-magic-sparkles"></i>';document.body.appendChild(toggle);let paused=false;toggle.addEventListener('click',()=>{paused=!paused;document.body.classList.toggle('mk-motion-paused',paused);toggle.innerHTML=paused?'<i class="fa-solid fa-play"></i>':'<i class="fa-solid fa-wand-magic-sparkles"></i>';toggle.setAttribute('aria-label',paused?'تشغيل الحركات':'إيقاف الحركات');if(!paused&&!reduceMotion&&!document.hidden)requestAnimationFrame(frame);showToastMessage?.(paused?'تم إيقاف الحركات الزخرفية':'تم تشغيل الحركات الزخرفية','info')});
-  /* Keyboard search: Ctrl/⌘ + K focuses the existing search field. */
-  document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();const search=document.querySelector('#searchInput,#librarySearch,input[type=search]');search?.focus();search?.select?.()}if(e.key==='Escape'){document.querySelector('.mk-download-overlay.mk-open')?.classList.remove('mk-open')}});
-  /* Keep brand typography font selection working even if CSS uses another token. */
-  const fontSaved=localStorage.getItem('madarik_font');if(fontSaved)document.documentElement.style.setProperty('--user-font',fontSaved);
-})();
-
-/* Streamed download progress and safe Madarik filename */
-(() => {
-  const originalDownload=window.downloadBook;
-  function extensionFromName(name,url){let m=String(name||'').match(/\.([a-z0-9]{1,12})$/i);if(m)return '.'+m[1];try{m=new URL(url,location.href).pathname.match(/\.([a-z0-9]{1,12})$/i);return m?'.'+m[1]:''}catch(_){return ''}}
-  function brandedName(book,url){const raw=String(book.file_name||book.filename||book.title||'ملف').trim(),ext=extensionFromName(raw,url);let base=raw.replace(/\.[a-z0-9]{1,12}$/i,'').replace(/^مدارك\s*/,'').replace(/[\\/:*?"<>|]/g,' ').replace(/\s+/g,' ').trim()||'ملف';return 'مدارك '+base+ext}
-  function bytes(value){if(!value)return '0 B';const units=['B','KB','MB','GB'];let n=value,i=0;while(n>=1024&&i<units.length-1){n/=1024;i++}return n.toFixed(i?1:0)+' '+units[i]}
-  const overlay=document.createElement('div');overlay.className='mk-download-overlay';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','حالة تحميل الملف');overlay.innerHTML='<div class="mk-download-card"><div class="mk-download-emblem"><i class="fa-solid fa-cloud-arrow-down"></i></div><div class="mk-download-title">تحميل من مكتبة مدارك</div><div class="mk-download-filename"></div><div class="mk-download-progress-wrap"><div class="mk-download-progress"></div></div><div class="mk-download-stats"><span class="mk-download-size">0 B</span><span class="mk-download-percent">0%</span></div><div class="mk-download-status">تهيئة التحميل…</div><button type="button" class="mk-download-close">إغلاق</button></div>';document.body.appendChild(overlay);
-  const fileEl=overlay.querySelector('.mk-download-filename'),progress=overlay.querySelector('.mk-download-progress'),percent=overlay.querySelector('.mk-download-percent'),sizeEl=overlay.querySelector('.mk-download-size'),status=overlay.querySelector('.mk-download-status'),emblem=overlay.querySelector('.mk-download-emblem i');let running=false;
-  overlay.querySelector('.mk-download-close').addEventListener('click',()=>{if(!running)overlay.classList.remove('mk-open')});overlay.addEventListener('click',e=>{if(e.target===overlay&&!running)overlay.classList.remove('mk-open')});
-  async function enhancedDownload(book){if(!book||running)return;if(!originalDownload){return}const url=book.download_url||book.file_url||book.url||book.download;if(!url){return originalDownload(book)}const filename=brandedName(book,url);running=true;overlay.classList.remove('mk-complete','mk-error');overlay.classList.add('mk-open');fileEl.textContent=filename;progress.style.width='0%';percent.textContent='0%';sizeEl.textContent='0 B';status.textContent='جاري الاتصال بمصدر الملف…';emblem.className='fa-solid fa-cloud-arrow-down';try{const response=await fetch(url);if(!response.ok)throw new Error('تعذر الوصول إلى الملف');const total=Number(response.headers.get('content-length')||0);let loaded=0;const chunks=[];if(response.body&&response.body.getReader){const reader=response.body.getReader();while(true){const part=await reader.read();if(part.done)break;chunks.push(part.value);loaded+=part.value.byteLength;sizeEl.textContent=bytes(loaded);if(total){const pct=Math.min(99,Math.round(loaded/total*100));progress.style.width=pct+'%';percent.textContent=pct+'%';status.textContent='جاري تنزيل المحتوى…'}else{progress.style.width='70%';percent.textContent=bytes(loaded);status.textContent='جاري استلام الملف'}}}else{const blob=await response.blob();chunks.push(blob);loaded=blob.size;sizeEl.textContent=bytes(loaded)}const blob=new Blob(chunks,{type:response.headers.get('content-type')||'application/octet-stream'}),objectURL=URL.createObjectURL(blob),a=document.createElement('a');a.href=objectURL;a.download=filename;a.rel='noopener';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(objectURL),60000);progress.style.width='100%';percent.textContent='100%';status.textContent='اكتمل التحميل — أصبح الملف جاهزًا';overlay.classList.add('mk-complete');emblem.className='fa-solid fa-circle-check';}catch(err){overlay.classList.add('mk-error');status.textContent='لم يسمح المصدر بالتحميل المباشر؛ سيتم فتح الملف الأصلي';progress.style.width='100%';percent.textContent='—';emblem.className='fa-solid fa-triangle-exclamation';const a=document.createElement('a');a.href=url;a.download=filename;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()}finally{running=false;overlay.querySelector('.mk-download-close').textContent='إغلاق';setTimeout(()=>{if(overlay.classList.contains('mk-complete'))overlay.classList.remove('mk-open')},2200)}}
-  /* Replace global handler so card and modal download actions share the same flow. */
-  window.downloadBook=enhancedDownload;
-})();
-
-</script>
-</body>
+ </body>
 </html>
