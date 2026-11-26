@@ -33,6 +33,7 @@ DATA_PATH = Path("library_index.json")
 CHANNEL_URL = "https://t.me/Kh_JOORE_BusinessLibrary"
 CONTACT_URL = "https://t.me/ONX44"
 WELCOME_IMAGE = os.getenv("WELCOME_IMAGE", "https://imgur.com/a/0C4FbCi").strip()
+VIEW_WELCOM = os.getenv("VIEW_WELCOM", "").strip()
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(level=getattr(logging, LOG_LEVEL, logging.INFO), format="%(asctime)s | %(levelname)s | %(message)s")
 log = logging.getLogger("madarek")
@@ -103,14 +104,16 @@ def main_keyboard(owner: bool = False) -> InlineKeyboardMarkup:
             [("📚 قناة البوت", "open:channel"), ("⚠️ الإبلاغ عن مشكلة", "open:report")],
             [("📘 دليل التشغيل", "menu:guide")]]
     if owner:
-        rows += [[("👥 MY-BOTS", "admin:contributors"), ("🚫 حظر مستخدم", "admin:ban")],
+        rows += [[("📊 مركز الإحصائيات", "admin:stats"), ("👥 MY-BOTS", "admin:contributors")],
+                 [("🚫 إدارة حظر المستخدمين", "admin:ban"), ("📡 إدارة القنوات", "admin:channels")],
+                 [("🎞️ ترحيب الوسائط", "admin:welcome"), ("📝 ملاحظاتي", "admin:notes")],
                  [("⏸ إيقاف البوت مؤقتًا" if not DB.get("paused") else "▶️ تشغيل البوت", "admin:pause")]]
     return make_keyboard(rows)
 
 
 # ------------------------------ Storage ------------------------------
 def empty_db() -> dict:
-    return {"version": 2, "next": {"file":1,"photo":1,"link":1}, "sources": [], "users": {}, "banned": [], "paused": False, "settings": {}}
+    return {"version": 3, "next": {"file":1,"photo":1,"link":1}, "sources": [], "users": {}, "banned": [], "paused": False, "settings": {}, "download_events": []}
 
 DB: dict[str, Any] = empty_db()
 DB_LOCK = asyncio.Lock()
@@ -127,6 +130,9 @@ async def load_db() -> None:
                     payload = r.json()
                     DB = json.loads(base64.b64decode(payload["content"]).decode("utf-8"))
                     log.info("Loaded persistent index from GitHub")
+                    DB.setdefault("sources", []); DB.setdefault("users", {}); DB.setdefault("banned", []); DB.setdefault("next", {"file":1,"photo":1,"link":1}); DB.setdefault("paused", False); DB.setdefault("settings", {}); DB.setdefault("download_events", []); DB.setdefault("ban_history", []); DB.setdefault("notes", {}); DB.setdefault("ban_history", []); DB.setdefault("notes", {})
+                    for uid, usr in DB["users"].items():
+                        usr.setdefault("downloads", []); usr.setdefault("download_count", 0); usr.setdefault("published_source_ids", [])
                     return
                 elif r.status_code != 404:
                     log.warning("GitHub index load returned %s: %s", r.status_code, r.text[:250])
@@ -139,7 +145,9 @@ async def load_db() -> None:
     except Exception:
         log.exception("Local index unreadable; initialized empty")
         DB = empty_db()
-    DB.setdefault("sources", []); DB.setdefault("users", {}); DB.setdefault("banned", []); DB.setdefault("next", {"file":1,"photo":1,"link":1}); DB.setdefault("paused", False)
+    DB.setdefault("sources", []); DB.setdefault("users", {}); DB.setdefault("banned", []); DB.setdefault("next", {"file":1,"photo":1,"link":1}); DB.setdefault("paused", False); DB.setdefault("settings", {}); DB.setdefault("download_events", []); DB.setdefault("ban_history", []); DB.setdefault("notes", {})
+    for uid, usr in DB["users"].items():
+        usr.setdefault("downloads", []); usr.setdefault("download_count", 0); usr.setdefault("published_source_ids", [])
 
 async def save_db() -> bool:
     async with GH_LOCK:
@@ -166,8 +174,12 @@ async def user_touch(user) -> None:
     if not user: return
     key = str(user.id)
     old = DB["users"].get(key, {})
-    DB["users"][key] = {"id": user.id, "name": display_user(user), "username": user.username,
-                        "first_seen": old.get("first_seen", utcnow()), "last_seen": utcnow(), "blocked": key in set(map(str,DB.get("banned",[])))}
+    is_new = not bool(old)
+    DB["users"][key] = {**old, "id": user.id, "name": display_user(user), "username": user.username,
+                        "first_seen": old.get("first_seen", utcnow()), "last_seen": utcnow(), "blocked": key in set(map(str,DB.get("banned",[]))),
+                        "downloads": old.get("downloads", []), "download_count": old.get("download_count", 0), "published_source_ids": old.get("published_source_ids", [])}
+    if is_new:
+        await save_db()
 
 async def next_id(t: str) -> str:
     number = int(DB.get("next", {}).get(t,1))
@@ -180,6 +192,8 @@ async def commit_record(rec: dict) -> None:
     user = DB["users"].setdefault(uid, {"id":rec["user_id"], "name":rec.get("user_name"), "username":rec.get("username"), "first_seen":rec["created_at"], "last_seen":rec["created_at"]})
     user["name"] = rec.get("user_name") or user.get("name")
     user["username"] = rec.get("username")
+    user.setdefault("published_source_ids", []).append(rec.get("source_id"))
+    user.setdefault("downloads", []); user.setdefault("download_count", 0)
     await save_db()
 
 async def persist_contributor_txt(rec_user_id: int) -> None:
@@ -213,7 +227,7 @@ async def github_put_text(path: str, content: str) -> bool:
 class Flow(StatesGroup):
     awaiting_file = State(); awaiting_file_note = State(); awaiting_photo = State(); awaiting_photo_note = State()
     awaiting_link = State(); awaiting_link_note = State(); awaiting_edit_note = State()
-    awaiting_search = State(); awaiting_ban = State()
+    awaiting_search = State(); awaiting_ban = State(); awaiting_ban_note = State(); awaiting_channel = State(); awaiting_welcome_media = State(); awaiting_note_content = State()
 
 PENDING: dict[int, dict] = {}
 PHOTO_GROUPS: dict[int, dict] = {}
@@ -245,7 +259,7 @@ async def ensure_allowed(message: Message) -> bool:
     if await is_banned(message.from_user.id):
         await message.answer("⛔ تم حظر استخدام البوت."); return False
     if await paused_for(message.from_user.id):
-        await message.answer("⏸ البوت متوقف مؤقتًا، يرجى المحاولة لاحقًا."); return False
+        await message.answer("🙏 نعتذر عن الإزعاج، البوت تحت الصيانة يرجى المحاولة لاحقاً."); return False
     return True
 
 async def publish_record(rec: dict) -> bool:
@@ -300,6 +314,19 @@ async def deliver_record(chat_id: int, rec: dict) -> None:
                     await bot.send_media_group(chat_id, group)
         elif rec["type"] == "link":
             await safe_send(chat_id, "🔗 " + html.escape(rec.get("url","")), disable_web_page_preview=False)
+        # Count one successful delivery/request event per interaction.
+        uid = str(chat_id)
+        usr = DB.setdefault("users", {}).setdefault(uid, {"id": int(chat_id), "name": "مستخدم", "username": None, "first_seen": utcnow(), "last_seen": utcnow(), "blocked": False})
+        usr.setdefault("downloads", []); usr.setdefault("download_count", 0)
+        usr["download_count"] = int(usr.get("download_count", 0)) + 1
+        event = {"user_id": int(chat_id), "source_id": rec.get("source_id"), "title": record_title(rec), "type": rec.get("type"), "requested_at": utcnow()}
+        usr["downloads"].append(event)
+        if len(usr["downloads"]) > 2000: usr["downloads"] = usr["downloads"][-2000:]
+        DB.setdefault("download_events", []).append(event)
+        if len(DB["download_events"]) > 10000: DB["download_events"] = DB["download_events"][-10000:]
+        rec["download_count"] = int(rec.get("download_count", 0)) + 1
+        rec.setdefault("download_events", []).append({"user_id": int(chat_id), "requested_at": event["requested_at"]})
+        await save_db()
     except Exception as e:
         log.warning("Delivery failed for %s: %s", rec.get("source_id"), e)
         await safe_send(chat_id, "تعذر إرسال المصدر حاليًا. حاول مجددًا أو تواصل مع الإدارة.")
@@ -392,11 +419,22 @@ async def start(message: Message, state: FSMContext):
               "🔷 إدارة الأعمال: مكتبة مصادر تخصصية\n"
               "🔷 دفعة: -2026-")
     kb = main_keyboard(await is_owner(user.id))
-    # Image URLs from galleries are often not direct; attempt photo and gracefully fall back to text.
-    if WELCOME_IMAGE:
-        try: await message.answer_photo(WELCOME_IMAGE, caption=welcome, reply_markup=kb)
-        except Exception: await message.answer(welcome, reply_markup=kb, disable_web_page_preview=True)
-    else: await message.answer(welcome, reply_markup=kb, disable_web_page_preview=True)
+    media = DB.get("settings", {}).get("welcome_media") or {}
+    media_type, media_value = media.get("type"), media.get("value")
+    if not media_value and VIEW_WELCOM:
+        media_value = VIEW_WELCOM
+        low = VIEW_WELCOM.lower().split("?")[0]
+        media_type = "animation" if low.endswith((".gif", ".mp4?gif")) else ("video" if low.endswith((".mp4", ".mov", ".m4v", ".webm")) else "photo")
+    media_value = media_value or WELCOME_IMAGE
+    try:
+        if media_type == "photo" and media_value: await message.answer_photo(media_value, caption=welcome, reply_markup=kb)
+        elif media_type == "video" and media_value: await message.answer_video(media_value, caption=welcome, reply_markup=kb)
+        elif media_type == "animation" and media_value: await message.answer_animation(media_value, caption=welcome, reply_markup=kb)
+        elif media_value: await message.answer_photo(media_value, caption=welcome, reply_markup=kb)
+        else: await message.answer(welcome, reply_markup=kb, disable_web_page_preview=True)
+    except Exception as media_exc:
+        log.warning("Welcome media failed; sending text fallback: %s", media_exc)
+        await message.answer(welcome, reply_markup=kb, disable_web_page_preview=True)
 
 @dp.message(Command("menu"))
 async def menu_command(message: Message, state: FSMContext):
@@ -566,6 +604,15 @@ async def ask_search(call: CallbackQuery, state: FSMContext):
 async def search_text(message: Message, state: FSMContext):
     if not await ensure_allowed(message): return
     data = await state.get_data()
+    if data.get("admin_stats_search"):
+        if not await is_owner(message.from_user.id): await state.clear(); return await message.answer("غير مصرح.")
+        value=(message.text or "").strip().lstrip("@").lower()
+        matches=[(uid,u) for uid,u in DB.get("users",{}).items() if value in str(uid) or value in (u.get("username") or "").lower() or value in (u.get("name") or "").lower()]
+        await state.clear()
+        if not matches: return await message.answer("لم أجد مستخدمًا بهذا البحث.")
+        rows=[]
+        for uid,u in matches[:50]: rows.append([(f"{shorten(u.get('name','مستخدم'),25)} | ID {uid} | نشر {len(user_stats(uid)[1])} | تحميل {u.get('download_count',0)}",f"admin:stats:user:{uid}")])
+        return await message.answer(f"نتائج البحث: {len(matches)} مستخدم",reply_markup=make_keyboard(rows))
     if data.get("admin_search_contrib"):
         if not await is_owner(message.from_user.id):
             await state.clear(); return await message.answer("غير مصرح.")
@@ -660,7 +707,7 @@ async def titles_txt(call: CallbackQuery):
                 lines += [f"[{r.get('source_id')}] {record_title(r)}", f"الوصف: {r.get('note') or '—'}", f"السنة: {r.get('year') or '—'}", f"تاريخ الإضافة: {r.get('created_at','')[:10]}"]
                 if typ=="link": lines.append(f"الرابط: {r.get('url','')}")
     lines += ["", "قناة مدارك المعرفة: " + CHANNEL_URL, "جميع المصادر مجانية ويمنع بيعها."]
-    file=BufferedInputFile("\n".join(lines).encode("utf-8"),filename="TAQ_BusinessLibrary.txt")
+    file=BufferedInputFile("\n".join(lines).encode("utf-8"),filename="TAQE_BusinessLibrary.txt")
     await bot.send_document(call.from_user.id,file,caption="📄 فهرس عناوين مكتبة مدارك المعرفة")
 
 # ------------------------------ Channel and guide ------------------------------
@@ -690,7 +737,7 @@ async def guide(call: CallbackQuery):
 
 
 # ------------------------------ Owner panel ------------------------------
-@dp.callback_query(F.data.in_({"admin:contributors", "admin:ban", "admin:pause"}))
+@dp.callback_query(F.data.in_({"admin:contributors", "admin:ban", "admin:pause", "admin:channels", "admin:welcome", "admin:notes"}))
 async def admin_router(call: CallbackQuery, state: FSMContext):
     if not await is_owner(call.from_user.id): return await call.answer("هذه القائمة خاصة بالمالك.",show_alert=True)
     action=call.data.split(":",1)[1]
@@ -698,7 +745,15 @@ async def admin_router(call: CallbackQuery, state: FSMContext):
     if action=="contributors":
         await admin_contributors(call,0)
     elif action=="ban":
-        await call.message.answer("🚫 <b>إدارة حظر المستخدمين</b>",reply_markup=make_keyboard([[ ("✍️ اكتب معرف المستخدم ليتم حظره","admin:ban:prompt")],[("👥 معرفات المستخدمين","admin:users:0")],[("🏠 الرئيسية","menu:home")]]))
+        await call.message.answer("🚫 <b>إدارة المحظورين</b>",reply_markup=make_keyboard([[ ("🔒 حظر مستخدم","admin:ban:prompt")],[ ("🆔 معرفات المستخدمين","admin:users:0")],[ ("📋 إدارة المحظورين","admin:banned:0")],[ ("🏠 الرئيسية","menu:home")]]))
+    elif action=="channels":
+        current = DB.get("settings", {}).get("channel", CHANNEL)
+        await call.message.answer(f"📡 <b>إدارة القنوات</b>\nالقناة المعتمدة الحالية: <code>{html.escape(str(current))}</code>\nأرسل ID رقميًا أو @username للقناة. روابط الدعوة لا يمكن تحويلها إلى ID عبر Telegram Bot API؛ إذا كان لديك رابط دعوة أضف البوت للقناة ثم أرسل ID القناة.", reply_markup=make_keyboard([[ ("✏️ تغيير القناة", "admin:channel:change")],[ ("↩️ لوحة الإدارة", "menu:home")]]))
+    elif action=="welcome":
+        current=DB.get("settings",{}).get("welcome_media",{}); desc=(current.get("type") if current else "Secret VIEW_WELCOM / صورة الافتراضية")
+        await call.message.answer(f"🎞️ <b>إدارة ترحيب الوسائط</b>\nالحالي: {html.escape(str(desc))}", reply_markup=make_keyboard([[ ("🖼️ صورة", "admin:welcome:photo"), ("🎥 فيديو", "admin:welcome:video")],[ ("🎞️ صورة متحركة GIF", "admin:welcome:animation")],[ ("🗑️ إزالة الوسائط", "admin:welcome:remove")],[ ("↩️ لوحة الإدارة", "menu:home")]]))
+    elif action=="notes":
+        await call.message.answer("📝 <b>ملاحظاتي</b>\nاختر إنشاء ملاحظة نصية أو صورة، ثم يمكنك تعديلها أو حذفها أو نشرها لجميع المستخدمين.", reply_markup=make_keyboard([[ ("✍️ ملاحظة نصية", "admin:note:text"), ("🖼️ ملاحظة بصورة", "admin:note:photo")],[ ("📋 الملاحظات الحالية", "admin:note:list")],[ ("↩️ لوحة الإدارة", "menu:home")]]))
     elif action=="pause":
         DB["paused"]=not DB.get("paused",False); await save_db()
         status="تم إيقاف البوت مؤقتًا." if DB["paused"] else "تم تشغيل البوت مجددًا."
@@ -809,22 +864,74 @@ async def admin_find_contributor(call: CallbackQuery, state: FSMContext):
 async def admin_ban_prompt(call: CallbackQuery, state: FSMContext):
     if not await is_owner(call.from_user.id): return await call.answer("غير مصرح",show_alert=True)
     await call.answer(); await state.set_state(Flow.awaiting_ban)
-    await call.message.answer("🚫 أرسل Telegram ID أو @username للمستخدم الذي تريد حظره.")
+    await call.message.answer("🚫 أرسل Telegram ID الرقمي للمستخدم الذي تريد حظره.")
 
 @dp.message(Flow.awaiting_ban)
 async def admin_ban_user(message: Message, state: FSMContext):
     if not await is_owner(message.from_user.id): await state.clear(); return
-    value=(message.text or "").strip()
-    uid=None
-    if value.isdigit(): uid=value
-    elif value.startswith("@"):
-        matches=[u for u in DB.get("users",{}).values() if (u.get("username") or "").lower()==value[1:].lower()]
-        if matches: uid=str(matches[0]["id"])
-    if not uid: await state.clear(); return await message.answer("لم أجد المستخدم. استخدم ID رقميًا لمستخدم سبق أن تعامل مع البوت.")
+    uid=(message.text or "").strip()
+    if not uid.isdigit(): return await message.answer("❗ أرسل ID رقميًا صحيحًا.")
+    await state.update_data(ban_uid=uid)
+    await state.set_state(Flow.awaiting_ban_note)
+    await message.answer("📝 أرسل ملاحظة أو سبب الحظر، أو اضغط تخطي.", reply_markup=make_keyboard([[ ("⏭️ تخطي", "admin:ban:skipnote")]]))
+
+@dp.callback_query(F.data == "admin:ban:skipnote")
+async def admin_ban_skip_note(call: CallbackQuery, state: FSMContext):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح", show_alert=True)
+    data=await state.get_data(); uid=str(data.get("ban_uid", "")); await call.answer()
+    if not uid: await state.clear(); return await call.message.answer("انتهت جلسة الحظر، ابدأ من جديد.")
+    await complete_ban(uid, "", call.from_user.id)
+    await state.clear(); await call.message.answer(f"🚫 تم حظر المستخدم <code>{uid}</code> وحفظ السجل.")
+
+
+async def complete_ban(uid: str, reason: str, admin_id: int):
     if uid not in DB["banned"]: DB["banned"].append(uid)
-    if uid in DB["users"]: DB["users"][uid]["blocked"]=True
-    await save_db(); await state.clear()
-    await message.answer(f"🚫 تم حظر {uid} من استخدام البوت.",reply_markup=make_keyboard([[ ("📋 عرض المستخدمين","admin:users:0")],[("🏠 الرئيسية","menu:home")]]))
+    if uid in DB.get("users", {}): DB["users"][uid]["blocked"] = True
+    record={"user_id":int(uid), "banned_at":utcnow(), "reason":reason.strip(), "admin_id":int(admin_id), "active":True}
+    DB.setdefault("ban_history", []).append(record)
+    await save_db()
+
+@dp.message(Flow.awaiting_ban_note)
+async def admin_ban_note(message: Message, state: FSMContext):
+    if not await is_owner(message.from_user.id): await state.clear(); return
+    data=await state.get_data(); uid=str(data.get("ban_uid", "")); reason=(message.text or "").strip()
+    if not uid: await state.clear(); return await message.answer("انتهت جلسة الحظر، ابدأ من جديد.")
+    await complete_ban(uid, reason, message.from_user.id); await state.clear()
+    await message.answer(f"🚫 تم حظر المستخدم <code>{uid}</code>.\n📝 السبب: {html.escape(reason) if reason else 'لم يتم تسجيل سبب'}")
+
+@dp.callback_query(F.data.regexp(r"^admin:banned:\d+$"))
+async def admin_banned_page(call: CallbackQuery):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح", show_alert=True)
+    history=DB.get("ban_history",[]); active=[x for x in history if x.get("active",True)]; active_ids=set(map(str,DB.get("banned",[])))
+    # Include legacy bans without history
+    known={str(x.get("user_id")) for x in active};
+    for uid in active_ids-known: active.append({"user_id":int(uid),"banned_at":"سجل قديم","reason":"لم يسجل السبب","active":True})
+    page=int(call.data.split(":")[-1]); per=10; pages=max(1,(len(active)+per-1)//per); page=max(0,min(page,pages-1)); rows=[]
+    for rec in active[page*per:(page+1)*per]: rows.append([(f"🚫 {rec.get('user_id')} | {str(rec.get('banned_at',''))[:10]}",f"admin:banned:user:{rec.get('user_id')}")])
+    nav=[]
+    if page: nav.append(("⬅️ السابق",f"admin:banned:{page-1}"))
+    if page<pages-1: nav.append(("التالي ➡️",f"admin:banned:{page+1}"))
+    if nav: rows.append(nav)
+    rows.append([( "↩️ إدارة الحظر", "admin:ban" )])
+    await call.answer(); await call.message.answer(f"📋 المحظورون النشطون: {len(active)} | صفحة {page+1}/{pages}",reply_markup=make_keyboard(rows))
+
+@dp.callback_query(F.data.startswith("admin:banned:user:"))
+async def admin_banned_profile(call: CallbackQuery):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح", show_alert=True)
+    uid=call.data.rsplit(":",1)[-1]; rec=next((x for x in reversed(DB.get("ban_history",[])) if str(x.get("user_id"))==uid and x.get("active",True)),None)
+    if not rec: rec={"user_id":int(uid),"banned_at":"سجل قديم","reason":"لم يسجل السبب","active":True}
+    await call.answer(); await call.message.answer(f"🚫 <b>سجل الحظر</b>\n🆔 <code>{uid}</code>\n📅 {html.escape(str(rec.get('banned_at','—')))}\n📝 {html.escape(rec.get('reason') or 'لم يتم تسجيل سبب')}",reply_markup=make_keyboard([[ ("🔓 فك الحظر",f"admin:unban:{uid}")],[ ("⬅️ المحظورون", "admin:banned:0")]]))
+
+@dp.callback_query(F.data.startswith("admin:unban:"))
+async def admin_unban(call: CallbackQuery):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح",show_alert=True)
+    uid=call.data.rsplit(":",1)[-1]; DB["banned"]=[x for x in DB.get("banned",[]) if str(x)!=uid]
+    if uid in DB.get("users",{}): DB["users"][uid]["blocked"]=False
+    for rec in reversed(DB.get("ban_history",[])):
+        if str(rec.get("user_id"))==uid and rec.get("active",True): rec["active"]=False; rec["unbanned_at"]=utcnow(); rec["unbanned_by"]=call.from_user.id; break
+    await save_db(); await call.answer("تم فك الحظر")
+    await call.message.answer(f"🔓 تم فك الحظر عن <code>{uid}</code>، وتم الاحتفاظ بسجل الحظر.",reply_markup=make_keyboard([[ ("📋 المحظورون", "admin:banned:0")]]))
+
 
 @dp.callback_query(F.data.startswith("admin:users:"))
 async def admin_users_page(call: CallbackQuery):
@@ -841,7 +948,293 @@ async def admin_users_page(call: CallbackQuery):
     rows.append([( "🏠 الرئيسية", "menu:home")])
     await call.answer(); await call.message.answer(f"👥 المستخدمون المسجلون: {len(users)} | صفحة {page+1}/{pages}",reply_markup=make_keyboard(rows))
 
+# ------------------------------ Admin: channel / welcome / notes ------------------------------
+@dp.callback_query(F.data == "admin:channel:change")
+async def admin_channel_change(call: CallbackQuery, state: FSMContext):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح",show_alert=True)
+    await call.answer(); await state.set_state(Flow.awaiting_channel)
+    await call.message.answer("📡 أرسل ID القناة (مثل -100...) أو @username. رابط الدعوة لا يكفي للتحويل آليًا إلى ID.")
+
+
+@dp.message(Flow.awaiting_channel)
+async def admin_channel_save(message: Message, state: FSMContext):
+    global CHANNEL
+    if not await is_owner(message.from_user.id): await state.clear(); return
+    value=(message.text or "").strip()
+    if not (value.startswith("-") and value[1:].isdigit() or value.startswith("@") and len(value)>1):
+        return await message.answer("❗ أرسل معرف قناة رقميًا مثل -100... أو @username. لا يمكن اعتماد رابط الدعوة مباشرة.")
+    try:
+        chat=await bot.get_chat(value)
+        bot_info=await bot.get_me(); member=await bot.get_chat_member(chat.id,bot_info.id)
+        if member.status not in ("administrator","creator"): return await message.answer("❗ يجب إضافة البوت إلى القناة ومنحه صلاحية إدارة/نشر قبل اعتمادها.")
+        CHANNEL=str(chat.id); DB.setdefault("settings",{})["channel"]=CHANNEL; await save_db(); await state.clear()
+        await message.answer(f"✅ تم اعتماد القناة الجديدة: <b>{html.escape(chat.title or CHANNEL)}</b>\nID: <code>{CHANNEL}</code>")
+    except Exception as e:
+        log.warning("Channel change failed: %s",e)
+        await message.answer("❌ تعذر الوصول للقناة. تأكد من ID أو @username، وأن البوت عضو فيها. رابط الدعوة مثل hvguuj65 لا يمكن استخدامه كمعرف قناة مباشرة.")
+
+
+@dp.callback_query(F.data.startswith("admin:welcome:"))
+async def admin_welcome_choice(call: CallbackQuery, state: FSMContext):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح",show_alert=True)
+    choice=call.data.split(":")[-1]; await call.answer()
+    if choice=="remove":
+        DB.setdefault("settings",{}).pop("welcome_media",None); await save_db(); return await call.message.answer("🗑️ تم إزالة وسائط الترحيب. سيعود الترحيب النصي أو VIEW_WELCOM.")
+    if choice not in ("photo","video","animation"): return
+    await state.set_state(Flow.awaiting_welcome_media); await state.update_data(welcome_type=choice)
+    prompt={"photo":"🖼️ أرسل الصورة الآن.","video":"🎥 أرسل الفيديو الآن.","animation":"🎞️ أرسل GIF متحركة الآن."}[choice]
+    await call.message.answer(prompt+"\nسيتم تطبيقها مباشرة وحفظها.")
+
+@dp.message(Flow.awaiting_welcome_media)
+async def admin_welcome_upload(message: Message, state: FSMContext):
+    if not await is_owner(message.from_user.id): await state.clear(); return
+    data=await state.get_data(); typ=data.get("welcome_type"); fid=None
+    if typ=="photo" and message.photo: fid=message.photo[-1].file_id
+    elif typ=="video" and message.video: fid=message.video.file_id
+    elif typ=="animation" and message.animation: fid=message.animation.file_id
+    if not fid: return await message.answer("❗ أرسل الوسائط المطلوبة حسب النوع المختار.")
+    DB.setdefault("settings",{})["welcome_media"]={"type":typ,"value":fid,"updated_at":utcnow()}; await save_db(); await state.clear()
+    await message.answer("✨ تم تحديث وسائط الترحيب تلقائيًا. ستظهر للمستخدمين عند تشغيل البوت.")
+
+
+@dp.callback_query(F.data == "admin:note:text")
+async def admin_note_text_start(call: CallbackQuery, state: FSMContext):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح",show_alert=True)
+    await call.answer(); await state.set_state(Flow.awaiting_note_content); await state.update_data(note_kind="text")
+    await call.message.answer("✍️ أرسل نص الملاحظة الذي تريد نشره على جميع المستخدمين.")
+
+@dp.callback_query(F.data == "admin:note:photo")
+async def admin_note_photo_start(call: CallbackQuery, state: FSMContext):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح",show_alert=True)
+    await call.answer(); await state.set_state(Flow.awaiting_note_content); await state.update_data(note_kind="photo")
+    await call.message.answer("🖼️ أرسل الصورة، ويمكنك إرفاق وصف في caption.")
+
+@dp.message(Flow.awaiting_note_content)
+async def admin_note_capture(message: Message, state: FSMContext):
+    if not await is_owner(message.from_user.id): await state.clear(); return
+    data=await state.get_data(); kind=data.get("note_kind"); note_id=str(data.get("edit_note_id") or int(datetime.now().timestamp()))
+    note={"id":note_id,"type":kind,"text":(message.text or message.caption or "").strip(),"file_id":message.photo[-1].file_id if kind=="photo" and message.photo else None,"created_at":utcnow(),"status":"draft"}
+    if kind=="photo" and not message.photo: return await message.answer("أرسل صورة من فضلك.")
+    if kind=="text" and not note["text"]: return await message.answer("أرسل نصًا غير فارغ.")
+    if data.get("edit_note_id"): note["status"]="draft"
+    DB.setdefault("notes",{})[note_id]=note; await save_db(); await state.clear()
+    await message.answer("📝 تم حفظ الملاحظة كمسودة. اختر نشر أو تعديل أو حذف.",reply_markup=make_keyboard([[ ("📢 نشر للجميع",f"admin:note:publish:{note_id}")],[ ("✏️ تعديل",f"admin:note:edit:{note_id}"), ("🗑️ حذف",f"admin:note:delete:{note_id}")],[ ("📋 الملاحظات", "admin:note:list")]]))
+
+@dp.callback_query(F.data == "admin:note:list")
+async def admin_note_list(call: CallbackQuery):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح",show_alert=True)
+    notes=list(DB.get("notes",{}).values()); rows=[]
+    for n in notes[-20:][::-1]: rows.append([(f"📝 {n.get('status')} | {shorten(n.get('text') or 'صورة',30)}",f"admin:note:manage:{n['id']}")])
+    rows.append([( "↩️ ملاحظاتي", "admin:notes" )]); await call.answer(); await call.message.answer(f"📝 الملاحظات: {len(notes)}",reply_markup=make_keyboard(rows))
+
+@dp.callback_query(F.data.startswith("admin:note:manage:"))
+async def admin_note_manage(call: CallbackQuery):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح",show_alert=True)
+    nid=call.data.split(":")[-1]; n=DB.get("notes",{}).get(nid)
+    if not n: return await call.answer("الملاحظة غير موجودة",show_alert=True)
+    await call.answer()
+    if n.get("type")=="photo" and n.get("file_id"): await call.message.answer_photo(n["file_id"],caption=n.get("text") or "ملاحظة")
+    else: await call.message.answer(n.get("text") or "—")
+    await call.message.answer("إدارة الملاحظة:",reply_markup=make_keyboard([[ ("📢 نشر",f"admin:note:publish:{nid}")],[ ("✏️ تعديل",f"admin:note:edit:{nid}"), ("🗑️ حذف",f"admin:note:delete:{nid}")],[ ("↩️ القائمة", "admin:note:list")]]))
+
+@dp.callback_query(F.data.startswith("admin:note:publish:"))
+async def admin_note_publish(call: CallbackQuery):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح",show_alert=True)
+    nid=call.data.split(":")[-1]; n=DB.get("notes",{}).get(nid)
+    if not n: return await call.answer("الملاحظة غير موجودة",show_alert=True)
+    await call.answer("جارٍ النشر")
+    users=list(DB.get("users",{}).keys()); sent=0; failed=0
+    for uid in users:
+        if str(uid) in set(map(str,DB.get("banned",[]))): continue
+        try:
+            if n.get("type")=="photo" and n.get("file_id"): await bot.send_photo(int(uid),n["file_id"],caption=n.get("text") or "📝 ملاحظة الإدارة")
+            else: await bot.send_message(int(uid),"📝 <b>ملاحظة من إدارة مدارك المعرفة</b>\n\n"+html.escape(n.get("text", "")))
+            sent+=1
+        except Exception: failed+=1
+    n["status"]="published"; n["published_at"]=utcnow(); n["sent_count"]=sent; n["failed_count"]=failed; await save_db()
+    await call.message.answer(f"📢 انتهى النشر.\n✅ أُرسلت إلى: {sent}\n⚠️ فشل: {failed}")
+
+@dp.callback_query(F.data.startswith("admin:note:delete:"))
+async def admin_note_delete(call: CallbackQuery):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح",show_alert=True)
+    nid=call.data.split(":")[-1]; DB.get("notes",{}).pop(nid,None); await save_db(); await call.answer("تم الحذف"); await call.message.answer("🗑️ تم حذف الملاحظة.")
+
+@dp.callback_query(F.data.startswith("admin:note:edit:"))
+async def admin_note_edit(call: CallbackQuery, state: FSMContext):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح",show_alert=True)
+    nid=call.data.split(":")[-1]; n=DB.get("notes",{}).get(nid)
+    if not n: return await call.answer("غير موجودة",show_alert=True)
+    await call.answer(); await state.set_state(Flow.awaiting_note_content); await state.update_data(note_kind=n.get("type","text"),edit_note_id=nid)
+    await call.message.answer("✏️ أرسل المحتوى الجديد. (للملاحظة المصورة أرسل صورة مع caption.)")
+
 # ------------------------------ Catch-all and startup ------------------------------
+# ------------------------------ Analytics center ------------------------------
+def published_sources():
+    return [r for r in DB.get("sources", []) if r.get("status") == "published"]
+
+def user_stats(uid: str):
+    usr = DB.get("users", {}).get(str(uid), {})
+    published = [r for r in published_sources() if str(r.get("user_id")) == str(uid)]
+    downloads = list(usr.get("downloads", []))
+    return usr, published, downloads
+
+
+def txt_document(filename: str, lines: list[str]):
+    return BufferedInputFile("\n".join(lines).encode("utf-8"), filename=filename)
+
+
+
+@dp.callback_query(F.data == "admin:stats")
+async def admin_stats_home(call: CallbackQuery):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح", show_alert=True)
+    users = DB.get("users", {})
+    sources = published_sources()
+    download_events = DB.get("download_events", [])
+    today = utcnow()[:10]
+    active_today = sum(1 for u in users.values() if (u.get("last_seen", "")[:10] == today))
+    rows = [[("👥 جميع المستخدمين", "admin:users:0"), ("🔎 البحث عن مستخدم", "admin:stats:search")],
+            [("🏆 متصدرو النشر", "admin:stats:publish:0"), ("📥 متصدرو التحميل", "admin:stats:download:0")],
+            [("📚 الأكثر طلبًا من الملفات", "admin:stats:files:0"), ("📄 تقرير TXT شامل", "admin:stats:export")],
+            [("↩️ لوحة الإدارة / الرئيسية", "menu:home")]]
+    await call.answer()
+    await call.message.answer(f"📊 <b>مركز إحصائيات مدارك المعرفة</b>\n━━━━━━━━━━━━━━━━\n👥 إجمالي المستخدمين: <b>{len(users)}</b>\n🟢 نشاط اليوم: <b>{active_today}</b>\n📚 المصادر المنشورة: <b>{len(sources)}</b>\n📥 طلبات/إرسالات الملفات المسجلة: <b>{len(download_events)}</b>\n🚫 المحظورون: <b>{len(DB.get('banned', []))}</b>\n━━━━━━━━━━━━━━━━\nاختر التقرير:", reply_markup=make_keyboard(rows))
+
+
+@dp.callback_query(F.data == "admin:stats:search")
+async def admin_stats_search_prompt(call: CallbackQuery, state: FSMContext):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح", show_alert=True)
+    await call.answer(); await state.set_state(Flow.awaiting_search); await state.update_data(admin_stats_search=True)
+    await call.message.answer("🔎 أرسل ID أو @username أو جزءًا من اسم المستخدم للبحث.")
+
+
+@dp.callback_query(F.data.startswith("admin:stats:publish:"))
+async def admin_stats_publish(call: CallbackQuery):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح", show_alert=True)
+    page=int(call.data.split(":")[-1]); sources=published_sources(); counts={}
+    for r in sources: counts[str(r.get("user_id"))]=counts.get(str(r.get("user_id")),0)+1
+    users=DB.get("users",{}); ranking=sorted(counts.items(),key=lambda x:(-x[1],x[0]))
+    per=10; pages=max(1,(len(ranking)+per-1)//per); page=max(0,min(page,pages-1)); rows=[]
+    for rank,(uid,count) in enumerate(ranking[page*per:(page+1)*per],start=page*per+1):
+        u=users.get(uid,{}); rows.append([(f"🏅 {rank}. {shorten(u.get('name') or 'مستخدم',24)} | {count} نشر",f"admin:stats:user:{uid}")])
+    nav=[]
+    if page>0: nav.append(("⬅️ السابق",f"admin:stats:publish:{page-1}"))
+    if page<pages-1: nav.append(("التالي ➡️",f"admin:stats:publish:{page+1}"))
+    if nav: rows.append(nav)
+    rows.append([("📄 TXT متصدري النشر","admin:stats:export:publish")]); rows.append([("↩️ مركز الإحصائيات","admin:stats")])
+    await call.answer(); await call.message.answer(f"🏆 <b>متصدرو النشر</b>\nعدد الناشرين: {len(ranking)} | صفحة {page+1}/{pages}",reply_markup=make_keyboard(rows))
+
+
+@dp.callback_query(F.data.startswith("admin:stats:download:"))
+async def admin_stats_download(call: CallbackQuery):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح", show_alert=True)
+    page=int(call.data.split(":")[-1]); users=DB.get("users",{}); ranking=sorted(((uid,int(u.get("download_count",0))) for uid,u in users.items()),key=lambda x:(-x[1],x[0]))
+    ranking=[x for x in ranking if x[1]>0]; per=10; pages=max(1,(len(ranking)+per-1)//per); page=max(0,min(page,pages-1)); rows=[]
+    for rank,(uid,count) in enumerate(ranking[page*per:(page+1)*per],start=page*per+1):
+        u=users.get(uid,{}); rows.append([(f"📥 {rank}. {shorten(u.get('name') or 'مستخدم',24)} | {count} تحميل",f"admin:stats:user:{uid}")])
+    nav=[]
+    if page>0: nav.append(("⬅️ السابق",f"admin:stats:download:{page-1}"))
+    if page<pages-1: nav.append(("التالي ➡️",f"admin:stats:download:{page+1}"))
+    if nav: rows.append(nav)
+    rows.append([ ("📄 TXT متصدري التحميل","admin:stats:export:download")]); rows.append([ ("↩️ مركز الإحصائيات","admin:stats")])
+    await call.answer(); await call.message.answer(f"📥 <b>متصدرو التحميل</b>\nعدد المستخدمين الذين لديهم طلبات: {len(ranking)} | صفحة {page+1}/{pages}",reply_markup=make_keyboard(rows))
+
+
+@dp.callback_query(F.data.startswith("admin:stats:files:"))
+async def admin_stats_files(call: CallbackQuery):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح", show_alert=True)
+    page=int(call.data.split(":")[-1]); sources=published_sources(); counts={}
+    for r in sources: counts[r.get("source_id")]=int(r.get("download_count",0))
+    ranked=sorted(sources,key=lambda r:(-counts.get(r.get("source_id"),0),r.get("source_id", "")))
+    per=10; pages=max(1,(len(ranked)+per-1)//per); page=max(0,min(page,pages-1)); rows=[]
+    for r in ranked[page*per:(page+1)*per]:
+        rows.append([(f"📥 {r.get('download_count',0)} | {shorten(record_title(r),36)}",f"admin:source:{r.get('source_id')}")])
+    nav=[]
+    if page>0: nav.append(("⬅️ السابق",f"admin:stats:files:{page-1}"))
+    if page<pages-1: nav.append(("التالي ➡️",f"admin:stats:files:{page+1}"))
+    if nav: rows.append(nav)
+    rows.append([ ("↩️ مركز الإحصائيات","admin:stats")])
+    await call.answer(); await call.message.answer(f"📚 <b>الأكثر طلبًا</b> | صفحة {page+1}/{pages}",reply_markup=make_keyboard(rows))
+
+
+@dp.callback_query(F.data.regexp(r"^admin:stats:user:\d+$"))
+async def admin_stats_user_detail(call: CallbackQuery):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح", show_alert=True)
+    uid=call.data.split(":")[-1]; usr,published,downloads=user_stats(uid)
+    published.sort(key=lambda r:r.get("created_at", "")); downloads.sort(key=lambda r:r.get("requested_at", ""))
+    uname="@"+(usr.get("username") or "—")
+    lines=["📋 ملف مستخدم مدارك المعرفة", "━━━━━━━━━━━━━━━━", f"الاسم: {usr.get('name','—')}", f"Username: {uname}", f"Telegram ID: {uid}", f"تاريخ الانضمام: {usr.get('first_seen','—')}", f"آخر نشاط: {usr.get('last_seen','—')}", f"الملفات المنشورة: {len(published)}", f"طلبات/تحميلات الملفات: {int(usr.get('download_count',len(downloads)))}", "", "📤 الملفات المنشورة:"]
+    if published:
+        for r in published[-40:]: lines.append(f"• {r.get('source_id')} | {shorten(record_title(r),110)} | {r.get('created_at','')[:10]} | ملاحظة: {shorten(r.get('note') or '—',100)}")
+        if len(published)>40: lines.append(f"... عرض آخر 40 منشورًا من أصل {len(published)} (التقرير TXT يحتوي السجل الكامل)")
+    else: lines.append("— لا توجد منشورات مسجلة —")
+    lines += ["", "📥 الملفات التي طلبها:"]
+    if downloads:
+        for d in downloads[-40:]: lines.append(f"• {d.get('source_id','—')} | {shorten(d.get('title','—'),110)} | {d.get('requested_at','—')}")
+        if len(downloads)>40: lines.append(f"... عرض آخر 40 طلبًا من أصل {len(downloads)} (التقرير TXT يحتوي السجل الكامل)")
+    else: lines.append("— لا توجد طلبات تحميل مسجلة —")
+    report="\n".join(lines)
+    rows=[[ ("📄 تنزيل ملف المستخدم TXT",f"admin:stats:user:txt:{uid}")],[("📤 المنشورات فقط",f"admin:stats:user:pub:{uid}"),("📥 التحميلات فقط",f"admin:stats:user:dl:{uid}")],[("↩️ مركز الإحصائيات","admin:stats")]]
+    await call.answer(); await call.message.answer(report,reply_markup=make_keyboard(rows))
+
+
+@dp.callback_query(F.data.startswith("admin:stats:user:txt:"))
+async def admin_stats_user_txt(call: CallbackQuery):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح",show_alert=True)
+    uid=call.data.split(":")[-1]; usr,published,downloads=user_stats(uid)
+    lines=["MADAREK USER REPORT", "="*50, f"Name: {usr.get('name','—')}", f"Username: @{usr.get('username') or '—'}",f"Telegram ID: {uid}", f"Joined: {usr.get('first_seen','—')}", f"Last seen: {usr.get('last_seen','—')}",f"Published: {len(published)}",f"Download/request count: {usr.get('download_count',len(downloads))}","", "PUBLISHED SOURCES", "="*50]
+    for r in published: lines += [f"{r.get('source_id')} | {record_title(r)}", f"Note: {r.get('note') or '—'}",f"Date: {r.get('created_at','—')}"]
+    lines += ["", "DOWNLOAD HISTORY", "="*50]
+    for d in downloads: lines.append(f"{d.get('source_id','—')} | {d.get('title','—')} | {d.get('requested_at','—')}")
+    await call.answer("جاري إعداد TXT")
+    await bot.send_document(call.from_user.id,txt_document(f"TAQE_User_{uid}.txt",lines),caption="📄 تقرير المستخدم الكامل")
+
+
+@dp.callback_query(F.data.startswith("admin:stats:user:pub:"))
+async def admin_stats_user_pub(call: CallbackQuery):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح",show_alert=True)
+    uid=call.data.split(":")[-1]; usr,published,_=user_stats(uid)
+    lines=[f"منشورات {usr.get('name','—')} ({uid})", "="*45]
+    for r in published: lines.append(f"{r.get('source_id')} | {record_title(r)} | {r.get('created_at','—')} | {r.get('note') or '—'}")
+    await call.answer(); await bot.send_document(call.from_user.id,txt_document(f"TAQE_Published_{uid}.txt",lines),caption="📤 سجل المنشورات")
+
+
+@dp.callback_query(F.data.startswith("admin:stats:user:dl:"))
+async def admin_stats_user_dl(call: CallbackQuery):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح",show_alert=True)
+    uid=call.data.split(":")[-1]; usr,_,downloads=user_stats(uid)
+    lines=[f"تحميلات {usr.get('name','—')} ({uid})", "="*45]
+    for d in downloads: lines.append(f"{d.get('source_id','—')} | {d.get('title','—')} | {d.get('requested_at','—')}")
+    await call.answer(); await bot.send_document(call.from_user.id,txt_document(f"TAQE_Downloads_{uid}.txt",lines),caption="📥 سجل التحميلات")
+
+
+@dp.callback_query(F.data.startswith("admin:stats:export"))
+async def admin_stats_export(call: CallbackQuery):
+    if not await is_owner(call.from_user.id): return await call.answer("غير مصرح",show_alert=True)
+    mode=call.data.split(":")[-1]; users=DB.get("users",{}); sources=published_sources()
+    if mode=="publish":
+        count={}
+        for r in sources: count[str(r.get("user_id"))]=count.get(str(r.get("user_id")),0)+1
+        rank=sorted(count.items(),key=lambda x:-x[1]); lines=["TOP CONTRIBUTORS", "="*50]
+        for i,(uid,n) in enumerate(rank,1): lines.append(f"{i}. {users.get(uid,{}).get('name','—')} | ID {uid} | {n} sources")
+        fname="TAQE_Top_Publishers.txt"
+    elif mode=="download":
+        rank=sorted(((uid,int(u.get("download_count",0))) for uid,u in users.items()),key=lambda x:-x[1]); lines=["TOP DOWNLOAD USERS", "="*50]
+        for i,(uid,n) in enumerate((x for x in rank if x[1]>0),1): lines.append(f"{i}. {users.get(uid,{}).get('name','—')} | ID {uid} | {n} downloads")
+        fname="TAQE_Top_Downloaders.txt"
+    else:
+        download_rank=sorted(((uid,int(u.get("download_count",0))) for uid,u in users.items()),key=lambda x:-x[1]); publish_count={}
+        for r in sources: publish_count[str(r.get("user_id"))]=publish_count.get(str(r.get("user_id")),0)+1
+        lines=["MADAREK KNOWLEDGE LIBRARY - FULL ANALYTICS", "="*60, f"Generated: {utcnow()}", f"Users: {len(users)}", f"Published sources: {len(sources)}", f"Download requests: {len(DB.get('download_events',[]))}", "", "USER DIRECTORY", "="*60]
+        for uid,u in sorted(users.items(),key=lambda x:x[1].get("first_seen","")):
+            _,pub,dl=user_stats(uid); lines += [f"\nName: {u.get('name','—')} | Username: @{u.get('username') or '—'} | ID: {uid}",f"Joined: {u.get('first_seen','—')} | Last active: {u.get('last_seen','—')}",f"Published: {publish_count.get(uid,0)} | Download count: {u.get('download_count',0)}", "Published files:"]
+            lines += [f" - {r.get('source_id')} | {record_title(r)} | {r.get('note') or '—'} | {r.get('created_at','—')}" for r in pub]
+            lines += ["Downloaded/requested files:"]
+            lines += [f" - {d.get('source_id','—')} | {d.get('title','—')} | {d.get('requested_at','—')}" for d in dl]
+        fname="TAQE_All_Analytics.txt"
+    await call.answer("يتم تجهيز التقرير")
+    await bot.send_document(call.from_user.id,txt_document(fname,lines),caption="📄 تقرير الإحصائيات")
+
+
 @dp.message()
 async def catch_all(message: Message, state: FSMContext):
     if not await ensure_allowed(message): return
@@ -849,7 +1242,9 @@ async def catch_all(message: Message, state: FSMContext):
     await message.answer("لم أفهم الرسالة. استخدم القائمة الرئيسية واختر العملية المطلوبة.",reply_markup=main_keyboard(await is_owner(message.from_user.id)))
 
 async def main():
+    global CHANNEL
     await load_db()
+    if DB.get("settings", {}).get("channel"): CHANNEL = str(DB["settings"]["channel"])
     log.info("Madarek library bot started. Persistent GitHub: %s", bool(GH_TOKEN and GH_REPO))
     # Polling and webhook cannot coexist. Clear any old webhook before polling,
     # while preserving queued updates so users' messages are not discarded.
