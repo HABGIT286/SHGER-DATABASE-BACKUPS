@@ -324,8 +324,60 @@ async def source_buttons(records: list[dict], page: int, prefix: str = "search")
 @dp.message(CommandStart())
 async def start(message: Message, state: FSMContext):
     await state.clear()
-    if not await ensure_allowed(message): return
     user = message.from_user
+
+    # Owner-only system/channel diagnostic. A temporary message is sent and
+    # deleted to verify actual channel posting permission without leaving clutter.
+    if await is_owner(user.id):
+        await message.answer("🧪 <b>بدء الفحص التشخيصي لمدارك المعرفة...</b>")
+        checks = []
+        bot_info = None
+        try:
+            bot_info = await bot.get_me()
+            checks.append((True, "اتصال Telegram API", f"متصل — @{bot_info.username or 'بدون اسم'}"))
+        except Exception as exc:
+            checks.append((False, "اتصال Telegram API", f"{type(exc).__name__}: {exc}"))
+
+        try:
+            channel_chat = await bot.get_chat(CHANNEL)
+            checks.append((True, "الوصول إلى القناة", html.escape(channel_chat.title or str(channel_chat.id))))
+            if bot_info:
+                member = await bot.get_chat_member(CHANNEL, bot_info.id)
+                is_admin = member.status in ("administrator", "creator")
+                checks.append((is_admin, "حالة البوت في القناة", html.escape(str(member.status))))
+                can_post = (member.status == "creator" or
+                            (member.status == "administrator" and getattr(member, "can_post_messages", False)))
+                checks.append((can_post, "صلاحية نشر الرسائل", "متاحة" if can_post else "غير متاحة — فعّل صلاحية نشر الرسائل"))
+                if can_post:
+                    try:
+                        test_msg = await bot.send_message(CHANNEL, "🧪 اختبار تشخيصي مؤقت — سيتم حذفه تلقائيًا.")
+                        checks.append((True, "اختبار الإرسال الفعلي", "نجح البوت في إرسال رسالة للقناة"))
+                        try:
+                            await bot.delete_message(CHANNEL, test_msg.message_id)
+                            checks.append((True, "حذف رسالة الاختبار", "تم حذف رسالة الاختبار بنجاح"))
+                        except Exception as delete_exc:
+                            checks.append((False, "حذف رسالة الاختبار", f"تعذر حذفها: {type(delete_exc).__name__}: {delete_exc}"))
+                    except Exception as send_exc:
+                        checks.append((False, "اختبار الإرسال الفعلي", f"{type(send_exc).__name__}: {send_exc}"))
+        except Exception as exc:
+            checks.append((False, "فحص القناة", f"{type(exc).__name__}: {exc}"))
+
+        checks.append((bool(GH_TOKEN and GH_REPO), "إعداد GitHub للحفظ", "التوكن والمستودع موجودان" if GH_TOKEN and GH_REPO else "تأكد من GITHUB_TOKEN و GITHUB_REPOSITORY"))
+        checks.append((True, "حالة ملف الفهرس", "library_index.json موجود محليًا" if DATA_PATH.exists() else "لا يوجد ملف محلي؛ يعتمد على تحميل GitHub أو الفهرس الموجود بالذاكرة"))
+        checks.append((True, "عدد المصادر في الذاكرة", str(len(DB.get("sources", [])))))
+
+        passed = sum(1 for ok, _, _ in checks if ok)
+        failed = len(checks) - passed
+        report = ["🛠 <b>تقرير فحص مدارك المعرفة</b>", "━━━━━━━━━━━━━━━━━━"]
+        for ok, title, detail in checks:
+            report.append(("✅" if ok else "❌") + f" <b>{title}</b>\n└ {detail}")
+        report.append("━━━━━━━━━━━━━━━━━━")
+        report.append(f"📊 النتيجة: <b>{passed}/{len(checks)} فحوصات ناجحة</b>")
+        report.append("🎉 <b>الفحص اكتمل دون أخطاء.</b>" if failed == 0 else f"⚠️ <b>هناك {failed} فحص/فحوصات تحتاج مراجعة.</b>")
+        await message.answer("\n\n".join(report), disable_web_page_preview=True)
+        # Continue to regular welcome after diagnostic report.
+
+    if not await ensure_allowed(message): return
     welcome = ("╭━━━━━━━━━━━━━━━━━━━━╮\n"
               "💾 <b>مــدارك الـمـعـرفــة</b>\n"
               "╰━━━━━━━━━━━━━━━━━━━━╯\n\n"
