@@ -3,7 +3,7 @@ name: Madarek Knowledge Library Bot
 on:
   workflow_dispatch:
   schedule:
-    # Restart approximately every six hours; GitHub scheduled runs are not guaranteed exact.
+    # Scheduled runs are approximate; this is not a permanent hosting service.
     - cron: '0 */6 * * *'
 
 permissions:
@@ -34,6 +34,41 @@ jobs:
 
       - name: Verify Python file syntax
         run: python -m py_compile bot.py
+
+      - name: Remove Telegram webhook before polling (diagnostic)
+        env:
+          TOKENN: ${{ secrets.TOKENN }}
+        run: |
+          python - <<'PY'
+          import os, httpx, sys
+          token = os.environ.get('TOKENN', '').strip()
+          if not token:
+              print('ERROR: TOKENN secret is missing')
+              sys.exit(1)
+          base = f'https://api.telegram.org/bot{token}'
+          with httpx.Client(timeout=30) as client:
+              delete = client.post(base + '/deleteWebhook', json={'drop_pending_updates': False})
+              print('deleteWebhook HTTP:', delete.status_code)
+              try:
+                  result = delete.json()
+                  print('deleteWebhook ok:', result.get('ok'))
+                  if not result.get('ok'):
+                      print('Telegram response:', result)
+                      sys.exit(1)
+              except ValueError:
+                  print('Telegram returned a non-JSON response')
+                  sys.exit(1)
+              info = client.get(base + '/getWebhookInfo')
+              print('getWebhookInfo HTTP:', info.status_code)
+              data = info.json()
+              print('getWebhookInfo ok:', data.get('ok'))
+              webhook = (data.get('result') or {}).get('url', '')
+              print('Webhook URL after deletion:', repr(webhook))
+              if webhook:
+                  print('ERROR: webhook still exists after deleteWebhook')
+                  sys.exit(1)
+          PY
+
 
       - name: Run Telegram bot
         env:
