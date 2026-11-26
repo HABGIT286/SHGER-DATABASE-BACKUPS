@@ -30,7 +30,7 @@ GH_REPO = os.getenv("GITHUB_REPOSITORY", "").strip()
 GH_BRANCH = os.getenv("GITHUB_REF_NAME", "main").strip() or "main"
 PROXY_URL = os.getenv("PROXY_URL", "").strip() or None
 DATA_PATH = Path("library_index.json")
-CHANNEL_URL = "https://t.me/Kh_JOORE_BusinessLibrary"
+CHANNEL_URL = "https://t.me/HRM800"
 CONTACT_URL = "https://t.me/ONX44"
 WELCOME_IMAGE = os.getenv("WELCOME_IMAGE", "https://imgur.com/a/0C4FbCi").strip()
 VIEW_WELCOM = os.getenv("VIEW_WELCOM", "").strip()
@@ -440,7 +440,7 @@ async def start(message: Message, state: FSMContext):
               "━━━━━━━━━━━━━━━━━━━━\n"
               f"🔷 قناة مـدارك الــمعـرفة: <a href='{CHANNEL_URL}'>@Kh_JOORE_BusinessLibrary</a>\n"
               "🔷 إدارة الأعمال: مكتبة مصادر تخصصية\n"
-              "🔷 دفعة: -2026-")
+              "🔷 جـامــعــة كــربــلاء:  دفــعــة -2026-")
     kb = main_keyboard(await is_owner(user.id))
     media = DB.get("settings", {}).get("welcome_media") or {}
     media_type, media_value = media.get("type"), media.get("value")
