@@ -1,25 +1,22 @@
 """Madarek Knowledge Library dashboard API.
 
 Runs separately from the Telegram polling process. It reads and commits the shared
-library_index.json file to GitHub. Configure WEB_ADMIN_PASSWORD, GITHUB_TOKEN,
-GITHUB_REPOSITORY and (optionally) GITHUB_REF_NAME as environment secrets.
+library_index.json file to GitHub. Configure GITHUB_TOKEN, GITHUB_REPOSITORY and (optionally) GITHUB_REF_NAME as environment secrets.
+This API is passwordless; anyone with access to the deployed URL can manage the library.
 """
 from __future__ import annotations
 
 import base64
-import hashlib
-import hmac
 import json
 import os
 import secrets
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 
 
-from fastapi import FastAPI, Depends, HTTPException, Header, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -29,22 +26,15 @@ import httpx
 
 ROOT = Path(__file__).resolve().parent
 INDEX_PATH = ROOT / "library_index.json"
-WEB_PASSWORD = os.getenv("WEB_ADMIN_PASSWORD", "").strip()
 GH_TOKEN = os.getenv("GITHUB_TOKEN", os.getenv("GH_TOKEN", "")).strip()
 GH_REPO = os.getenv("GITHUB_REPOSITORY", "").strip()
 GH_BRANCH = os.getenv("GITHUB_REF_NAME", "main").strip() or "main"
-SESSION_TTL = int(os.getenv("WEB_SESSION_TTL", "43200"))
-SESSIONS: dict[str, float] = {}
 API_LOCK = __import__("asyncio").Lock()
 
 
 
 app = FastAPI(title="Madarek Knowledge Library API", version="1.0.0")
 app.mount("/assets", StaticFiles(directory=str(ROOT)), name="assets")
-
-
-class LoginRequest(BaseModel):
-    password: str = Field(min_length=1, max_length=512)
 
 
 class NoteInput(BaseModel):
@@ -71,29 +61,7 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
-def prune_sessions() -> None:
-    now = time.time()
-    for key, expiry in list(SESSIONS.items()):
-        if expiry <= now:
-            SESSIONS.pop(key, None)
-
-
-def require_auth(authorization: str | None = Header(default=None)) -> str:
-    prune_sessions()
-    if not authorization or not authorization.lower().startswith("bearer "):
-        raise HTTPException(status_code=401, detail="تسجيل الدخول مطلوب")
-    token = authorization.split(" ", 1)[1].strip()
-    expiry = SESSIONS.get(token)
-    if not expiry or expiry <= time.time():
-        SESSIONS.pop(token, None)
-        raise HTTPException(status_code=401, detail="الجلسة غير صالحة أو انتهت")
-    return token
-
-
-
 def ensure_configuration() -> None:
-    if not WEB_PASSWORD:
-        raise HTTPException(status_code=503, detail="لم يتم إعداد WEB_ADMIN_PASSWORD في إعدادات الخدمة")
     if not (GH_TOKEN and GH_REPO):
         raise HTTPException(status_code=503, detail="لم يتم إعداد GitHub token أو repository في إعدادات الخدمة")
 
@@ -200,24 +168,8 @@ async def health() -> dict[str, Any]:
     return {"status": "ok", "service": "madarek-dashboard", "timestamp": now_iso()}
 
 
-@app.post("/api/login")
-async def login(payload: LoginRequest) -> dict[str, Any]:
-    ensure_configuration()
-    if not hmac.compare_digest(payload.password.encode("utf-8"), WEB_PASSWORD.encode("utf-8")):
-        raise HTTPException(status_code=401, detail="كلمة المرور غير صحيحة")
-    token = secrets.token_urlsafe(48)
-    SESSIONS[token] = time.time() + SESSION_TTL
-    return {"token": token, "expires_in": SESSION_TTL}
-
-
-@app.post("/api/logout")
-async def logout(token: str = Depends(require_auth)) -> dict[str, bool]:
-    SESSIONS.pop(token, None)
-    return {"ok": True}
-
-
 @app.get("/api/dashboard")
-async def dashboard(_: str = Depends(require_auth)) -> dict[str, Any]:
+async def dashboard() -> dict[str, Any]:
     async with API_LOCK:
         db, _sha = await github_read()
     sources = db.get("sources", [])
@@ -238,7 +190,7 @@ async def dashboard(_: str = Depends(require_auth)) -> dict[str, Any]:
 
 
 @app.get("/api/users/{user_id}")
-async def user_detail(user_id: str, _: str = Depends(require_auth)) -> dict[str, Any]:
+async def user_detail(user_id: str) -> dict[str, Any]:
     async with API_LOCK:
         db, _sha = await github_read()
     user = db.get("users", {}).get(str(user_id))
@@ -250,7 +202,7 @@ async def user_detail(user_id: str, _: str = Depends(require_auth)) -> dict[str,
 
 
 @app.delete("/api/sources/{source_id}")
-async def delete_source(source_id: str, _: str = Depends(require_auth)) -> dict[str, bool]:
+async def delete_source(source_id: str) -> dict[str, bool]:
     async with API_LOCK:
         db, sha = await github_read()
         before = len(db.get("sources", []))
@@ -265,7 +217,7 @@ async def delete_source(source_id: str, _: str = Depends(require_auth)) -> dict[
 
 
 @app.patch("/api/sources/{source_id}")
-async def edit_source(source_id: str, payload: SourceEditInput, _: str = Depends(require_auth)) -> dict[str, bool]:
+async def edit_source(source_id: str, payload: SourceEditInput) -> dict[str, bool]:
     updates = payload.model_dump(exclude_none=True)
     if not updates:
         raise HTTPException(status_code=400, detail="لا توجد بيانات للتعديل")
@@ -281,7 +233,7 @@ async def edit_source(source_id: str, payload: SourceEditInput, _: str = Depends
 
 
 @app.post("/api/users/{user_id}/ban")
-async def set_user_ban(user_id: str, payload: UserBanInput, _: str = Depends(require_auth)) -> dict[str, bool]:
+async def set_user_ban(user_id: str, payload: UserBanInput) -> dict[str, bool]:
     async with API_LOCK:
         db, sha = await github_read()
         users = db.setdefault("users", {})
@@ -300,7 +252,7 @@ async def set_user_ban(user_id: str, payload: UserBanInput, _: str = Depends(req
 
 
 @app.post("/api/notes")
-async def create_note(payload: NoteInput, _: str = Depends(require_auth)) -> dict[str, Any]:
+async def create_note(payload: NoteInput) -> dict[str, Any]:
     async with API_LOCK:
         db, sha = await github_read()
         notes = normalize_notes(db)
@@ -313,7 +265,7 @@ async def create_note(payload: NoteInput, _: str = Depends(require_auth)) -> dic
 
 
 @app.patch("/api/notes/{note_id}")
-async def edit_note(note_id: str, payload: NoteInput, _: str = Depends(require_auth)) -> dict[str, bool]:
+async def edit_note(note_id: str, payload: NoteInput) -> dict[str, bool]:
     async with API_LOCK:
         db, sha = await github_read()
         notes = normalize_notes(db)
@@ -330,7 +282,7 @@ async def edit_note(note_id: str, payload: NoteInput, _: str = Depends(require_a
 
 
 @app.delete("/api/notes/{note_id}")
-async def delete_note(note_id: str, _: str = Depends(require_auth)) -> dict[str, bool]:
+async def delete_note(note_id: str) -> dict[str, bool]:
     async with API_LOCK:
         db, sha = await github_read()
         notes = normalize_notes(db)
@@ -343,7 +295,7 @@ async def delete_note(note_id: str, _: str = Depends(require_auth)) -> dict[str,
 
 
 @app.patch("/api/settings")
-async def update_settings(payload: SettingsInput, _: str = Depends(require_auth)) -> dict[str, bool]:
+async def update_settings(payload: SettingsInput) -> dict[str, bool]:
     allowed = {"welcome_text", "pause_text", "library_name"}
     updates = payload.model_dump(exclude_none=True)
     if not updates or not set(updates).issubset(allowed):
@@ -358,7 +310,7 @@ async def update_settings(payload: SettingsInput, _: str = Depends(require_auth)
 
 
 @app.post("/api/bot/pause")
-async def set_pause(payload: PauseInput, _: str = Depends(require_auth)) -> dict[str, Any]:
+async def set_pause(payload: PauseInput) -> dict[str, Any]:
     async with API_LOCK:
         db, sha = await github_read()
         db["paused"] = bool(payload.paused)
