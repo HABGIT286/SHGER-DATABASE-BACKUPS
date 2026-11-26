@@ -24,7 +24,14 @@
       ],
       "status": "published",
       "source_id": "DOC-0005",
-      "published_at": "2026-11-26T10:23:32+00:00"
+      "published_at": "2026-11-26T10:23:32+00:00",
+      "download_count": 1,
+      "download_events": [
+        {
+          "user_id": 910624538,
+          "requested_at": "2026-11-26T15:42:47+00:00"
+        }
+      ]
     },
     {
       "type": "photo",
@@ -66,10 +73,18 @@
       "name": "دِ٘اِ٘اِ٘نِ٘ـي٘اِ٘اِ٘ݪ​​​​𔔁",
       "username": "MOTRXVIP",
       "first_seen": "2026-11-26T07:25:50+00:00",
-      "last_seen": "2026-11-26T13:06:36+00:00",
+      "last_seen": "2026-11-26T15:42:46+00:00",
       "blocked": false,
-      "downloads": [],
-      "download_count": 0,
+      "downloads": [
+        {
+          "user_id": 910624538,
+          "source_id": "DOC-0005",
+          "title": "مشاريع",
+          "type": "file",
+          "requested_at": "2026-11-26T15:42:47+00:00"
+        }
+      ],
+      "download_count": 1,
       "published_source_ids": []
     },
     "1242589207": {
@@ -99,7 +114,15 @@
       "updated_at": "2026-11-26T12:52:06+00:00"
     }
   },
-  "download_events": [],
+  "download_events": [
+    {
+      "user_id": 910624538,
+      "source_id": "DOC-0005",
+      "title": "مشاريع",
+      "type": "file",
+      "requested_at": "2026-11-26T15:42:47+00:00"
+    }
+  ],
   "ban_history": [],
   "notes": {
     "1795697708": {
