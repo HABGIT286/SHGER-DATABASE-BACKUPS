@@ -55,7 +55,7 @@
       "name": "⌯ .𝐎𝐍𝐘𝐗ぷ𓆤",
       "username": "ONX44",
       "first_seen": "2026-11-26T07:21:42+00:00",
-      "last_seen": "2026-11-26T10:28:04+00:00",
+      "last_seen": "2026-11-26T10:29:14+00:00",
       "blocked": false
     },
     "910624538": {
@@ -64,10 +64,12 @@
       "username": "MOTRXVIP",
       "first_seen": "2026-11-26T07:25:50+00:00",
       "last_seen": "2026-11-26T08:20:35+00:00",
-      "blocked": false
+      "blocked": true
     }
   },
-  "banned": [],
+  "banned": [
+    "910624538"
+  ],
   "paused": false,
   "settings": {}
 }
