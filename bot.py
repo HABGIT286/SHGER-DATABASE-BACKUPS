@@ -227,7 +227,7 @@ async def github_put_text(path: str, content: str) -> bool:
 class Flow(StatesGroup):
     awaiting_file = State(); awaiting_file_note = State(); awaiting_photo = State(); awaiting_photo_note = State()
     awaiting_link = State(); awaiting_link_note = State(); awaiting_edit_note = State()
-    awaiting_search = State(); awaiting_ban = State(); awaiting_ban_note = State(); awaiting_channel = State(); awaiting_welcome_media = State(); awaiting_note_content = State()
+    awaiting_search = State(); awaiting_ban = State(); awaiting_ban_note = State(); awaiting_channel = State(); awaiting_welcome_media = State(); awaiting_welcome_note = State(); awaiting_pause_media = State(); awaiting_pause_note = State(); awaiting_note_content = State()
 
 PENDING: dict[int, dict] = {}
 PHOTO_GROUPS: dict[int, dict] = {}
@@ -254,12 +254,35 @@ async def is_banned(user_id: int) -> bool:
     return str(user_id) in set(map(str, DB.get("banned", [])))
 async def paused_for(user_id: int) -> bool:
     return DB.get("paused", False) and int(user_id) != OWNER_ID
+async def send_pause_notice(chat_id: int) -> None:
+    """Send configured pause media with protected content; fall back to text."""
+    settings = DB.setdefault("settings", {})
+    pause_media = settings.get("pause_media") or {}
+    default_text = "🙏 عذرًا، تم إيقاف البوت مؤقتًا. نرجو المحاولة لاحقًا."
+    caption = (pause_media.get("note") or default_text).strip()
+    typ, value = pause_media.get("type"), pause_media.get("value")
+    try:
+        if typ == "photo" and value:
+            await bot.send_photo(chat_id, value, caption=caption, protect_content=True)
+        elif typ == "video" and value:
+            await bot.send_video(chat_id, value, caption=caption, protect_content=True)
+        elif typ == "animation" and value:
+            await bot.send_animation(chat_id, value, caption=caption, protect_content=True)
+        else:
+            await bot.send_message(chat_id, settings.get("pause_text") or default_text, protect_content=True)
+    except Exception as exc:
+        log.warning("Pause media send failed, falling back to text: %s", exc)
+        try:
+            await bot.send_message(chat_id, caption or default_text, protect_content=True)
+        except Exception:
+            log.exception("Pause fallback message failed")
+
 async def ensure_allowed(message: Message) -> bool:
     await user_touch(message.from_user)
     if await is_banned(message.from_user.id):
         await message.answer("⛔ تم حظر استخدام البوت."); return False
     if await paused_for(message.from_user.id):
-        await message.answer("🙏 نعتذر عن الإزعاج، البوت تحت الصيانة يرجى المحاولة لاحقاً."); return False
+        await send_pause_notice(message.chat.id); return False
     return True
 
 async def publish_record(rec: dict) -> bool:
@@ -421,20 +444,21 @@ async def start(message: Message, state: FSMContext):
     kb = main_keyboard(await is_owner(user.id))
     media = DB.get("settings", {}).get("welcome_media") or {}
     media_type, media_value = media.get("type"), media.get("value")
+    welcome_caption = welcome + ("\n\n" + html.escape(str(media.get("note"))) if media.get("note") else "")
     if not media_value and VIEW_WELCOM:
         media_value = VIEW_WELCOM
         low = VIEW_WELCOM.lower().split("?")[0]
         media_type = "animation" if low.endswith((".gif", ".mp4?gif")) else ("video" if low.endswith((".mp4", ".mov", ".m4v", ".webm")) else "photo")
     media_value = media_value or WELCOME_IMAGE
     try:
-        if media_type == "photo" and media_value: await message.answer_photo(media_value, caption=welcome, reply_markup=kb)
-        elif media_type == "video" and media_value: await message.answer_video(media_value, caption=welcome, reply_markup=kb)
-        elif media_type == "animation" and media_value: await message.answer_animation(media_value, caption=welcome, reply_markup=kb)
-        elif media_value: await message.answer_photo(media_value, caption=welcome, reply_markup=kb)
-        else: await message.answer(welcome, reply_markup=kb, disable_web_page_preview=True)
+        if media_type == "photo" and media_value: await message.answer_photo(media_value, caption=welcome_caption, reply_markup=kb, protect_content=True)
+        elif media_type == "video" and media_value: await message.answer_video(media_value, caption=welcome_caption, reply_markup=kb, protect_content=True)
+        elif media_type == "animation" and media_value: await message.answer_animation(media_value, caption=welcome_caption, reply_markup=kb, protect_content=True)
+        elif media_value: await message.answer_photo(media_value, caption=welcome_caption, reply_markup=kb, protect_content=True)
+        else: await message.answer(welcome, reply_markup=kb, disable_web_page_preview=True, protect_content=bool(media.get("type")))
     except Exception as media_exc:
         log.warning("Welcome media failed; sending text fallback: %s", media_exc)
-        await message.answer(welcome, reply_markup=kb, disable_web_page_preview=True)
+        await message.answer(welcome, reply_markup=kb, disable_web_page_preview=True, protect_content=bool(media.get("type")))
 
 @dp.message(Command("menu"))
 async def menu_command(message: Message, state: FSMContext):
@@ -755,9 +779,71 @@ async def admin_router(call: CallbackQuery, state: FSMContext):
     elif action=="notes":
         await call.message.answer("📝 <b>ملاحظاتي</b>\nاختر إنشاء ملاحظة نصية أو صورة، ثم يمكنك تعديلها أو حذفها أو نشرها لجميع المستخدمين.", reply_markup=make_keyboard([[ ("✍️ ملاحظة نصية", "admin:note:text"), ("🖼️ ملاحظة بصورة", "admin:note:photo")],[ ("📋 الملاحظات الحالية", "admin:note:list")],[ ("↩️ لوحة الإدارة", "menu:home")]]))
     elif action=="pause":
-        DB["paused"]=not DB.get("paused",False); await save_db()
-        status="تم إيقاف البوت مؤقتًا." if DB["paused"] else "تم تشغيل البوت مجددًا."
-        await call.message.answer(status,reply_markup=main_keyboard(True))
+        paused = DB.get("paused", False)
+        pause_media = DB.get("settings", {}).get("pause_media") or {}
+        media_label = pause_media.get("type") or "لا توجد وسائط معينة"
+        await call.message.answer(
+            f"⛔ <b>إدارة إيقاف البوت</b>\nالحالة: {'متوقف' if paused else 'نشط'}\nوسائط الإيقاف الحالية: {html.escape(str(media_label))}\n\nاختر وسائط الاعتذار أو الإيقاف الفوري:",
+            reply_markup=make_keyboard([[ ("🖼️ تعيين صورة", "admin:pause:photo"), ("🎥 تعيين فيديو", "admin:pause:video")],[ ("🎞️ صورة GIF", "admin:pause:animation")],[ ("⛔ إيقاف بالوسائط المحددة", "admin:pause:stop_media")],[ ("⚡ إيقاف فوري", "admin:pause:instant")],[ ("▶️ تشغيل البوت", "admin:pause:resume")],[ ("🗑️ إزالة وسائط الإيقاف", "admin:pause:remove")],[ ("↩️ لوحة الإدارة", "menu:home")]]))
+
+# ------------------------------ Admin: pause media controls ------------------------------
+@dp.callback_query(F.data.startswith("admin:pause:"))
+async def admin_pause_options(call: CallbackQuery, state: FSMContext):
+    if not await is_owner(call.from_user.id):
+        return await call.answer("غير مصرح", show_alert=True)
+    choice = call.data.split(":")[-1]
+    await call.answer()
+    if choice in ("photo", "video", "animation"):
+        await state.clear()
+        await state.set_state(Flow.awaiting_pause_media)
+        await state.update_data(pause_media_type=choice)
+        prompt = {"photo":"🖼️ أرسل صورة الاعتذار الآن.", "video":"🎥 أرسل فيديو الاعتذار الآن.", "animation":"🎞️ أرسل GIF الاعتذار الآن."}[choice]
+        return await call.message.answer(prompt + "\nبعد استلام الوسائط سأطلب منك رسالة اختيارية.")
+    settings = DB.setdefault("settings", {})
+    if choice == "stop_media":
+        DB["paused"] = True
+        await save_db()
+        return await call.message.answer("⛔ تم إيقاف البوت باستخدام الوسائط المحددة. سيظهر الاعتذار المحفوظ للمستخدمين.", reply_markup=main_keyboard(True))
+    if choice == "instant":
+        DB["paused"] = True
+        settings["pause_media"] = {"type":"text", "value":None, "note":"", "updated_at":utcnow()}
+        await save_db()
+        return await call.message.answer("⚡ تم إيقاف البوت فورًا دون صورة أو فيديو أو GIF. المستخدمون سيشاهدون رسالة نصية فقط.", reply_markup=main_keyboard(True))
+    if choice == "resume":
+        DB["paused"] = False
+        await save_db()
+        return await call.message.answer("▶️ تم تشغيل البوت مجددًا.", reply_markup=main_keyboard(True))
+    if choice == "remove":
+        settings.pop("pause_media", None)
+        DB["paused"] = True
+        await save_db()
+        return await call.message.answer("🗑️ أزيلت وسائط الإيقاف. سيظهر اعتذار نصي عند توقف البوت.", reply_markup=main_keyboard(True))
+
+@dp.message(Flow.awaiting_pause_media)
+async def admin_pause_media_upload(message: Message, state: FSMContext):
+    if not await is_owner(message.from_user.id):
+        await state.clear(); return
+    data = await state.get_data(); typ = data.get("pause_media_type"); fid = None
+    if typ == "photo" and message.photo: fid = message.photo[-1].file_id
+    elif typ == "video" and message.video: fid = message.video.file_id
+    elif typ == "animation" and message.animation: fid = message.animation.file_id
+    if not fid:
+        return await message.answer("❗ أرسل الوسائط من النوع الذي اخترته.")
+    await state.update_data(pause_media_file_id=fid)
+    await state.set_state(Flow.awaiting_pause_note)
+    await message.answer("📝 أرسل رسالة الاعتذار الاختيارية، أو اكتب <code>تخطي</code> لاستخدام الرسالة الافتراضية.")
+
+@dp.message(Flow.awaiting_pause_note)
+async def admin_pause_media_note(message: Message, state: FSMContext):
+    if not await is_owner(message.from_user.id):
+        await state.clear(); return
+    data = await state.get_data(); typ = data.get("pause_media_type"); fid = data.get("pause_media_file_id")
+    note = (message.text or "").strip()
+    if note.lower() in ("تخطي", "skip", "—"): note = ""
+    DB.setdefault("settings", {})["pause_media"] = {"type":typ, "value":fid, "note":note, "updated_at":utcnow()}
+    await save_db(); await state.clear()
+    await message.answer(f"✅ تم حفظ وسائط الإيقاف ({typ}) والرسالة الاختيارية. ستُرسل للمستخدمين بشكل محمي عند تفعيل الإيقاف.", reply_markup=main_keyboard(True))
+
 
 async def admin_contributors(call: CallbackQuery, page: int):
     contribs={}
@@ -983,7 +1069,7 @@ async def admin_welcome_choice(call: CallbackQuery, state: FSMContext):
     if choice not in ("photo","video","animation"): return
     await state.set_state(Flow.awaiting_welcome_media); await state.update_data(welcome_type=choice)
     prompt={"photo":"🖼️ أرسل الصورة الآن.","video":"🎥 أرسل الفيديو الآن.","animation":"🎞️ أرسل GIF متحركة الآن."}[choice]
-    await call.message.answer(prompt+"\nسيتم تطبيقها مباشرة وحفظها.")
+    await call.message.answer(prompt+"\nسيتم تطبيقها مباشرة وحفظها، وإرفاق رسالة اختيارية. ستُرسل للمستخدمين مع حماية المحتوى من إعادة التوجيه والحفظ المعتاد.")
 
 @dp.message(Flow.awaiting_welcome_media)
 async def admin_welcome_upload(message: Message, state: FSMContext):
@@ -993,8 +1079,20 @@ async def admin_welcome_upload(message: Message, state: FSMContext):
     elif typ=="video" and message.video: fid=message.video.file_id
     elif typ=="animation" and message.animation: fid=message.animation.file_id
     if not fid: return await message.answer("❗ أرسل الوسائط المطلوبة حسب النوع المختار.")
-    DB.setdefault("settings",{})["welcome_media"]={"type":typ,"value":fid,"updated_at":utcnow()}; await save_db(); await state.clear()
-    await message.answer("✨ تم تحديث وسائط الترحيب تلقائيًا. ستظهر للمستخدمين عند تشغيل البوت.")
+    await state.update_data(welcome_media_file_id=fid)
+    await state.set_state(Flow.awaiting_welcome_note)
+    await message.answer("📝 أرسل رسالة ترحيب اختيارية لتظهر مع الوسائط، أو اكتب <code>تخطي</code> لاستخدام رسالة الترحيب الافتراضية.")
+
+
+@dp.message(Flow.awaiting_welcome_note)
+async def admin_welcome_note(message: Message, state: FSMContext):
+    if not await is_owner(message.from_user.id): await state.clear(); return
+    data=await state.get_data(); typ=data.get("welcome_type"); fid=data.get("welcome_media_file_id")
+    note=(message.text or "").strip()
+    if note.lower() in ("تخطي", "skip", "—"): note=""
+    DB.setdefault("settings", {})["welcome_media"]={"type":typ,"value":fid,"note":note,"updated_at":utcnow()}
+    await save_db(); await state.clear()
+    await message.answer("✨ تم تحديث وسائط الترحيب والرسالة الاختيارية. ستظهر للمستخدمين عند بدء البوت، مع حماية المحتوى.")
 
 
 @dp.callback_query(F.data == "admin:note:text")
