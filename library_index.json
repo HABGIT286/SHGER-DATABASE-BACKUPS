@@ -100,7 +100,7 @@
       "name": "دِ٘اِ٘اِ٘نِ٘ـي٘اِ٘اِ٘ݪ​​​​𔔁",
       "username": "MOTRXVIP",
       "first_seen": "2026-11-26T07:25:50+00:00",
-      "last_seen": "2026-11-26T15:46:05+00:00",
+      "last_seen": "2026-11-26T15:55:11+00:00",
       "blocked": false,
       "downloads": [
         {
@@ -136,7 +136,7 @@
     }
   },
   "banned": [],
-  "paused": true,
+  "paused": false,
   "settings": {
     "welcome_media": {
       "type": "video",
