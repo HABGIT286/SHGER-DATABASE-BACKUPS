@@ -25,6 +25,28 @@
       "status": "published",
       "source_id": "DOC-0005",
       "published_at": "2026-11-26T10:23:32+00:00"
+    },
+    {
+      "type": "photo",
+      "file_ids": [
+        "AgACAgIAAxkBAAOuawgJowABqUbBxGIlNPhlCGRkU-u7AAKlIWsb6oVBSJC3YKWiHxHSAQADAgADeAADPQQ",
+        "AgACAgIAAxkBAAOvawgJo9pakewMpBbjrTz2e6ujpooAAqYhaxvqhUFIU9TUpn1ntT4BAAMCAAN5AAM9BA"
+      ],
+      "title": "تجرب",
+      "note": "تجرب",
+      "year": null,
+      "user_id": 7753969972,
+      "user_name": "⌯ .𝐎𝐍𝐘𝐗ぷ𓆤",
+      "username": "ONX44",
+      "created_at": "2026-11-26T10:28:02+00:00",
+      "channel_message_ids": [
+        13,
+        14,
+        15
+      ],
+      "status": "published",
+      "source_id": "IMG-0001",
+      "published_at": "2026-11-26T10:28:05+00:00"
     }
   ],
   "users": {
