@@ -438,7 +438,7 @@ async def start(message: Message, state: FSMContext):
               "📌 جميع المصادر تقدم مجاناً ويمنع بيعها\n\n"
               "🪩 <b>زكـاة الـعلـم نـشــره</b> 🔹\n"
               "━━━━━━━━━━━━━━━━━━━━\n"
-              f"🔷 قناة مـدارك الــمعـرفة: <a href='{CHANNEL_URL}'>@Kh_JOORE_BusinessLibrary</a>\n"
+              f"🔷 قناة مـدارك الــمعـرفة: <a href='{CHANNEL_URL}'>@HRM800</a>\n"
               "🔷 إدارة الأعمال: مكتبة مصادر تخصصية\n"
               "🔷 جـامــعــة كــربــلاء:  دفــعــة -2026-")
     kb = main_keyboard(await is_owner(user.id))
