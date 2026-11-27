@@ -25,11 +25,15 @@
       "status": "published",
       "source_id": "DOC-0005",
       "published_at": "2026-11-26T10:23:32+00:00",
-      "download_count": 1,
+      "download_count": 2,
       "download_events": [
         {
           "user_id": 910624538,
           "requested_at": "2026-11-26T15:42:47+00:00"
+        },
+        {
+          "user_id": 7843506705,
+          "requested_at": "2026-11-27T05:16:43+00:00"
         }
       ]
     },
@@ -139,10 +143,18 @@
       "name": "ْ",
       "username": null,
       "first_seen": "2026-11-27T05:11:37+00:00",
-      "last_seen": "2026-11-27T05:11:37+00:00",
+      "last_seen": "2026-11-27T05:16:42+00:00",
       "blocked": false,
-      "downloads": [],
-      "download_count": 0,
+      "downloads": [
+        {
+          "user_id": 7843506705,
+          "source_id": "DOC-0005",
+          "title": "مشاريع",
+          "type": "file",
+          "requested_at": "2026-11-27T05:16:43+00:00"
+        }
+      ],
+      "download_count": 1,
       "published_source_ids": []
     },
     "7258679404": {
@@ -186,6 +198,13 @@
       "title": "تجرب",
       "type": "photo",
       "requested_at": "2026-11-26T15:42:52+00:00"
+    },
+    {
+      "user_id": 7843506705,
+      "source_id": "DOC-0005",
+      "title": "مشاريع",
+      "type": "file",
+      "requested_at": "2026-11-27T05:16:43+00:00"
     }
   ],
   "ban_history": [],
