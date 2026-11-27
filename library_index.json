@@ -215,7 +215,10 @@
       "text": "",
       "file_id": "AgACAgIAAxkBAAIBtGsJHdI-vUO1beHygvzc6qwfn_icAAK3J2sb6oVRSNOHG_ZWDk78AQADAgADeAADPQQ",
       "created_at": "2026-11-27T06:06:10+00:00",
-      "status": "draft"
+      "status": "published",
+      "published_at": "2026-11-27T06:06:14+00:00",
+      "sent_count": 5,
+      "failed_count": 0
     }
   }
 }
