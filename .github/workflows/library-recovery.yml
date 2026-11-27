@@ -1,17 +1,17 @@
 
-name: Madarek Library Recovery
+name: Madarek Auto Recovery
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '*/5 * * * *'
 
 permissions:
   actions: write
   contents: read
 
 concurrency:
-  group: madarek-recovery-monitor
+  group: madarek-auto-recovery
   cancel-in-progress: false
 
 jobs:
@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - name: Check bot and recover if failed
+      - name: Detect failure and restore bot
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           TOKENN: ${{ secrets.TOKENN }}
@@ -30,154 +30,143 @@ jobs:
         run: |
           python - <<'PY'
           import os
+          import sys
           import json
+          import time
           import urllib.request
           import urllib.error
-          import sys
           from datetime import datetime, timezone
 
-          GH_TOKEN = os.environ.get("GH_TOKEN", "").strip()
+          GH_TOKEN = os.environ["GH_TOKEN"].strip()
           TG_TOKEN = os.environ.get("TOKENN", "").strip()
           ADMIN_ID = os.environ.get("ID_TELE", "").strip()
           LOGO = os.environ.get("WELCOME_IMAGE", "").strip()
-          REPO = os.environ.get("REPOSITORY", "").strip()
+          REPO = os.environ["REPOSITORY"].strip()
 
-          WORKFLOW_FILE = "library-bot.yml"
+          TARGET = "library.yml"
           MAX_ATTEMPTS = 3
           MAX_AGE_MINUTES = 45
 
-          if not GH_TOKEN or not REPO:
-              print("Missing GH_TOKEN or REPOSITORY.")
-              sys.exit(1)
-
-          GH_API = "https://api.github.com"
-          GH_HEADERS = {
+          API = "https://api.github.com"
+          HEADERS = {
               "Authorization": f"Bearer {GH_TOKEN}",
               "Accept": "application/vnd.github+json",
               "X-GitHub-Api-Version": "2022-11-28",
-              "User-Agent": "Madarek-Recovery"
+              "User-Agent": "Madarek-Auto-Recovery"
           }
 
-          def github_request(path, method="GET"):
-              req = urllib.request.Request(
-                  f"{GH_API}/repos/{REPO}/{path}",
-                  headers=GH_HEADERS,
-                  method=method
-              )
-              with urllib.request.urlopen(req, timeout=30) as response:
-                  raw = response.read().decode("utf-8", errors="replace")
-                  return response.status, json.loads(raw) if raw.strip() else {}
-
-          def telegram_send(text):
-              if not TG_TOKEN or not ADMIN_ID:
-                  print("Telegram secrets missing; notification skipped.")
-                  return
-
-              base = f"https://api.telegram.org/bot{TG_TOKEN}"
-
-              try:
-                  if LOGO:
-                      payload = {
-                          "chat_id": ADMIN_ID,
-                          "photo": LOGO,
-                          "caption": text
-                      }
-                      endpoint = "sendPhoto"
-                  else:
-                      payload = {
-                          "chat_id": ADMIN_ID,
-                          "text": text
-                      }
-                      endpoint = "sendMessage"
-
-                  req = urllib.request.Request(
-                      f"{base}/{endpoint}",
-                      data=json.dumps(payload).encode("utf-8"),
-                      headers={"Content-Type": "application/json"},
-                      method="POST"
-                  )
-
-                  with urllib.request.urlopen(req, timeout=25) as response:
-                      result = json.loads(response.read().decode())
-                      print("Telegram notification:", result.get("ok"))
-
-              except Exception as exc:
-                  print("Telegram notification failed:", type(exc).__name__)
-
-          def now():
+          def utc_now():
               return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
-          def alert(title, details):
+          def gh(path, method="GET"):
+              req = urllib.request.Request(
+                  f"{API}/repos/{REPO}/{path}",
+                  headers=HEADERS,
+                  method=method
+              )
+              with urllib.request.urlopen(req, timeout=30) as res:
+                  raw = res.read().decode("utf-8", errors="replace")
+                  return res.status, json.loads(raw) if raw.strip() else {}
+
+          def telegram(text):
+              if not TG_TOKEN or not ADMIN_ID:
+                  print("Telegram secrets missing.")
+                  return
+
+              endpoint = "sendPhoto" if LOGO else "sendMessage"
+              payload = {"chat_id": ADMIN_ID}
+
+              if LOGO:
+                  payload["photo"] = LOGO
+                  payload["caption"] = text[:1000]
+              else:
+                  payload["text"] = text
+
+              req = urllib.request.Request(
+                  f"https://api.telegram.org/bot{TG_TOKEN}/{endpoint}",
+                  data=json.dumps(payload).encode(),
+                  headers={"Content-Type": "application/json"},
+                  method="POST"
+              )
+
+              try:
+                  with urllib.request.urlopen(req, timeout=25) as res:
+                      result = json.loads(res.read().decode())
+                      print("Telegram sent:", result.get("ok"))
+              except Exception as e:
+                  print("Telegram error:", type(e).__name__, str(e))
+
+          def report(title, body):
               message = (
                   f"{title}\n\n"
-                  f"🛡️ Madarek Recovery System\n"
-                  f"━━━━━━━━━━━━━━━━━━\n"
-                  f"{details}\n"
-                  f"━━━━━━━━━━━━━━━━━━\n"
-                  f"🕒 {now()}"
+                  "🛡️ MADAREK AUTO RECOVERY\n"
+                  "━━━━━━━━━━━━━━━━━━\n"
+                  f"{body}\n"
+                  "━━━━━━━━━━━━━━━━━━\n"
+                  f"🕒 {utc_now()}"
               )
               print(message)
-              telegram_send(message)
+              telegram(message)
 
-          print("MADAREK RECOVERY STARTED")
-          print("Repository:", REPO)
-          print("Time:", now())
+          if not GH_TOKEN:
+              print("GH_TOKEN is missing.")
+              sys.exit(1)
 
-          # Get the latest workflow runs.
+          print("Recovery monitor started:", utc_now())
+
+          # Read recent runs of the main workflow.
           try:
-              _, data = github_request(
-                  f"actions/workflows/{WORKFLOW_FILE}/runs?per_page=5"
+              _, data = gh(
+                  f"actions/workflows/{TARGET}/runs?per_page=10"
               )
-          except Exception as exc:
-              alert(
-                  "🚨 RECOVERY MONITOR ERROR",
-                  f"تعذر الوصول إلى GitHub Actions.\n"
-                  f"الخطأ: {type(exc).__name__}"
+          except Exception as e:
+              report(
+                  "🚨 GITHUB CHECK FAILED",
+                  f"تعذر فحص تشغيل البوت.\n"
+                  f"الخطأ: {type(e).__name__}: {str(e)[:300]}"
               )
               sys.exit(1)
 
           runs = data.get("workflow_runs", [])
 
           if not runs:
-              alert(
-                  "⚠️ BOT RUN NOT FOUND",
-                  f"لم يتم العثور على تشغيل للملف:\n"
-                  f"📄 {WORKFLOW_FILE}\n"
-                  f"📦 Repository: {REPO}"
+              report(
+                  "🚨 BOT WORKFLOW NOT FOUND",
+                  f"لم يتم العثور على تشغيل للملف:\n{TARGET}"
               )
               sys.exit(1)
 
           run = runs[0]
-          run_id = run.get("id")
+          run_id = run["id"]
           status = run.get("status")
           conclusion = run.get("conclusion")
           attempt = int(run.get("run_attempt", 1))
           run_url = run.get("html_url", "")
           created_at = run.get("created_at", "")
 
-          print("Latest run ID:", run_id)
+          print("Run ID:", run_id)
           print("Status:", status)
           print("Conclusion:", conclusion)
           print("Attempt:", attempt)
 
-          # Workflow is running. Do not interfere.
+          # Active or queued run: do not start another.
           if status in ("in_progress", "queued"):
-              print("Bot workflow is active. No action needed.")
+              print("Bot workflow is active. No action.")
               sys.exit(0)
 
-          # Bot workflow completed successfully.
+          # Successful run: no recovery needed.
           if status == "completed" and conclusion == "success":
-              print("Bot workflow succeeded.")
+              print("Latest run succeeded.")
               sys.exit(0)
 
-          # Recover only recognized failure states.
+          # Only recover these failure states.
           if status != "completed" or conclusion not in (
               "failure", "cancelled", "timed_out"
           ):
               print("No recovery action required.")
               sys.exit(0)
 
-          # Avoid recovering an old failure.
+          # Ignore old failures.
           try:
               created = datetime.fromisoformat(
                   created_at.replace("Z", "+00:00")
@@ -189,72 +178,125 @@ jobs:
               age = 999999
 
           if age > MAX_AGE_MINUTES:
-              alert(
-                  "⚠️ RECOVERY EXPIRED",
-                  f"اكتشاف تشغيل فاشل قديم.\n\n"
-                  f"📄 Workflow: {WORKFLOW_FILE}\n"
-                  f"🆔 Run ID: {run_id}\n"
-                  f"❌ الحالة: {conclusion}\n"
-                  f"لم تتم إعادة التشغيل لأن عمر الفشل تجاوز "
+              report(
+                  "⚠️ RECOVERY WINDOW EXPIRED",
+                  f"اكتشاف تشغيل فاشل قديم.\n"
+                  f"Workflow: {TARGET}\n"
+                  f"Run ID: {run_id}\n"
+                  f"الحالة: {conclusion}\n"
+                  f"لم تتم إعادة التشغيل بسبب تجاوز "
                   f"{MAX_AGE_MINUTES} دقيقة.\n"
-                  f"🔗 {run_url}"
+                  f"{run_url}"
               )
               sys.exit(0)
 
-          # Stop automatic recovery after the retry limit.
+          # Stop when retry limit has been reached.
           if attempt >= MAX_ATTEMPTS:
-              alert(
-                  "🛑 RECOVERY LIMIT REACHED",
-                  f"وصل التشغيل إلى الحد الأقصى للمحاولات.\n\n"
-                  f"📄 Workflow: {WORKFLOW_FILE}\n"
-                  f"🆔 Run ID: {run_id}\n"
-                  f"🔢 Attempts: {attempt}/{MAX_ATTEMPTS}\n"
-                  f"❌ الحالة: {conclusion}\n"
-                  f"🔗 {run_url}"
+              report(
+                  "🛑 RECOVERY RETRY LIMIT",
+                  f"وصل التشغيل إلى حد المحاولات.\n"
+                  f"Workflow: {TARGET}\n"
+                  f"Run ID: {run_id}\n"
+                  f"Attempts: {attempt}/{MAX_ATTEMPTS}\n"
+                  f"Conclusion: {conclusion}\n"
+                  f"{run_url}"
               )
               sys.exit(0)
 
-          # Request GitHub Actions to rerun the failed workflow.
+          # Notify administration before attempting recovery.
+          report(
+              "🚨 BOT FAILURE DETECTED",
+              f"تم اكتشاف فشل في تشغيل البوت.\n\n"
+              f"📄 Workflow: {TARGET}\n"
+              f"🆔 Run ID: {run_id}\n"
+              f"❌ الحالة: {conclusion}\n"
+              f"🔢 المحاولة السابقة: {attempt}/{MAX_ATTEMPTS}\n"
+              f"🔄 يتم طلب إعادة التشغيل الآن.\n"
+              f"{run_url}"
+          )
+
+          # Ask GitHub to rerun the failed workflow.
           try:
-              code, _ = github_request(
+              code, _ = gh(
                   f"actions/runs/{run_id}/rerun",
                   method="POST"
               )
+              print("Rerun request accepted. HTTP:", code)
 
-              alert(
-                  "🔄 MADAREK — RECOVERY REQUESTED",
-                  f"تم اكتشاف فشل في تشغيل البوت.\n"
-                  f"تم إرسال طلب إعادة تشغيل إلى GitHub Actions.\n\n"
-                  f"📄 الملف: {WORKFLOW_FILE}\n"
-                  f"🆔 Run ID: {run_id}\n"
-                  f"🔢 المحاولة السابقة: {attempt}/{MAX_ATTEMPTS}\n"
-                  f"⚠️ الحالة السابقة: {conclusion}\n"
-                  f"📡 HTTP: {code}\n"
-                  f"🔗 متابعة التشغيل:\n{run_url}"
+          except urllib.error.HTTPError as e:
+              details = e.read().decode("utf-8", errors="replace")
+              report(
+                  "❌ RESTART REQUEST FAILED",
+                  f"تعذر إرسال طلب إعادة التشغيل.\n"
+                  f"HTTP: {e.code}\n"
+                  f"Details: {details[:500]}\n"
+                  f"{run_url}"
               )
+              sys.exit(1)
 
-          except urllib.error.HTTPError as exc:
-              body = exc.read().decode("utf-8", errors="replace")
+          except Exception as e:
+              report(
+                  "❌ RECOVERY REQUEST ERROR",
+                  f"{type(e).__name__}: {str(e)[:500]}\n"
+                  f"{run_url}"
+              )
+              sys.exit(1)
 
-              alert(
-                  "🚨 RECOVERY REQUEST FAILED",
-                  f"فشل طلب إعادة التشغيل.\n\n"
-                  f"📄 Workflow: {WORKFLOW_FILE}\n"
+          # Wait and verify the new attempt.
+          print("Waiting for the new run to start...")
+
+          recovered = False
+          new_attempt = attempt + 1
+
+          for _ in range(18):
+              time.sleep(5)
+
+              try:
+                  _, updated = gh(f"actions/runs/{run_id}")
+                  new_attempt = int(updated.get("run_attempt", attempt))
+                  new_status = updated.get("status")
+                  new_conclusion = updated.get("conclusion")
+
+                  print(
+                      "Verification:",
+                      new_attempt,
+                      new_status,
+                      new_conclusion
+                  )
+
+                  if new_attempt > attempt and new_status == "completed":
+                      if new_conclusion == "success":
+                          recovered = True
+                          break
+                      else:
+                          break
+
+                  if new_attempt > attempt and new_status == "in_progress":
+                      break
+
+              except Exception as e:
+                  print("Verification error:", type(e).__name__)
+
+          if recovered:
+              report(
+                  "✅ BOT RESTORED SUCCESSFULLY",
+                  f"تمت إعادة تشغيل البوت بنجاح.\n\n"
+                f"📄 Workflow: {TARGET}\n"
+                f"🆔 Run ID: {run_id}\n"
+                f"🔢 Attempt: {new_attempt}\n"
+                f"🟢 النتيجة: SUCCESS\n"
+                f"🔗 {run_url}"
+            )
+          else:
+              report(
+                  "🔄 RECOVERY IN PROGRESS",
+                  f"تم إرسال طلب إعادة التشغيل، لكن لم يتم "
+                  f"تأكيد النجاح خلال فترة التحقق.\n\n"
+                  f"📄 Workflow: {TARGET}\n"
                   f"🆔 Run ID: {run_id}\n"
-                  f"HTTP: {exc.code}\n"
-                  f"Details: {body[:800]}\n"
+                  f"🔢 المحاولة: {attempt + 1}/{MAX_ATTEMPTS}\n"
+                  f"يرجى متابعة حالة التشغيل في GitHub Actions.\n"
                   f"🔗 {run_url}"
-              )
-              sys.exit(1)
-
-          except Exception as exc:
-              alert(
-                  "🚨 RECOVERY SYSTEM ERROR",
-                  f"حدث خطأ غير متوقع.\n"
-                  f"نوع الخطأ: {type(exc).__name__}\n"
-                  f"التفاصيل: {str(exc)[:800]}\n"
-                  f"Run ID: {run_id}"
-              )
-              sys.exit(1)
+            )
 
           PY
