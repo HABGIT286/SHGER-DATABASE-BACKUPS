@@ -1,47 +1,447 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#e8ebef">
-<title>NOIR · مركز التحكم</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=DM+Sans:wght@400;500;700&family=Cinzel:wght@500;600;700&family=Playfair+Display:wght@500;600;700&family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;700&family=Amiri:wght@400;700&family=El+Messiri:wght@400;600;700&family=Reem+Kufi+Fun&family=Rakkas&family=Katibeh&family=Noto+Kufi+Arabic:wght@400;600;700&family=Noto+Naskh+Arabic:wght@400;700&family=Lateef:wght@400;700&family=Aref+Ruqaa:wght@400;700&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#eef1f5;--card:#f8fafc;--ink:#19232f;--muted:#6d7784;--line:#d2dae4;--accent:#a88743;--accent2:#737f8e;--shadow:0 18px 45px #19232f12, inset 0 1px 0 #fff;--radius:24px;--arabic:'Noto Kufi Arabic',sans-serif;--latin:'Cinzel',serif}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 12% 5%,#fff 0,transparent 30%),radial-gradient(ellipse at 90% 15%,#d9e2ec 0,transparent 30%),var(--bg);color:var(--ink);font-family:var(--arabic);min-height:100vh}button,a,select{font:inherit}a{color:inherit;text-decoration:none}button{cursor:pointer;color:inherit}button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}button{-webkit-tap-highlight-color:transparent}button:active{transform:scale(.985)}.shell{max-width:1450px;margin:auto;padding:24px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 18px;border:1px solid #d6dee8;background:#ffffffa8;backdrop-filter:blur(18px);border-radius:22px;box-shadow:var(--shadow)}.brand{display:flex;align-items:center;gap:14px}.brandmark{width:54px;height:54px;border-radius:17px;background:linear-gradient(145deg,#fff,#dbe1e8);border:1px solid #c3ccd8;box-shadow:inset 0 1px 0 white,0 8px 16px #1d29371a;display:grid;place-items:center;color:#987439}.brandmark svg{width:29px}.brandname{font:700 22px var(--latin);letter-spacing:3px}.brandsub{font:12px var(--arabic);color:var(--muted);margin-top:3px}.top-actions{display:flex;gap:9px;flex-wrap:wrap}.btn,.iconbtn{border:1px solid var(--line);background:linear-gradient(140deg,#fff,#e8edf2);border-radius:13px;box-shadow:0 4px 12px #1e293710,inset 0 1px 0 white;padding:10px 14px;display:inline-flex;align-items:center;justify-content:center;gap:9px;transition:.2s}.btn:hover,.iconbtn:hover{border-color:#b7c3d0;box-shadow:0 9px 18px #1e293718,inset 0 1px 0 white;transform:translateY(-1px)}.btn svg,.iconbtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7}.btn.primary{background:linear-gradient(145deg,#c8b27b,#9e7937);color:#fff;border-color:#b79a5b}.btn.dark{background:linear-gradient(145deg,#303a48,#151d27);color:#f4f6f8;border-color:#303a48}.hero{padding:38px 6px 25px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px}.eyebrow{font:600 11px var(--latin);letter-spacing:3px;color:var(--accent);text-transform:uppercase}.hero h1{margin:12px 0 10px;font-size:clamp(24px,4vw,42px);letter-spacing:-.5px}.hero p{margin:0;color:var(--muted);font-size:14px;max-width:650px;line-height:2}.hero-meta{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:#ffffffb0;color:var(--muted);font-size:12px;white-space:nowrap}.pulse{width:8px;height:8px;border-radius:50%;background:#8798a8;box-shadow:0 0 0 5px #8798a81a}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:17px}.card{background:linear-gradient(145deg,#ffffffd9,#f4f7f9);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;position:relative;overflow:hidden}.card:before{content:"";position:absolute;inset:0 auto auto 0;width:100%;height:1px;background:linear-gradient(90deg,transparent,#fff,transparent);pointer-events:none}.card h2{margin:0;font-size:17px}.card p{color:var(--muted);line-height:1.9;font-size:13px}.sectionhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}.sectionhead small{color:var(--muted)}.controlcard{grid-column:span 8}.sidecard{grid-column:span 4}.controlgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.action{border:1px solid #d6dee8;border-radius:18px;background:linear-gradient(145deg,#fff,#edf1f5);min-height:118px;padding:17px;text-align:right;display:flex;flex-direction:column;justify-content:space-between;transition:.22s;box-shadow:0 8px 18px #202b3810,inset 0 1px 0 white}.action:hover{transform:translateY(-3px);border-color:#b7c5d3;box-shadow:0 15px 24px #202b3815}.action .glyph{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;color:var(--accent);background:linear-gradient(145deg,#fff,#e7edf2);border:1px solid #d5dde6;box-shadow:inset 0 1px 0 white}.glyph svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.6}.action strong{font-size:14px}.action span.desc{font-size:11px;color:var(--muted);margin-top:5px}.native-note{background:#f0f3f7;border:1px dashed #bbc7d4;border-radius:16px;padding:15px;color:#556171;font-size:12px;line-height:1.9}.side-links{display:grid;gap:10px}.side-link{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff9;transition:.2s}.side-link:hover{background:#fff;transform:translateX(-2px)}.side-link svg{width:18px;height:18px;stroke:var(--accent2);fill:none;stroke-width:1.7}.side-link small{display:block;color:var(--muted);font-size:10px;margin-top:3px}.side-link strong{font-size:12px}.tiles{grid-column:span 12;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.tile{display:flex;gap:15px;align-items:center}.tile .tileicon{width:48px;height:48px;border-radius:16px;border:1px solid var(--line);background:linear-gradient(145deg,#fff,#e6ebf1);display:grid;place-items:center;color:var(--accent2);flex-shrink:0}.tileicon svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7}.tile h3{font-size:13px;margin:0 0 4px}.tile p{margin:0;font-size:11px}.themebox{grid-column:span 6}.fontbox{grid-column:span 6}.selects{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field label{font-size:12px;color:var(--muted);display:block;margin-bottom:7px}.field select{width:100%;padding:12px;border:1px solid var(--line);background:#fff;border-radius:12px;color:var(--ink)}.preview{margin-top:14px;border:1px solid var(--line);background:#ffffffb7;border-radius:16px;padding:20px;min-height:70px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:19px}.footer{margin:24px 4px 8px;display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:11px}.warning{border-color:#d8c79d;background:linear-gradient(145deg,#fffdf6,#f8f1df)}.warning h2{color:#94733c}.theme-chip{font:11px var(--latin);letter-spacing:1px;color:var(--muted)}@media(max-width:1000px){.controlcard,.sidecard{grid-column:span 12}.tiles{grid-template-columns:repeat(2,1fr)}.themebox,.fontbox{grid-column:span 12}}@media(max-width:650px){.shell{padding:12px}.top{padding:12px;align-items:flex-start}.brandmark{width:44px;height:44px}.brandname{font-size:18px}.top-actions .btn{padding:9px 10px;font-size:11px}.hero{display:block;padding:25px 4px}.hero-meta{margin-top:16px;display:inline-flex}.controlgrid{grid-template-columns:1fr 1fr}.action{min-height:115px}.tiles{grid-template-columns:1fr}.selects{grid-template-columns:1fr}.footer{flex-direction:column}}
-</style></head>
-<body><div class="shell">
-<header class="top"><div class="brand"><div class="brandmark"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M16 3 27 9v14L16 29 5 23V9z"/><path d="M11 20V12l10 8v-8"/><path d="M8 8 24 24" opacity=".22"/></svg></div><div><div class="brandname">NOIR <span style="color:var(--accent)">CONTROL</span></div><div class="brandsub">مركز إدارة مكتبة مدارك المعرفة</div></div></div>
-<div class="top-actions"><a class="btn" href="https://github.com" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.8a3.4 3.4 0 0 0-1-2.7c3.3-.4 6.7-1.6 6.7-7.2a5.6 5.6 0 0 0-1.5-3.8 5.2 5.2 0 0 0-.1-4s-1.2-.4-4 1.5a13.8 13.8 0 0 0-7.3 0C6 4.1 4.8 4.5 4.8 4.5a5.2 5.2 0 0 0-.1 4 5.6 5.6 0 0 0-1.5 3.8c0 5.6 3.4 6.8 6.7 7.2a3.4 3.4 0 0 0-1 2.7V22"/></svg> GitHub</a><button class="btn primary" onclick="openRepoSetup()"><svg viewBox="0 0 24 24"><path d="M12 3v12m0-12 4 4m-4-4L8 7M4 14v5h16v-5"/></svg> إعداد المستودع</button></div></header>
-<section class="hero"><div><div class="eyebrow">Repository-native control center</div><h1>منظومة التحكم المركزية</h1><p>لوحة مستقلة على GitHub Pages. الأزرار تفتح إجراءات GitHub الحقيقية لتأكيد تنفيذ الأوامر من حسابك، دون Backend خارجي أو تخزين رمز وصول في المتصفح.</p></div><div class="hero-meta"><span class="pulse"></span><span>واجهة ثابتة · مصدر الحالة GitHub Actions</span></div></section>
-<div class="grid">
-<section class="card controlcard"><div class="sectionhead"><h2>إجراءات البوت</h2><small>تحكم عبر GitHub Actions</small></div><div class="controlgrid">
-<a class="action" href="#" onclick="goAction('start');return false"><div class="glyph"><svg viewBox="0 0 24 24"><path d="m8 5 11 7-11 7z"/></svg></div><div><strong>تشغيل البوت</strong><span class="desc">إرسال طلب تشغيل workflow</span></div></a>
-<a class="action" href="#" onclick="goAction('restart');return false"><div class="glyph"><svg viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M6.4 9a6.5 6.5 0 0 1 11-2L20 12M4 12l2.5 3a6.5 6.5 0 0 0 11-2"/></svg></div><div><strong>إعادة التشغيل</strong><span class="desc">طلب إعادة تشغيل عبر Actions</span></div></a>
-<a class="action" href="#" onclick="goAction('stop');return false"><div class="glyph"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></div><div><strong>إيقاف البوت</strong><span class="desc">فتح تشغيل Actions لإلغائه</span></div></a>
-<a class="action" href="#" onclick="openRuns();return false"><div class="glyph"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h4"/></svg></div><div><strong>سجل التشغيل</strong><span class="desc">عمليات التشغيل وحالاتها الحقيقية</span></div></a>
-<a class="action" href="#" onclick="openSettings();return false"><div class="glyph"><svg viewBox="0 0 24 24"><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6l1.4 1.4m10 10 1.4 1.4m0-12.8L17.4 7m-10 10-1.8 1.4"/><circle cx="12" cy="12" r="5"/></svg></div><div><strong>Secrets & Variables</strong><span class="desc">إعداد التوكنات والقيم السرية</span></div></a>
-<a class="action" href="#" onclick="openWorkflow();return false"><div class="glyph"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h8M8 17h5"/></svg></div><div><strong>ملف تشغيل البوت</strong><span class="desc">فتح ملف Workflow في المستودع</span></div></a>
-</div><p class="native-note" style="margin-bottom:0">كل إجراء يفتح صفحة GitHub المناسبة؛ لا يوجد اتصال API مباشر من المتصفح ولا Token مكشوف. لإتمام الأمر، يلزم تسجيل الدخول إلى GitHub وتأكيد الإجراء من صفحته.</p></section>
-<aside class="card sidecard"><div class="sectionhead"><h2>الوصول السريع</h2><small>Repository</small></div><div class="side-links">
-<a class="side-link" href="#" onclick="openRepo();return false"><div><strong>المستودع</strong><small>Source files</small></div><svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
-<a class="side-link" href="#" onclick="openActions();return false"><div><strong>GitHub Actions</strong><small>Workflows and runs</small></div><svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
-<a class="side-link" href="#" onclick="openSecrets();return false"><div><strong>Secrets</strong><small>Token and configuration</small></div><svg viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3m-12 0h14v11H5z"/></svg></a>
-<a class="side-link" href="#" onclick="openIssues();return false"><div><strong>الملاحظات والمشكلات</strong><small>Issues</small></div><svg viewBox="0 0 24 24"><path d="M12 3v18M4 7h16M4 17h16"/></svg></a>
-<a class="side-link" href="#" onclick="openDiscord();return false"><div><strong>التواصل</strong><small>رابط التواصل المحفوظ بالموقع</small></div><svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></a></div></aside>
-<div class="tiles"><article class="card tile"><div class="tileicon"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="8"/></svg></div><div><h3>بيانات حقيقية</h3><p>لا إحصاءات مصطنعة داخل الواجهة</p></div></article><article class="card tile"><div class="tileicon"><svg viewBox="0 0 24 24"><path d="M12 3 20 6v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/><path d="m8 12 3 3 5-6"/></svg></div><div><h3>أمان GitHub</h3><p>لا تخزين Secrets داخل HTML</p></div></article><article class="card tile"><div class="tileicon"><svg viewBox="0 0 24 24"><path d="M3 4h18v16H3zM7 8h10M7 12h10M7 16h6"/></svg></div><div><h3>ملف واحد للواجهة</h3><p>HTML + CSS + JavaScript</p></div></article><article class="card tile"><div class="tileicon"><svg viewBox="0 0 24 24"><path d="M4 12h4l2-7 4 14 2-7h4"/></svg></div><div><h3>Actions</h3><p>مصدرك الحقيقي لتنفيذ العمليات</p></div></article></div>
-<section class="card themebox"><div class="sectionhead"><h2>مظهر الواجهة</h2><small class="theme-chip">THEME STUDIO</small></div><div class="selects"><div class="field"><label for="theme">الثيم</label><select id="theme" onchange="setTheme(this.value)"><option value="silver">Silver · فضي</option><option value="midnight">Midnight · ليلي</option><option value="gold">Champagne · ذهبي</option><option value="blue">Ice Blue · جليدي</option><option value="rose">Rose Mist · وردي</option><option value="sage">Sage · أخضر</option><option value="graphite">Graphite · فحمي</option><option value="violet">Amethyst · بنفسجي</option><option value="cream">Ivory · عاجي</option><option value="copper">Copper · نحاسي</option></select></div><div class="field"><label for="font">الخط العربي</label><select id="font" onchange="setFont(this.value)"><option value="Noto Kufi Arabic">Noto Kufi Arabic · كوفي</option><option value="Cairo">Cairo · عصري</option><option value="Amiri">Amiri · نسخ</option><option value="Noto Naskh Arabic">Noto Naskh · نسخ</option><option value="Scheherazade New">Scheherazade · نسخي</option><option value="Lateef">Lateef · لطيف</option><option value="Aref Ruqaa">Aref Ruqaa · رقعة</option><option value="Rakkas">Rakkas · زخرفي</option><option value="Reem Kufi Fun">Reem Kufi · كوفي</option><option value="El Messiri">El Messiri · أنيق</option><option value="Katibeh">Katibeh · كلاسيكي</option></select></div></div><div class="preview" id="preview">مدارك المعرفة · NOIR CONTROL</div></section>
-<section class="card fontbox"><div class="sectionhead"><h2>الخط الإنجليزي</h2><small class="theme-chip">TYPOGRAPHY</small></div><div class="field"><label for="latin">اختيار خط الواجهة الإنجليزية</label><select id="latin" onchange="setLatin(this.value)"><option value="Cinzel">Cinzel · Royal</option><option value="Playfair Display">Playfair Display · Editorial</option><option value="Cormorant Garamond">Cormorant Garamond · Luxury</option><option value="DM Sans">DM Sans · Modern</option><option value="Space Grotesk">Space Grotesk · Tech</option><option value="Inter">Inter · Clean</option><option value="Manrope">Manrope · Soft</option><option value="IBM Plex Sans">IBM Plex Sans · Technical</option></select></div><div class="preview" id="latinpreview" dir="ltr">NOIR · COMMAND & CONTROL</div><p>التغييرات مرئية مباشرة في معاينات الخطوط.</p></section>
-</div><footer class="footer"><span>NOIR CONTROL · Repository-native dashboard</span><span>لا تتصل هذه الواجهة بتليغرام مباشرة — إجراءاتها عبر GitHub</span></footer></div>
-<script>
-const REPO='HABGIT286/SHGER-DATABASE-BACKUPS';const WORKFLOW='ملف تشغيل v6.yml';const BASE='https://github.com/'+REPO;const ACTIONS=BASE+'/actions';const WF=encodeURIComponent(WORKFLOW);
-function openRepo(){window.open(BASE,'_blank','noopener')}function openActions(){window.open(ACTIONS,'_blank','noopener')}function openRuns(){window.open(ACTIONS+'/workflows/'+WF,'_blank','noopener')}function openWorkflow(){window.open(BASE+'/blob/main/.github/workflows/'+WF,'_blank','noopener')}function openSecrets(){window.open(BASE+'/settings/secrets/actions','_blank','noopener')}function openSettings(){openSecrets()}function openIssues(){window.open(BASE+'/issues','_blank','noopener')}function openRepoSetup(){window.open(BASE+'/settings','_blank','noopener')}function openDiscord(){alert('أضف رابط Discord الحقيقي في متغير DISCORD_LINK داخل هذا الملف إذا أردت تفعيل زر التواصل.')}function goAction(action){if(action==='start'){window.open(ACTIONS+'/workflows/'+WF,'_blank','noopener');return}if(action==='restart'){window.open(ACTIONS+'/workflows/'+WF,'_blank','noopener');alert('من صفحة Actions: ألغِ التشغيل الجاري أولاً (Cancel workflow)، ثم اختر Run workflow لتشغيل نسخة جديدة.');return}window.open(ACTIONS,'_blank','noopener');alert('من صفحة Actions افتح التشغيل الجاري واضغط Cancel workflow. لا يمكن إلغاء التشغيل مباشرة من GitHub Pages دون صلاحية API آمنة.')}function setFont(f){document.documentElement.style.setProperty('--arabic',`'${f}',sans-serif`);document.getElementById('preview').style.fontFamily=`'${f}',sans-serif`}function setLatin(f){document.documentElement.style.setProperty('--latin',`'${f}',serif`);document.getElementById('latinpreview').style.fontFamily=`'${f}',serif`}const themes={silver:['#eef1f5','#f8fafc','#19232f','#6d7784','#a88743','#737f8e','#d2dae4'],midnight:['#141a23','#202a36','#f0f3f6','#b3bfcb','#d5b46e','#8b98a8','#3c4b5d'],gold:['#f4efe4','#fffaf0','#382d1b','#85775f','#b78a42','#88765b','#dfd0b1'],blue:['#eaf2f8','#f6fbff','#1c3449','#678195','#6799bd','#7a91a8','#cadbe8'],rose:['#f5ecef','#fff8fb','#3c2530','#947b87','#b8899d','#98828e','#e1cbd5'],sage:['#eaf0eb','#f7fbf8','#22372c','#718478','#a18650','#728779','#cfded2'],graphite:['#252a31','#333a43','#f0f2f5','#aab2bc','#c6a35e','#9aa6b4','#4a5562'],violet:['#eeedf6','#faf9ff','#2c2840','#807b98','#aa8fca','#9185a9','#d6d1e7'],cream:['#f4f0e7','#fffdf7','#383126','#877c68','#aa8847','#968b78','#ddd3bd'],copper:['#f2ebe5','#faf7f3','#3a2c24','#88796c','#b17b4e','#8c7967','#d8c3b0']};function setTheme(name){let t=themes[name]||themes.silver;let r=document.documentElement.style;r.setProperty('--bg',t[0]);r.setProperty('--card',t[1]);r.setProperty('--ink',t[2]);r.setProperty('--muted',t[3]);r.setProperty('--accent',t[4]);r.setProperty('--accent2',t[5]);r.setProperty('--line',t[6]);document.body.style.background=`radial-gradient(ellipse at 12% 5%,#ffffff35 0,transparent 30%),${t[0]}`;document.querySelectorAll('.card,.top').forEach(el=>el.style.background=`linear-gradient(145deg,${t[1]}dd,${t[0]}cc)`)}
-</script>
-<style>
-#noir-lock{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at 20% 15%,#fff 0,#edf1f6 48%,#dbe2eb 100%);backdrop-filter:blur(25px)}#noir-lock[hidden]{display:none!important}#noir-lock-card{width:min(440px,100%);padding:30px;border:1px solid #fff;border-radius:28px;background:linear-gradient(145deg,#ffffffed,#e8edf4);box-shadow:0 28px 90px #23324725,inset 0 1px 0 #fff;text-align:center;color:#273445}#noir-lock-seal{margin:auto auto 15px;width:76px;height:76px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 25% 18%,#fff,#dce5ef 42%,#9aa9ba 75%,#fff);box-shadow:inset 4px 4px 8px #fff,inset -5px -5px 12px #26394a20,0 12px 24px #29394d20;border:1px solid #fff}#noir-lock h2{margin:0;font-size:24px}#noir-lock p{font-size:12px;line-height:2;color:#6d7889}#noir-lock-password{display:block;width:100%;padding:14px;margin:14px 0 10px;border-radius:14px;border:1px solid #d4deea;background:#ffffffc9;color:#263446;outline:none}#noir-lock-submit{width:100%;padding:13px;border-radius:14px;border:1px solid #c7d1dd;background:linear-gradient(145deg,#fff,#dce5ef);box-shadow:inset 0 1px 0 #fff,0 8px 18px #26344715;color:#35465c;font-weight:800;cursor:pointer}#noir-lock-submit:disabled{opacity:.6}#noir-lock-message{min-height:24px;color:#a44e52;font-size:12px;margin-top:10px}#noir-lock-status{display:flex;justify-content:center;align-items:center;gap:8px;color:#7b8796;font-size:11px;margin-top:14px}#noir-lock-dot{width:8px;height:8px;border-radius:50%;background:#a8b1bd}#noir-lock-dot.good{background:#4c9976;box-shadow:0 0 0 4px #4c997622}#noir-lock-dot.bad{background:#c16c6c;box-shadow:0 0 0 4px #c16c6c22}
-</style>
-<div id="noir-lock" role="dialog" aria-modal="true" aria-labelledby="noir-lock-title"><div id="noir-lock-card"><div id="noir-lock-seal"><svg viewBox="0 0 24 24" width="32" fill="none" stroke="#53657a" stroke-width="1.6"><path d="M12 3 4 7v5c0 5 8 9 8 9s8-4 8-9V7z"/><path d="m9 12 2 2 4-5"/></svg></div><h2 id="noir-lock-title">دخول الإدارة</h2><p>NOIR CONTROL · جلسة محمية<br>أدخل كلمة المرور للتحقق وفتح لوحة التحكم.</p><form id="noir-lock-form"><input id="noir-lock-password" type="password" autocomplete="current-password" placeholder="كلمة مرور الإدارة" aria-label="كلمة مرور الإدارة" required><button id="noir-lock-submit" type="submit">التحقق وفتح لوحة التحكم</button></form><div id="noir-lock-message" role="status"></div><div id="noir-lock-status"><span id="noir-lock-dot"></span><span id="noir-lock-status-text">فحص خدمة الربط…</span></div></div></div>
-<script>
-(()=>{const API_BASE='https://YOUR-BACKEND-HOST';const lock=document.getElementById('noir-lock'),form=document.getElementById('noir-lock-form'),pass=document.getElementById('noir-lock-password'),btn=document.getElementById('noir-lock-submit'),msg=document.getElementById('noir-lock-message'),dot=document.getElementById('noir-lock-dot'),statusText=document.getElementById('noir-lock-status-text');let session='';const base=()=>API_BASE.replace(/\/$/,'');const status=(t,c)=>{statusText.textContent=t;dot.className=c||''};async function health(){if(API_BASE.includes('YOUR-BACKEND-HOST')){status('عنوان API يحتاج إعداداً مرة واحدة','bad');return}try{let r=await fetch(base()+'/api/health',{cache:'no-store'});if(!r.ok)throw Error();let j=await r.json();if(!j.ok)throw Error();status('خدمة الربط متصلة','good')}catch(e){status('خدمة الربط غير متاحة — تحقق من API وCORS','bad')}}form.addEventListener('submit',async e=>{e.preventDefault();msg.textContent='';btn.disabled=true;btn.textContent='جارٍ التحقق…';try{if(API_BASE.includes('YOUR-BACKEND-HOST'))throw Error('يجب ضبط رابط API مرة واحدة داخل الملف قبل تسجيل الدخول.');let r=await fetch(base()+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pass.value})}),j=await r.json().catch(()=>({}));if(!r.ok||!j.session)throw Error(j.detail||'فشل التحقق');session=j.session;let verify=await fetch(base()+'/api/status',{headers:{'X-NOIR-SESSION':session},cache:'no-store'});if(!verify.ok)throw Error('فشل تأكيد جلسة الإدارة');window.NOIR_API={base:base(),session:()=>session,request:(path,options={})=>fetch(base()+path,{...options,headers:{...(options.headers||{}),'X-NOIR-SESSION':session}})};window.dispatchEvent(new CustomEvent('noir:authenticated',{detail:await verify.json()}));lock.hidden=true;document.documentElement.dataset.noirAuthenticated='true'}catch(err){msg.textContent=err.message;pass.value='';pass.focus();await health()}finally{btn.disabled=false;btn.textContent='التحقق وفتح لوحة التحكم'}});health();pass.focus()})();
-</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#e8ebef">
+  <title>NOIR · مدارك المعرفة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=DM+Sans:wght@400;500;700&family=Cinzel:wght@500;600;700&family=Playfair+Display:wght@500;600;700&family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;700&family=Amiri:wght@400;700&family=El+Messiri:wght@400;600;700&family=Reem+Kufi+Fun&family=Rakkas&family=Katibeh&family=Noto+Kufi+Arabic:wght@400;600;700&family=Noto+Naskh+Arabic:wght@400;700&family=Lateef:wght@400;700&family=Aref+Ruqaa:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #eef1f5;
+      --panel: #f9fbfd;
+      --ink: #18232f;
+      --muted: #6d7784;
+      --line: #d3dce6;
+      --accent: #a88743;
+      --accent-soft: #d9c99f;
+      --shadow: 0 18px 45px #18232f12, inset 0 1px 0 #ffffff;
+      --arabic: 'Noto Kufi Arabic', sans-serif;
+      --latin: 'Cinzel', serif;
+      --radius: 23px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 10% 3%, #ffffff 0, transparent 34%),
+                  radial-gradient(ellipse at 92% 12%, #dbe4ed 0, transparent 32%), var(--bg);
+      color: var(--ink);
+      font-family: var(--arabic);
+      -webkit-tap-highlight-color: transparent;
+    }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button:focus, a:focus, input:focus, select:focus, textarea:focus { outline: none; }
+    button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline: 2px solid var(--accent); outline-offset: 3px;
+    }
+    a { text-decoration: none; color: inherit; }
+    button { cursor: pointer; }
+    .shell { max-width: 1500px; margin: 0 auto; padding: 24px; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      border: 1px solid var(--line); border-radius: 23px; padding: 15px 18px;
+      background: #ffffffb7; backdrop-filter: blur(18px); box-shadow: var(--shadow);
+    }
+    .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .brand-orb {
+      width: 55px; height: 55px; flex: 0 0 55px; display: grid; place-items: center;
+      border-radius: 50%; color: var(--accent);
+      background: radial-gradient(circle at 30% 24%, #fff 0, #f4f5f7 25%, #cbd4de 70%, #a8b2be 100%);
+      border: 1px solid #c2ccd8; box-shadow: inset 0 3px 5px #fff, 0 8px 17px #1d29371a;
+    }
+    .brand-orb svg { width: 28px; height: 28px; stroke: currentColor; fill: none; stroke-width: 1.6; }
+    .brand-title { font-family: var(--latin); font-weight: 700; letter-spacing: 3px; font-size: 22px; }
+    .brand-sub { color: var(--muted); font-size: 11px; margin-top: 3px; }
+    .top-actions { display: flex; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
+    .button, .icon-button {
+      border: 1px solid var(--line); border-radius: 13px; padding: 10px 14px;
+      background: linear-gradient(145deg, #fff, #e9eef3); box-shadow: 0 5px 13px #18232f10, inset 0 1px 0 #fff;
+      display: inline-flex; align-items: center; justify-content: center; gap: 9px; transition: .2s;
+    }
+    .button:hover, .icon-button:hover { transform: translateY(-2px); border-color: #b7c5d2; }
+    .button svg, .icon-button svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+    .button.gold { color: #fff; background: linear-gradient(145deg, #c8b27b, #987236); border-color: #b79a5b; }
+    .button.dark { color: #f5f7fa; background: linear-gradient(145deg, #34404e, #151d27); border-color: #34404e; }
+    .hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding: 38px 6px 24px; }
+    .eyebrow { color: var(--accent); font-family: var(--latin); font-size: 11px; letter-spacing: 3px; }
+    .hero h1 { margin: 10px 0; font-size: clamp(23px, 3.8vw, 42px); }
+    .hero p { margin: 0; max-width: 700px; color: var(--muted); font-size: 13px; line-height: 2; }
+    .live-note { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; background: #ffffffa8; color: var(--muted); font-size: 11px; white-space: nowrap; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: #8a9aab; box-shadow: 0 0 0 5px #8a9aab20; animation: breathe 2.1s infinite; }
+    @keyframes breathe { 50% { box-shadow: 0 0 0 8px #8a9aab10; opacity: .65; } }
+    .tabs { display: flex; gap: 8px; overflow-x: auto; padding: 9px; border: 1px solid var(--line); background: #ffffffa6; border-radius: 18px; box-shadow: var(--shadow); margin-bottom: 18px; }
+    .tab { border: 1px solid transparent; background: transparent; border-radius: 12px; padding: 11px 16px; white-space: nowrap; font-size: 12px; color: var(--muted); transition: .18s; }
+    .tab:hover { background: #fff9; }
+    .tab.active { color: var(--ink); border-color: var(--line); background: linear-gradient(145deg, #fff, #e9eef3); box-shadow: inset 0 1px 0 #fff, 0 4px 10px #18232f0c; }
+    .section { display: none; animation: appear .22s ease-out; }
+    .section.active { display: block; }
+    @keyframes appear { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+    .panel { border: 1px solid var(--line); border-radius: var(--radius); padding: 21px; background: linear-gradient(145deg, #ffffffd9, #f3f7f9); box-shadow: var(--shadow); position: relative; overflow: hidden; }
+    .panel::before { content: ''; position: absolute; top: 0; right: 0; left: 0; height: 1px; background: linear-gradient(90deg, transparent, #fff, transparent); pointer-events: none; }
+    .span-12 { grid-column: span 12; } .span-8 { grid-column: span 8; } .span-6 { grid-column: span 6; } .span-4 { grid-column: span 4; }
+    .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 17px; }
+    .panel-head h2 { margin: 0; font-size: 16px; }
+    .panel-head small { color: var(--muted); font-family: var(--latin); font-size: 10px; letter-spacing: 1.5px; }
+    .subtext { color: var(--muted); font-size: 12px; line-height: 1.9; }
+    .action-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 11px; }
+    .action-card { display: flex; flex-direction: column; justify-content: space-between; min-height: 126px; gap: 13px; text-align: right; padding: 15px; border: 1px solid var(--line); border-radius: 18px; background: linear-gradient(145deg, #fff, #edf2f6); box-shadow: 0 8px 18px #18232f10, inset 0 1px 0 #fff; transition: .2s; }
+    .action-card:hover { transform: translateY(-3px); border-color: #b7c5d3; box-shadow: 0 14px 24px #18232f15; }
+    .action-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .action-icon { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 15px; color: var(--accent); border: 1px solid #d5dde6; background: radial-gradient(circle at 25% 20%, #fff, #e3eaf0); box-shadow: inset 0 1px 0 white, 0 5px 12px #1b283510; }
+    .action-icon svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.6; }
+    .action-card strong { font-size: 13px; }
+    .action-card small { display: block; color: var(--muted); font-size: 10px; line-height: 1.7; margin-top: 5px; }
+    .chip { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 100px; padding: 6px 10px; color: var(--muted); font-size: 10px; background: #fff8; }
+    .feature-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+    .feature { border: 1px solid var(--line); border-radius: 16px; padding: 15px; background: #ffffffa8; min-height: 100px; }
+    .feature h3 { font-size: 13px; margin: 0 0 8px; }
+    .feature p { font-size: 11px; color: var(--muted); line-height: 1.85; margin: 0; }
+    .notice { border: 1px dashed #bdc9d5; border-radius: 16px; background: #eef3f7; padding: 14px 16px; font-size: 11px; color: #5c6877; line-height: 1.9; }
+    .link-list { display: grid; gap: 9px; }
+    .link-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 14px; border: 1px solid var(--line); border-radius: 14px; background: #ffffffa8; transition: .18s; }
+    .link-row:hover { background: #fff; transform: translateY(-1px); }
+    .link-row strong { display: block; font-size: 12px; }
+    .link-row small { display: block; color: var(--muted); font-size: 10px; margin-top: 3px; }
+    .link-row svg { width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 1.7; flex-shrink: 0; }
+    .field { display: grid; gap: 8px; margin: 12px 0; }
+    .field label { font-size: 11px; color: var(--muted); }
+    .field input, .field select, .field textarea { width: 100%; border: 1px solid var(--line); border-radius: 13px; padding: 12px 13px; background: #fff; font-size: 12px; }
+    .field textarea { min-height: 130px; resize: vertical; line-height: 1.9; }
+    .preview { border: 1px dashed var(--line); border-radius: 14px; padding: 18px; text-align: center; color: var(--accent); background: #ffffff8a; margin-top: 14px; }
+    .notes-tools { display: flex; gap: 8px; flex-wrap: wrap; }
+    .saved-note { border: 1px solid var(--line); border-radius: 14px; padding: 13px; background: #fff9; margin-top: 10px; }
+    .saved-note time { color: var(--muted); font-size: 10px; display: block; margin-bottom: 7px; }
+    .saved-note p { font-size: 12px; white-space: pre-wrap; line-height: 1.9; margin: 0; }
+    .saved-note button { margin-top: 9px; font-size: 10px; }
+    .footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 25px 4px 8px; color: var(--muted); font: 10px var(--latin); }
+    .smallprint { font-size: 10px; line-height: 1.8; color: var(--muted); }
+    @media (max-width: 980px) { .span-8,.span-4 { grid-column: span 12; } .span-6 { grid-column: span 6; } .feature-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+    @media (max-width: 680px) { .shell { padding: 13px; } .topbar { align-items: flex-start; padding: 12px; flex-direction: column; } .top-actions { width: 100%; justify-content: stretch; } .top-actions .button { flex: 1; } .hero { align-items: flex-start; flex-direction: column; padding: 27px 3px 19px; } .live-note { white-space: normal; } .action-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .feature-grid { grid-template-columns: 1fr; } .span-6 { grid-column: span 12; } .panel { padding: 16px; } }
+    @media (max-width: 390px) { .action-grid { grid-template-columns: 1fr; } .brand-title { font-size: 19px; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-orb" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 3v12M8 7l4-4 4 4M5 16v4h14v-4M8 18h8"/></svg>
+        </div>
+        <div><div class="brand-title">NOIR</div><div class="brand-sub">مدارك المعرفة · مركز التحكم</div></div>
+      </div>
+      <div class="top-actions">
+        <a class="button gold" href="#" onclick="openActions();return false;"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5zM9 8h6M9 12h6M9 16h3"/></svg>GitHub Actions</a>
+        <a class="button" href="#" onclick="openRepo();return false;"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg>المستودع</a>
+      </div>
+    </header>
 
-</body></html>
+
+    <section class="hero">
+      <div>
+        <div class="eyebrow">LIBRARY BOT · CONTROL DESK</div>
+        <h1>منظومة التحكم المركزية</h1>
+        <p>واجهة منظمة لبوت مدارك المعرفة. الأوامر والإحصائيات الحقيقية تبقى داخل Telegram وGitHub Actions، وتفتحها اللوحة مباشرة من دون أرقام تجريبية أو مفاتيح مكشوفة.</p>
+      </div>
+      <div class="live-note"><span class="dot"></span><span>اللوحة ثابتة · حالة البوت ليست بثًا مباشرًا</span></div>
+    </section>
+
+
+    <nav class="tabs" aria-label="أقسام لوحة التحكم">
+      <button class="tab active" data-section="dashboard">الرئيسية</button>
+      <button class="tab" data-section="bot">وظائف البوت</button>
+      <button class="tab" data-section="actions">التشغيل والتحكم</button>
+      <button class="tab" data-section="repository">المستودع والإعدادات</button>
+      <button class="tab" data-section="notes">ملاحظاتي</button>
+      <button class="tab" data-section="appearance">المظهر</button>
+    </nav>
+
+
+    <main>
+      <section class="section active" id="dashboard">
+        <div class="grid">
+          <article class="panel span-8">
+            <div class="panel-head"><h2>إجراءات البوت</h2><small>GITHUB WORKFLOW</small></div>
+            <div class="action-grid">
+              <a class="action-card" href="#" onclick="openDispatcher();return false;"><div class="action-top"><div class="action-icon"><svg viewBox="0 0 24 24"><path d="m8 5 12 7-12 7z"/></svg></div><span class="chip">START</span></div><div><strong>تشغيل البوت</strong><small>فتح تشغيل NOIR Dispatcher واختيار Start</small></div></a>
+              <a class="action-card" href="#" onclick="openDispatcher();return false;"><div class="action-top"><div class="action-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM9 9h6v6H9z"/></svg></div><span class="chip">RESTART</span></div><div><strong>إعادة التشغيل</strong><small>اختر Restart من صفحة تشغيل Workflow</small></div></a>
+              <a class="action-card" href="#" onclick="openDispatcher();return false;"><div class="action-top"><div class="action-icon"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></div><span class="chip">STOP</span></div><div><strong>إيقاف البوت</strong><small>اختر Stop لإلغاء التشغيل الجاري</small></div></a>
+              <a class="action-card" href="#" onclick="openRuns();return false;"><div class="action-top"><div class="action-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5"/></svg></div><span class="chip">RUNS</span></div><div><strong>سجل التشغيل</strong><small>عرض سجل Actions ونتائج التنفيذ الحقيقية</small></div></a>
+              <a class="action-card" href="#" onclick="openSettings();return false;"><div class="action-top"><div class="action-icon"><svg viewBox="0 0 24 24"><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6l1.4 1.4m10 10 1.4 1.4m0-12.8L17.4 7m-10 10-1.4 1.4"/><circle cx="12" cy="12" r="5"/></svg></div><span class="chip">CONFIG</span></div><div><strong>Secrets & Variables</strong><small>إدارة إعدادات التشغيل في GitHub</small></div></a>
+              <a class="action-card" href="#" onclick="openBotWorkflow();return false;"><div class="action-top"><div class="action-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h8M8 17h5"/></svg></div><span class="chip">YAML</span></div><div><strong>ملف تشغيل البوت</strong><small>مراجعة ملف Workflow المرتبط بالبوت</small></div></a>
+            </div>
+            <p class="notice" style="margin-top:15px">كل أمر يفتح GitHub حيث يلزم تأكيد الإجراء. لا يمكن لموقع GitHub Pages ثابت تنفيذ الإيقاف أو التشغيل من تلقاء نفسه أو قراءة الحالة المباشرة من Actions من دون خدمة وسيطة موثوقة.</p>
+          </article>
+          <aside class="panel span-4">
+            <div class="panel-head"><h2>روابط أساسية</h2><small>QUICK ACCESS</small></div>
+            <div class="link-list">
+              <a class="link-row" href="#" onclick="openRepo();return false;"><div><strong>المستودع</strong><small>ملفات البوت والموقع</small></div><svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+              <a class="link-row" href="#" onclick="openActions();return false;"><div><strong>GitHub Actions</strong><small>Workflows وعمليات التشغيل</small></div><svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+              <a class="link-row" href="#" onclick="openVariables();return false;"><div><strong>Actions Variables</strong><small>قيم إعداد البوت</small></div><svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+              <a class="link-row" href="#" onclick="openSecrets();return false;"><div><strong>Actions Secrets</strong><small>الرموز وكلمات المرور السرية</small></div><svg viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3m-12 0h14v11H5z"/></svg></a>
+              <a class="link-row" href="#" onclick="openIssues();return false;"><div><strong>Issues</strong><small>ملاحظات ومشكلات المستودع</small></div><svg viewBox="0 0 24 24"><path d="M12 3v18M4 7h16M4 17h16"/></svg></a>
+            </div>
+          </aside>
+          <article class="panel span-12">
+            <div class="panel-head"><h2>نطاق لوحة NOIR</h2><small>CONNECTED BOT FEATURES</small></div>
+            <div class="feature-grid">
+              <div class="feature"><h3>📚 مكتبة المصادر</h3><p>ملفات، صور، روابط، وصف وسنة، بطاقة المصدر ورمز مرجعي.</p></div>
+              <div class="feature"><h3>🔎 البحث والفهرسة</h3><p>بحث في العناوين والأوصاف، قوائم صفحات، وتسليم المصادر للمستخدم.</p></div>
+              <div class="feature"><h3>👥 المساهمون والمستخدمون</h3><p>بيانات المساهمين، النشر، التنزيلات، والتفاصيل حسب المستخدم.</p></div>
+              <div class="feature"><h3>🚫 الحظر</h3><p>حظر المستخدمين وإدارة قائمة المحظورين وإلغاء الحظر.</p></div>
+              <div class="feature"><h3>⏸ الإيقاف المؤقت</h3><p>إيقاف استقبال الاستخدام مع رسالة نصية أو وسائط اعتذار محددة.</p></div>
+              <div class="feature"><h3>📝 الملاحظات الإدارية</h3><p>إضافة ملاحظات، تعديلها، حذفها، ونشرها داخل البوت.</p></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+
+      <section class="section" id="bot">
+        <div class="grid">
+          <article class="panel span-12">
+            <div class="panel-head"><h2>وظائف بوت مدارك المعرفة المضافة لهذه اللوحة</h2><small>BOT MODULES</small></div>
+            <div class="feature-grid">
+              <div class="feature"><h3>رفع مصدر</h3><p>رفع مستند، تجميع صور، أو إدخال رابط. إضافة وصف اختياري ومراجعة قبل النشر.</p></div>
+              <div class="feature"><h3>المصادر المنشورة</h3><p>نشر الملف/الصورة/الرابط في القناة وإرفاق بطاقة معلومات المصدر.</p></div>
+              <div class="feature"><h3>تسليم المصدر</h3><p>إرسال المصدر الأصلي للمستخدم عند اختياره من نتائج البحث أو فهرس المكتبة.</p></div>
+              <div class="feature"><h3>فهرس TXT</h3><p>توليد ملف عناوين للمصادر حسب النوع، مع الوصف والتاريخ والروابط.</p></div>
+              <div class="feature"><h3>إدارة القناة</h3><p>تغيير قناة النشر من أدوات الإدارة داخل البوت، بشرط صلاحيات البوت المناسبة.</p></div>
+              <div class="feature"><h3>ترحيب واعتذار</h3><p>وسائط ترحيب ووسائط إيقاف قابلة للتغيير من الإدارة.</p></div>
+              <div class="feature"><h3>إحصائيات</h3><p>إحصاءات نشر وتنزيلات وملفات ومستخدمين مع تصدير سجلات.</p></div>
+              <div class="feature"><h3>تقارير المساهم</h3><p>ملف TXT للمساهمين يُنشأ في المستودع عند تفعيل صلاحيات الكتابة.</p></div>
+              <div class="feature"><h3>حفظ البيانات</h3><p>فهرس library_index.json يُحفظ في GitHub عبر API باستخدام GITHUB_TOKEN الخاص بالـ Workflow.</p></div>
+            </div>
+          </article>
+          <article class="panel span-6">
+            <div class="panel-head"><h2>أوامر المالك داخل Telegram</h2><small>OWNER MENU</small></div>
+            <p class="subtext">الأدوات التالية موجودة في كود البوت نفسه، وتظهر للمالك عند تحقق معرفه.</p>
+            <div class="link-list">
+              <div class="link-row"><div><strong>مركز الإحصائيات</strong><small>أرقام النشر والتنزيل والمستخدمين والتصدير</small></div><span class="chip">ADMIN</span></div>
+              <div class="link-row"><div><strong>MY-BOTS / المساهمون</strong><small>عرض المساهمين والبحث عن تفاصيلهم</small></div><span class="chip">ADMIN</span></div>
+              <div class="link-row"><div><strong>إدارة الحظر</strong><small>حظر، عرض المحظورين، إلغاء الحظر</small></div><span class="chip">ADMIN</span></div>
+              <div class="link-row"><div><strong>إدارة القنوات والترحيب</strong><small>تغيير قناة النشر ووسائط الترحيب</small></div><span class="chip">ADMIN</span></div>
+            </div>
+          </article>
+          <article class="panel span-6">
+            <div class="panel-head"><h2>ملاحظات التشغيل</h2><small>REALITY CHECK</small></div>
+            <p class="notice">لا تعرض اللوحة أعداد مستخدمين أو مصادر أو CPU/RAM تخمينية. المعلومات الحقيقية موجودة في البوت وقاعدة الفهرس وسجل Actions. الروابط أدناه تفتح المصادر الأصلية.</p>
+            <div class="notes-tools" style="margin-top:14px"><a class="button" href="#" onclick="openRuns();return false;">عرض التشغيل الفعلي</a><a class="button" href="#" onclick="openRepoFile('library_index.json');return false;">فتح فهرس المكتبة</a></div>
+          </article>
+        </div>
+      </section>
+
+
+      <section class="section" id="actions">
+        <div class="grid">
+          <article class="panel span-8">
+            <div class="panel-head"><h2>تشغيل / إيقاف / إعادة تشغيل</h2><small>WORKFLOW DISPATCH</small></div>
+            <p class="subtext">هذه الأزرار تفتح صفحة تشغيل Workflow Dispatcher. داخل GitHub اختر Run workflow ثم اختر الأمر المطلوب من القائمة.</p>
+            <div class="action-grid">
+              <a class="action-card" href="#" onclick="openDispatcher();return false;"><div class="action-top"><div class="action-icon"><svg viewBox="0 0 24 24"><path d="m8 5 12 7-12 7z"/></svg></div><span class="chip">START</span></div><div><strong>بدء تشغيل جديد</strong><small>من القائمة اختَر start</small></div></a>
+              <a class="action-card" href="#" onclick="openDispatcher();return false;"><div class="action-top"><div class="action-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM9 9h6v6H9z"/></svg></div><span class="chip">STOP</span></div><div><strong>إلغاء التشغيل الحالي</strong><small>من القائمة اختَر stop</small></div></a>
+              <a class="action-card" href="#" onclick="openDispatcher();return false;"><div class="action-top"><div class="action-icon"><svg viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M6.5 8a7 7 0 0 1 11-1M17.5 16a7 7 0 0 1-11 1"/></svg></div><span class="chip">RESTART</span></div><div><strong>إعادة التشغيل</strong><small>من القائمة اختَر restart</small></div></a>
+            </div>
+            <p class="notice" style="margin-top:15px">لا يوجد تنفيذ تلقائي من صفحة الموقع. يتطلب GitHub تسجيل دخول وصلاحية على المستودع، ثم تأكيد الأمر في واجهة Actions.</p>
+          </article>
+          <article class="panel span-4">
+            <div class="panel-head"><h2>سجل ومتابعة</h2><small>RUN HISTORY</small></div>
+            <div class="link-list">
+              <a class="link-row" href="#" onclick="openRuns();return false;"><div><strong>سجل التشغيل</strong><small>آخر عمليات Workflow</small></div><svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+              <a class="link-row" href="#" onclick="openActions();return false;"><div><strong>قائمة Actions</strong><small>كل workflows بالمستودع</small></div><svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+              <a class="link-row" href="#" onclick="openBotWorkflow();return false;"><div><strong>Workflow البوت</strong><small>ملف التشغيل الأساسي</small></div><svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+
+      <section class="section" id="repository">
+        <div class="grid">
+          <article class="panel span-6">
+            <div class="panel-head"><h2>المستودع</h2><small>REPOSITORY</small></div>
+            <div class="link-list">
+              <a class="link-row" href="#" onclick="openRepo();return false;"><div><strong>فتح المستودع</strong><small>Source repository</small></div><svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+              <a class="link-row" href="#" onclick="openBotFile();return false;"><div><strong>bot.py</strong><small>ملف البوت الذي ينفذه Workflow</small></div><svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+              <a class="link-row" href="#" onclick="openBotWorkflow();return false;"><div><strong>ملف تشغيل v6.yml</strong><small>الجدولة والتشغيل اليدوي</small></div><svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+              <a class="link-row" href="#" onclick="openDispatcherFile();return false;"><div><strong>noir-control.yml</strong><small>Workflow start / stop / restart</small></div><svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+              <a class="link-row" href="#" onclick="openRepoFile('library_index.json');return false;"><div><strong>library_index.json</strong><small>الفهرس الدائم للمكتبة</small></div><svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+            </div>
+          </article>
+          <article class="panel span-6">
+            <div class="panel-head"><h2>الإعدادات في GitHub</h2><small>VARIABLES & SECRETS</small></div>
+            <div class="link-list">
+              <a class="link-row" href="#" onclick="openVariables();return false;"><div><strong>Actions Variables</strong><small>القيم غير الحساسة</small></div><svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></a>
+              <a class="link-row" href="#" onclick="openSecrets();return false;"><div><strong>Actions Secrets</strong><small>توكن البوت والبيانات السرية</small></div><svg viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3m-12 0h14v11H5z"/></svg></a>
+              <a class="link-row" href="#" onclick="openPagesSettings();return false;"><div><strong>GitHub Pages</strong><small>إعداد نشر الموقع</small></div><svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+            </div>
+            <p class="notice" style="margin-top:14px">الأسرار مثل TOKENN وPROXY_URL يجب وضعها في Secrets وليس Variables. إعدادات مثل ID_TELE وDEV_TELE وGROUP_LINK وWELCOME_IMAGE يمكن وضعها في Variables.</p>
+          </article>
+          <article class="panel span-12">
+            <div class="panel-head"><h2>قائمة المتغيرات المتوافقة مع بوتك</h2><small>CONFIG REFERENCE</small></div>
+            <div class="feature-grid">
+              <div class="feature"><h3>TOKENN</h3><p>توكن Telegram Bot — Actions Secret.</p></div>
+              <div class="feature"><h3>JOIN_CHANEL</h3><p>معرف القناة أو username — إعداد مطلوب لتشغيل البوت.</p></div>
+              <div class="feature"><h3>ID_TELE</h3><p>معرف مالك البوت — Variable.</p></div>
+              <div class="feature"><h3>DEV_TELE</h3><p>اسم حساب التواصل — Variable.</p></div>
+              <div class="feature"><h3>GROUP_LINK</h3><p>رابط القناة المعروض للمستخدمين — Variable.</p></div>
+              <div class="feature"><h3>WELCOME_IMAGE</h3><p>رابط الوسائط الافتراضية للترحيب — Variable.</p></div>
+              <div class="feature"><h3>PROXY_URL</h3><p>رابط proxy عند الحاجة — Secret.</p></div>
+              <div class="feature"><h3>GITHUB_TOKEN</h3><p>Token تلقائي من GitHub Actions لحفظ الفهرس؛ يحتاج Contents write.</p></div>
+              <div class="feature"><h3>WEB_ADMIN_PASSWORD</h3><p>لا يمكن التحقق منه بأمان في موقع static. يلزم backend موثوق للتحقق دون كشفه للمتصفح.</p></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+
+      <section class="section" id="notes">
+        <div class="grid">
+          <article class="panel span-8">
+            <div class="panel-head"><h2>ملاحظاتي المحلية</h2><small>LOCAL NOTES</small></div>
+            <p class="subtext">تُحفظ الملاحظات على هذا المتصفح والجهاز فقط عبر التخزين المحلي. لا تُرفع إلى GitHub ولا تظهر على جهاز آخر.</p>
+            <div class="field"><label for="noteText">اكتب ملاحظة</label><textarea id="noteText" placeholder="اكتب ملاحظة تشغيل، فكرة، أو قائمة مهام..."></textarea></div>
+            <div class="notes-tools"><button class="button gold" type="button" onclick="saveNote()">حفظ الملاحظة</button><button class="button" type="button" onclick="clearNoteInput()">مسح الكتابة</button></div>
+          </article>
+          <article class="panel span-4">
+            <div class="panel-head"><h2>حالة الحفظ</h2><small>DEVICE STORAGE</small></div>
+            <div id="notesStatus" class="notice">الملاحظات محفوظة محليًا في متصفحك.</div>
+            <p class="smallprint">إذا مسحت بيانات المتصفح فقد تُحذف هذه الملاحظات. لا تكتب كلمات مرور أو مفاتيح أو معلومات حساسة هنا.</p>
+          </article>
+          <article class="panel span-12">
+            <div class="panel-head"><h2>الملاحظات المحفوظة</h2><small>YOUR NOTES</small></div>
+            <div id="notesList"></div>
+          </article>
+        </div>
+      </section>
+
+
+      <section class="section" id="appearance">
+        <div class="grid">
+          <article class="panel span-6">
+            <div class="panel-head"><h2>استوديو المظهر</h2><small>THEME STUDIO</small></div>
+            <div class="field"><label for="themeSelect">اختر الثيم</label><select id="themeSelect" onchange="setTheme(this.value)"><option value="silver">Silver · فضي</option><option value="midnight">Midnight · ليلي</option><option value="gold">Champagne · ذهبي</option><option value="blue">Ice Blue · جليدي</option><option value="rose">Rose Mist · وردي</option><option value="sage">Sage · أخضر</option><option value="graphite">Graphite · فحمي</option><option value="violet">Amethyst · بنفسجي</option><option value="cream">Ivory · عاجي</option><option value="copper">Copper · نحاسي</option></select></div>
+            <div class="field"><label for="arabicFont">الخط العربي</label><select id="arabicFont" onchange="setArabicFont(this.value)"><option value="Noto Kufi Arabic">Noto Kufi Arabic · كوفي</option><option value="Cairo">Cairo · عصري</option><option value="Amiri">Amiri · نسخ</option><option value="Noto Naskh Arabic">Noto Naskh · نسخ</option><option value="Lateef">Lateef · لطيف</option><option value="Aref Ruqaa">Aref Ruqaa · رقعة</option><option value="Rakkas">Rakkas · زخرفي</option><option value="Reem Kufi Fun">Reem Kufi · كوفي</option><option value="El Messiri">El Messiri · أنيق</option><option value="Katibeh">Katibeh · كلاسيكي</option></select></div>
+            <div class="field"><label for="englishFont">الخط الإنجليزي</label><select id="englishFont" onchange="setEnglishFont(this.value)"><option value="Cinzel">Cinzel · Royal</option><option value="Playfair Display">Playfair Display · Editorial</option><option value="DM Sans">DM Sans · Modern</option><option value="Space Grotesk">Space Grotesk · Tech</option><option value="Inter">Inter · Clean</option><option value="Manrope">Manrope · Soft</option><option value="IBM Plex Sans">IBM Plex Sans · Technical</option></select></div>
+            <div class="preview" id="themePreview">مدارك المعرفة · NOIR CONTROL</div>
+          </article>
+          <article class="panel span-6">
+            <div class="panel-head"><h2>معلومات واجهة الموقع</h2><small>STATIC WEB APP</small></div>
+            <div class="feature-grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+              <div class="feature"><h3>واجهة ثابتة</h3><p>HTML / CSS / JavaScript تعمل عبر GitHub Pages.</p></div>
+              <div class="feature"><h3>لا Token بالواجهة</h3><p>لا تُضمّن مفاتيح GitHub أو Telegram داخل ملفات الموقع.</p></div>
+              <div class="feature"><h3>تخصيص محلي</h3><p>الثيم والخط محفوظان في هذا المتصفح.</p></div>
+              <div class="feature"><h3>إحصائيات صادقة</h3><p>لا يتم اختلاق أعداد أو حالة تشغيل غير متصلة.</p></div>
+            </div>
+            <p class="notice" style="margin-top:14px">تنبيه: تسجيل دخول WEB_ADMIN_PASSWORD الآمن والتحكم المباشر من صفحة الموقع غير متاحين دون خدمة backend. لا أضع كلمة المرور أو GH_TOKEN داخل JavaScript لأن ذلك يكشفهما للزوار.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer"><span>NOIR CONTROL · MADAREK KNOWLEDGE LIBRARY</span><span>واجهة GitHub-native · لا بيانات تشغيل وهمية</span></footer>
+  </div>
+
+  <script>
+    // Repository configuration for this project.
+    const REPOSITORY = 'HABGIT286/SHGER-DATABASE-BACKUPS';
+    const BOT_WORKFLOW_FILE = 'ملف تشغيل v6.yml';
+    const REPOSITORY_URL = `https://github.com/${REPOSITORY}`;
+    const ACTIONS_URL = `${REPOSITORY_URL}/actions`;
+    const DISPATCHER_URL = `${REPOSITORY_URL}/actions/workflows/noir-control.yml`;
+    const BOT_RUNS_URL = `${REPOSITORY_URL}/actions/workflows/${encodeURIComponent(BOT_WORKFLOW_FILE)}`;
+
+    function openRepo() { window.open(REPOSITORY_URL, '_blank', 'noopener'); }
+    function openActions() { window.open(ACTIONS_URL, '_blank', 'noopener'); }
+    function openRuns() { window.open(BOT_RUNS_URL, '_blank', 'noopener'); }
+    function openDispatcher() { window.open(DISPATCHER_URL, '_blank', 'noopener'); }
+    function openBotWorkflow() { window.open(`${REPOSITORY_URL}/blob/main/.github/workflows/${encodeURIComponent(BOT_WORKFLOW_FILE)}`, '_blank', 'noopener'); }
+    function openDispatcherFile() { window.open(`${REPOSITORY_URL}/blob/main/.github/workflows/noir-control.yml`, '_blank', 'noopener'); }
+    function openBotFile() { window.open(`${REPOSITORY_URL}/blob/main/bot.py`, '_blank', 'noopener'); }
+    function openRepoFile(file) { window.open(`${REPOSITORY_URL}/blob/main/${encodeURIComponent(file)}`, '_blank', 'noopener'); }
+    function openSettings() { openSecrets(); }
+    function openSecrets() { window.open(`${REPOSITORY_URL}/settings/secrets/actions`, '_blank', 'noopener'); }
+    function openVariables() { window.open(`${REPOSITORY_URL}/settings/variables/actions`, '_blank', 'noopener'); }
+    function openPagesSettings() { window.open(`${REPOSITORY_URL}/settings/pages`, '_blank', 'noopener'); }
+    function openIssues() { window.open(`${REPOSITORY_URL}/issues`, '_blank', 'noopener'); }
+
+    const THEMES = {
+      silver: ['#eef1f5','#f9fbfd','#18232f','#6d7784','#a88743','#737f8e','#d3dce6'],
+      midnight: ['#141a23','#202a36','#f0f3f6','#b3bfcb','#d5b46e','#8b98a8','#3c4b5d'],
+      gold: ['#f4efe4','#fffaf0','#382d1b','#85775f','#b78a42','#88765b','#dfd0b1'],
+      blue: ['#eaf2f8','#f6fbff','#1c3449','#678195','#6799bd','#7a91a8','#cadbe8'],
+      rose: ['#f5ecef','#fff8fb','#3c2530','#947b87','#b8899d','#98828e','#e1cbd5'],
+      sage: ['#eaf0eb','#f7fbf8','#22372c','#718478','#a18650','#728779','#cfded2'],
+      graphite: ['#252a31','#333a43','#f0f2f5','#aab2bc','#c6a35e','#9aa6b4','#4a5562'],
+      violet: ['#eeedf6','#faf9ff','#2c2840','#807b98','#aa8fca','#9185a9','#d6d1e7'],
+      cream: ['#f4f0e7','#fffdf7','#383126','#877c68','#aa8847','#968b78','#ddd3bd'],
+      copper: ['#f2ebe5','#faf7f3','#3a2c24','#88796c','#b17b4e','#8c7967','#d8c3b0']
+    };
+    function setTheme(name) {
+      const t = THEMES[name] || THEMES.silver;
+      const root = document.documentElement.style;
+      root.setProperty('--bg', t[0]); root.setProperty('--panel', t[1]); root.setProperty('--ink', t[2]);
+      root.setProperty('--muted', t[3]); root.setProperty('--accent', t[4]); root.setProperty('--accent-soft', t[5]); root.setProperty('--line', t[6]);
+      document.body.style.background = `radial-gradient(ellipse at 10% 3%, #ffffff55 0, transparent 34%), radial-gradient(ellipse at 92% 12%, ${t[6]}55 0, transparent 32%), ${t[0]}`;
+      document.querySelectorAll('.panel,.topbar,.tabs').forEach(el => el.style.background = `linear-gradient(145deg, ${t[1]}e8, ${t[0]}dd)`);
+      localStorage.setItem('noir_theme', name);
+    }
+    function setArabicFont(font) {
+      document.documentElement.style.setProperty('--arabic', `'${font}', sans-serif`);
+      document.getElementById('themePreview').style.fontFamily = `'${font}', sans-serif`;
+      localStorage.setItem('noir_arabic_font', font);
+    }
+    function setEnglishFont(font) {
+      document.documentElement.style.setProperty('--latin', `'${font}', serif`);
+      document.querySelectorAll('.brand-title,.eyebrow,.panel-head small,.chip,.footer').forEach(el => el.style.fontFamily = `'${font}', serif`);
+      localStorage.setItem('noir_english_font', font);
+    }
+    document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.section).classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }));
+
+    // Local notes: intentionally kept only in this browser/device.
+    const NOTE_KEY = 'noir_local_notes_v1';
+    function readNotes() { try { return JSON.parse(localStorage.getItem(NOTE_KEY) || '[]'); } catch { return []; } }
+    function saveNote() {
+      const input = document.getElementById('noteText');
+      const content = input.value.trim();
+      if (!content) { document.getElementById('notesStatus').textContent = 'اكتب ملاحظة قبل الحفظ.'; return; }
+      const notes = readNotes(); notes.unshift({ id: Date.now(), content, created: new Date().toISOString() });
+      localStorage.setItem(NOTE_KEY, JSON.stringify(notes)); input.value = '';
+      document.getElementById('notesStatus').textContent = 'تم حفظ الملاحظة محليًا في هذا المتصفح.'; renderNotes();
+    }
+    function clearNoteInput() { document.getElementById('noteText').value = ''; }
+    function deleteNote(id) {
+      localStorage.setItem(NOTE_KEY, JSON.stringify(readNotes().filter(n => n.id !== id)));
+      document.getElementById('notesStatus').textContent = 'تم حذف الملاحظة المحلية.'; renderNotes();
+    }
+    function renderNotes() {
+      const host = document.getElementById('notesList'); const notes = readNotes();
+      if (!notes.length) { host.innerHTML = '<p class="subtext">لا توجد ملاحظات محفوظة بعد.</p>'; return; }
+      host.innerHTML = notes.map(note => {
+        const date = new Date(note.created).toLocaleString('ar-IQ');
+        const safeText = String(note.content).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        return `<article class="saved-note"><time>${date}</time><p>${safeText}</p><button class="button" onclick="deleteNote(${note.id})">حذف الملاحظة</button></article>`;
+      }).join('');
+    }
+    // Apply saved appearance on first render.
+    const savedTheme = localStorage.getItem('noir_theme') || 'silver';
+    const savedArabic = localStorage.getItem('noir_arabic_font') || 'Noto Kufi Arabic';
+    const savedEnglish = localStorage.getItem('noir_english_font') || 'Cinzel';
+    document.getElementById('themeSelect').value = savedTheme; setTheme(savedTheme);
+    document.getElementById('arabicFont').value = savedArabic; setArabicFont(savedArabic);
+    document.getElementById('englishFont').value = savedEnglish; setEnglishFont(savedEnglish);
+    renderNotes();
+  </script>
+</body>
+</html>
