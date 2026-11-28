@@ -1,0 +1,81 @@
+name: Madarek Knowledge Library Bot
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: madarek-library-bot
+  cancel-in-progress: true
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Verify Python syntax
+        run: python -m py_compile bot.py
+
+      - name: Remove Telegram webhook before polling
+        env:
+          TOKENN: ${{ secrets.TOKENN }}
+        run: |
+          python - <<'PY'
+          import os, httpx, sys
+          token = os.environ.get('TOKENN', '').strip()
+          if not token:
+              print('ERROR: TOKENN secret is missing')
+              sys.exit(1)
+          base = f'https://api.telegram.org/bot{token}'
+          with httpx.Client(timeout=30) as client:
+              delete = client.post(base + '/deleteWebhook', json={'drop_pending_updates': False})
+              print('deleteWebhook HTTP:', delete.status_code)
+              result = delete.json()
+              print('deleteWebhook ok:', result.get('ok'))
+              if not result.get('ok'):
+                  print('Telegram response:', result)
+                  sys.exit(1)
+              info = client.get(base + '/getWebhookInfo')
+              data = info.json()
+              webhook = (data.get('result') or {}).get('url', '')
+              print('Webhook URL after deletion:', repr(webhook))
+              if webhook:
+                  print('ERROR: webhook still exists after deleteWebhook')
+                  sys.exit(1)
+          PY
+
+
+      - name: Run Telegram bot
+        env:
+          TOKENN: ${{ secrets.TOKENN }}
+          JOIN_CHANEL: ${{ vars.JOIN_CHANEL }}
+          DEV_TELE: ${{ vars.DEV_TELE }}
+          ID_TELE: ${{ vars.ID_TELE }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          PROXY_URL: ${{ secrets.PROXY_URL }}
+          WELCOME_IMAGE: ${{ vars.WELCOME_IMAGE }}
+          GROUP_LINK: ${{ vars.GROUP_LINK }}
+          LOG_LEVEL: INFO
+        run: python bot.py
