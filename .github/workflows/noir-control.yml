@@ -1,0 +1,43 @@
+name: NOIR Control Dispatcher
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: Action to apply to the library bot workflow
+        required: true
+        type: choice
+        options: [start, stop, restart]
+permissions:
+  actions: write
+  contents: read
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Perform requested operation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TARGET: "ملف تشغيل v6.yml"
+          COMMAND: ${{ inputs.command }}
+        run: |
+          set -euo pipefail
+          RUNS="https://api.github.com/repos/$REPO/actions/workflows/$TARGET/runs?branch=main&per_page=20"
+          ACTIVE=$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$RUNS" | jq -r '.workflow_runs[] | select(.status=="in_progress" or .status=="queued") | .id')
+          if [ "$COMMAND" = "stop" ]; then
+            if [ -z "$ACTIVE" ]; then echo "No active bot run found."; exit 0; fi
+            while read -r runid; do [ -z "$runid" ] || gh api -X POST "/repos/$REPO/actions/runs/$runid/cancel"; done <<< "$ACTIVE"
+            echo "Cancellation requested for active run(s)."
+          elif [ "$COMMAND" = "start" ]; then
+            if [ -n "$ACTIVE" ]; then echo "Bot workflow is already queued or running; not starting a duplicate."; exit 0; fi
+            gh api -X POST "/repos/$REPO/actions/workflows/$TARGET/dispatches" -f ref=main
+            echo "Start request accepted."
+          elif [ "$COMMAND" = "restart" ]; then
+            if [ -n "$ACTIVE" ]; then
+              while read -r runid; do [ -z "$runid" ] || gh api -X POST "/repos/$REPO/actions/runs/$runid/cancel"; done <<< "$ACTIVE"
+              echo "Cancellation requested. Wait briefly, then dispatch new run."
+              sleep 8
+            fi
+            gh api -X POST "/repos/$REPO/actions/workflows/$TARGET/dispatches" -f ref=main
+            echo "Restart dispatch sent."
+          fi
