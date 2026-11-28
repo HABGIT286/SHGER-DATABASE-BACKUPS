@@ -1,43 +1,151 @@
+
 name: NOIR Control Dispatcher
+
 on:
   workflow_dispatch:
     inputs:
       command:
-        description: Action to apply to the library bot workflow
+        description: Select bot operation
         required: true
         type: choice
-        options: [start, stop, restart]
+        options:
+          - start
+          - stop
+          - restart
+
 permissions:
   actions: write
   contents: read
+
+concurrency:
+  group: noir-control-dispatcher
+  cancel-in-progress: false
+
 jobs:
   dispatch:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Perform requested operation
+      - name: Control Telegram bot workflow
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           TARGET: "ملف تشغيل v6.yml"
           COMMAND: ${{ inputs.command }}
+
         run: |
           set -euo pipefail
-          RUNS="https://api.github.com/repos/$REPO/actions/workflows/$TARGET/runs?branch=main&per_page=20"
-          ACTIVE=$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$RUNS" | jq -r '.workflow_runs[] | select(.status=="in_progress" or .status=="queued") | .id')
-          if [ "$COMMAND" = "stop" ]; then
-            if [ -z "$ACTIVE" ]; then echo "No active bot run found."; exit 0; fi
-            while read -r runid; do [ -z "$runid" ] || gh api -X POST "/repos/$REPO/actions/runs/$runid/cancel"; done <<< "$ACTIVE"
-            echo "Cancellation requested for active run(s)."
-          elif [ "$COMMAND" = "start" ]; then
-            if [ -n "$ACTIVE" ]; then echo "Bot workflow is already queued or running; not starting a duplicate."; exit 0; fi
-            gh api -X POST "/repos/$REPO/actions/workflows/$TARGET/dispatches" -f ref=main
-            echo "Start request accepted."
-          elif [ "$COMMAND" = "restart" ]; then
+
+          echo "=================================="
+          echo "NOIR CONTROL"
+          echo "=================================="
+
+          echo "Repository: $REPO"
+          echo "Command: $COMMAND"
+          echo "Target workflow: $TARGET"
+
+          # Encode Arabic characters and spaces in workflow filename
+          TARGET_ENCODED=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$TARGET")
+
+          echo "Encoded workflow name:"
+          echo "$TARGET_ENCODED"
+
+          # Build valid GitHub API URL
+          RUNS_URL="https://api.github.com/repos/${REPO}/actions/workflows/${TARGET_ENCODED}/runs?branch=main&per_page=50"
+
+          echo "Checking active bot runs..."
+
+          ACTIVE=$(curl --fail --silent --show-error \
+            --get "$RUNS_URL" \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header "Accept: application/vnd.github+json" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            | jq -r '.workflow_runs[] | select(.status=="in_progress" or .status=="queued") | .id')
+
+          echo "Active runs:"
+          echo "${ACTIVE:-None}"
+
+          # START
+          if [ "$COMMAND" = "start" ]; then
+
             if [ -n "$ACTIVE" ]; then
-              while read -r runid; do [ -z "$runid" ] || gh api -X POST "/repos/$REPO/actions/runs/$runid/cancel"; done <<< "$ACTIVE"
-              echo "Cancellation requested. Wait briefly, then dispatch new run."
-              sleep 8
+              echo "Bot is already running or queued."
+              exit 0
             fi
-            gh api -X POST "/repos/$REPO/actions/workflows/$TARGET/dispatches" -f ref=main
-            echo "Restart dispatch sent."
+
+            echo "Starting bot workflow..."
+
+            gh api \
+              --method POST \
+              "/repos/${REPO}/actions/workflows/${TARGET_ENCODED}/dispatches" \
+              -f ref=main
+
+            echo "Start request submitted successfully."
+
+          # STOP
+          elif [ "$COMMAND" = "stop" ]; then
+
+            if [ -z "$ACTIVE" ]; then
+              echo "No active bot run found."
+              exit 0
+            fi
+
+            while read -r RUN_ID; do
+
+              if [ -n "$RUN_ID" ]; then
+
+                echo "Cancelling run: $RUN_ID"
+
+                gh api \
+                  --method POST \
+                  "/repos/${REPO}/actions/runs/${RUN_ID}/cancel"
+
+              fi
+
+            done <<< "$ACTIVE"
+
+            echo "Cancellation requests submitted."
+
+          # RESTART
+          elif [ "$COMMAND" = "restart" ]; then
+
+            if [ -n "$ACTIVE" ]; then
+
+              while read -r RUN_ID; do
+
+                if [ -n "$RUN_ID" ]; then
+
+                  echo "Cancelling run: $RUN_ID"
+
+                  gh api \
+                    --method POST \
+                    "/repos/${REPO}/actions/runs/${RUN_ID}/cancel"
+
+                fi
+
+              done <<< "$ACTIVE"
+
+              echo "Waiting for cancellation..."
+              sleep 10
+
+            fi
+
+            echo "Starting new bot run..."
+
+            gh api \
+              --method POST \
+              "/repos/${REPO}/actions/workflows/${TARGET_ENCODED}/dispatches" \
+              -f ref=main
+
+            echo "Restart request submitted successfully."
+
+          else
+
+            echo "ERROR: Invalid command."
+            exit 1
+
           fi
+
+          echo "=================================="
+          echo "NOIR CONTROL COMPLETED"
+          echo "=================================="
