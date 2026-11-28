@@ -1,17 +1,24 @@
 services:
   - type: web
-    name: madarek-dashboard
+    name: noir-control-api
     runtime: python
+    rootDir: noir_backend
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: python web_api.py
-    healthCheckPath: /health
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
     envVars:
       - key: GITHUB_REPOSITORY
         sync: false
-      - key: GITHUB_TOKEN
+      - key: GH_TOKEN
         sync: false
       - key: WEB_ADMIN_PASSWORD
         sync: false
-      - key: GITHUB_REF_NAME
+      - key: WORKFLOW_FILE
+        value: "ملف تشغيل v6.yml"
+      - key: WORKFLOW_REF
         value: main
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: CORS_ORIGINS
+        sync: false
