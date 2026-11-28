@@ -1,0 +1,11 @@
+NOIR CONTROL SECURE LOGIN SETUP
+
+1) Publish index.html to GitHub Pages.
+2) Deploy noir_auth_api.py on an HTTPS ASGI host. Install requirements.txt. Start: uvicorn noir_auth_api:app --host 0.0.0.0 --port 8000
+3) Configure environment variables from .env.example in host settings, not in the repository. GitHub Actions secrets are not automatically visible to an external API host.
+4) Set NOIR_ALLOWED_ORIGINS to the exact website origin.
+5) Replace https://YOUR-BACKEND-HOST once in index.html with the API origin. Login will not ask for a URL.
+6) GH_TOKEN needs Actions read/write permissions. Ensure noir-control.yml exists under .github/workflows.
+7) Use HTTPS and a strong password. Sessions expire in 8 hours and are in memory; restarting the API invalidates sessions.
+
+Existing dashboard action links remain GitHub navigation links. API endpoints are provided for login/status/test Telegram/dispatch; existing UI controls are not all connected to API actions yet.
